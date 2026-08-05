@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Udvari István — Data Analyst</title>
+<meta name="description" content="Data analyst munkák, demók és esettanulmányok: SQL, Python, Power BI, AI-alapú automatizálás.">
+
+<!-- ADATVÉDELEM: ha NEM akarod, hogy a Google megtalálja, hagyd bent ezt a sort.
+     Ha majd szeretnéd, hogy indexelje, töröld ezt az egy sort. -->
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:#F2F3F0;
+  --card:#FFFFFF;
+  --ink:#15181C;
+  --muted:#6E7480;
+  --line:#DCDED8;
+  --accent:#1F6F5C;
+  --accent-soft:#E2EDE8;
+  --radius:4px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+
+/* ---------- fejléc ---------- */
+header{padding:76px 0 0}
+
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:20px;
+}
+
+h1{
+  font-size:clamp(38px,6.2vw,62px);
+  font-weight:600;
+  letter-spacing:-.028em;
+  line-height:1.04;
+  margin-bottom:22px;
+}
+
+.lead{
+  font-size:clamp(17px,2.1vw,19px);
+  color:#3A4048;
+  max-width:60ch;
+  margin-bottom:30px;
+}
+
+.lead strong{font-weight:600;color:var(--ink)}
+
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:64px}
+
+.links a{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:13px;
+  color:var(--ink);
+  text-decoration:none;
+  padding:9px 15px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--card);
+  transition:border-color .15s, color .15s, transform .15s;
+}
+
+.links a:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.links svg{width:15px;height:15px;flex:none}
+
+/* ---------- szűrő ---------- */
+.filterbar{
+  border-top:1px solid var(--line);
+  padding-top:26px;
+  margin-bottom:34px;
+}
+
+.filter-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:20px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+
+.filter-label{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* a lekérdezés-sor: ez a "signature" elem */
+.query{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12.5px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+.query .kw{color:var(--accent);font-weight:500}
+.query .val{color:var(--ink)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+
+.chip{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12.5px;
+  padding:7px 13px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--card);
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s;
+  font-weight:400;
+}
+
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.chip[aria-pressed="true"]{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+
+.chip.reset{color:var(--muted)}
+.chip.reset:hover{color:var(--accent)}
+
+/* ---------- csempék ---------- */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:18px;
+  padding-bottom:20px;
+}
+
+.card{
+  grid-column:span 1;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:26px 26px 22px;
+  text-decoration:none;
+  color:inherit;
+  display:flex;
+  flex-direction:column;
+  min-height:210px;
+  transition:border-color .18s, transform .18s, box-shadow .18s;
+  animation:rise .32s ease both;
+}
+
+.card.wide{grid-column:span 2}
+
+@media (max-width:719px){
+  .card.wide{grid-column:span 1}
+}
+
+.card:hover{
+  border-color:var(--accent);
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(21,24,28,.07);
+}
+
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+.card-date{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;
+  color:var(--muted);
+  letter-spacing:.06em;
+  margin-bottom:14px;
+}
+
+.card h2{
+  font-size:19px;
+  font-weight:600;
+  letter-spacing:-.012em;
+  line-height:1.3;
+  margin-bottom:10px;
+}
+
+.card p{
+  font-size:14.5px;
+  color:#4A505A;
+  line-height:1.55;
+  margin-bottom:18px;
+}
+
+.card-tags{
+  margin-top:auto;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  padding-top:4px;
+}
+
+.tag{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  padding:3px 8px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  border-radius:3px;
+  letter-spacing:.02em;
+}
+
+.card-open{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  color:var(--accent);
+  margin-top:14px;
+  opacity:0;
+  transform:translateX(-4px);
+  transition:opacity .18s, transform .18s;
+}
+
+.card:hover .card-open,
+.card:focus-visible .card-open{opacity:1;transform:none}
+
+/* ---------- üres állapot ---------- */
+.empty{
+  grid-column:1/-1;
+  border:1px dashed var(--line);
+  border-radius:var(--radius);
+  padding:44px 28px;
+  text-align:center;
+  color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;
+  font-size:13.5px;
+}
+
+/* ---------- lábléc ---------- */
+footer{
+  border-top:1px solid var(--line);
+  margin-top:44px;
+  padding:26px 0 60px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  color:var(--muted);
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+footer a{color:var(--muted)}
+footer a:hover{color:var(--accent)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Data Analyst · Budaörs</div>
+
+    <h1>Udvari István</h1>
+
+    <p class="lead">
+      15+ év marketing-, CRM- és kampányanalitika. Nagy adathalmazokból csinálok
+      döntéseket: <strong>SQL</strong>, <strong>Python</strong>, <strong>Power BI</strong> —
+      és egyre több <strong>AI-alapú automatizálás</strong>.
+      Az alábbi oldalak működő demók és anonimizált esettanulmányok a munkáimból.
+    </p>
+
+    <nav class="links">
+      <a href="https://www.linkedin.com/in/istvanudvari" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3A2 2 0 0 1 21 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+        LinkedIn
+      </a>
+      <a href="mailto:udvari.istvan2016@gmail.com">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+        E-mail
+      </a>
+    </nav>
+  </header>
+
+  <section class="filterbar" aria-labelledby="filter-label">
+    <div class="filter-head">
+      <span class="filter-label" id="filter-label">Szűrés címke szerint</span>
+      <span class="query" id="query" aria-live="polite"></span>
+    </div>
+    <div class="chips" id="chips" role="group" aria-labelledby="filter-label"></div>
+  </section>
+
+  <main class="grid" id="grid"></main>
+
+  <footer>
+    <span>© <span id="ev"></span> Udvari István</span>
+    <span><a href="https://www.linkedin.com/in/istvanudvari" target="_blank" rel="noopener">linkedin.com/in/istvanudvari</a></span>
+  </footer>
+
+</div>
+
+<script src="projects.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var grid   = document.getElementById("grid");
+  var chips  = document.getElementById("chips");
+  var query  = document.getElementById("query");
+  var aktiv  = [];   // aktív címkék
+
+  document.getElementById("ev").textContent = new Date().getFullYear();
+
+  var lista = (typeof PROJEKTEK !== "undefined" ? PROJEKTEK.slice() : []);
+
+  // újabb elöl
+  lista.sort(function(a,b){ return (b.datum||"").localeCompare(a.datum||""); });
+
+  // minden előforduló címke, ábécésorrendben
+  var cimkek = [];
+  lista.forEach(function(p){
+    (p.cimkek||[]).forEach(function(c){
+      if(cimkek.indexOf(c) === -1) cimkek.push(c);
+    });
+  });
+  cimkek.sort(function(a,b){ return a.localeCompare(b,"hu"); });
+
+  function honap(d){
+    if(!d) return "";
+    var r = d.split("-");
+    var nevek = ["jan.","febr.","márc.","ápr.","máj.","jún.","júl.","aug.","szept.","okt.","nov.","dec."];
+    var i = parseInt(r[1],10) - 1;
+    return r[0] + ". " + (nevek[i] || "");
+  }
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
+    });
+  }
+
+  function chipeketRajzol(){
+    chips.innerHTML = "";
+
+    var mind = document.createElement("button");
+    mind.className = "chip reset";
+    mind.type = "button";
+    mind.textContent = "Mind";
+    mind.setAttribute("aria-pressed", aktiv.length === 0 ? "true" : "false");
+    mind.addEventListener("click", function(){ aktiv = []; frissit(); });
+    chips.appendChild(mind);
+
+    cimkek.forEach(function(c){
+      var b = document.createElement("button");
+      b.className = "chip";
+      b.type = "button";
+      b.textContent = c;
+      b.setAttribute("aria-pressed", aktiv.indexOf(c) > -1 ? "true" : "false");
+      b.addEventListener("click", function(){
+        var i = aktiv.indexOf(c);
+        if(i > -1){ aktiv.splice(i,1); } else { aktiv.push(c); }
+        frissit();
+      });
+      chips.appendChild(b);
+    });
+  }
+
+  function szurtLista(){
+    if(aktiv.length === 0) return lista;
+    return lista.filter(function(p){
+      return aktiv.every(function(c){ return (p.cimkek||[]).indexOf(c) > -1; });
+    });
+  }
+
+  function queryFrissit(db){
+    var felt = aktiv.length
+      ? '<span class="kw">WHERE</span> címke <span class="kw">IN</span> (<span class="val">' +
+        aktiv.map(esc).join(", ") + '</span>)'
+      : '<span class="kw">SELECT</span> <span class="val">*</span>';
+    query.innerHTML = felt + ' &rarr; <span class="val">' + db + ' projekt</span>';
+  }
+
+  function gridFrissit(){
+    var sz = szurtLista();
+    grid.innerHTML = "";
+
+    if(sz.length === 0){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "Nincs ilyen címkéjű projekt. Válassz másik szűrőt.";
+      grid.appendChild(e);
+      return;
+    }
+
+    sz.forEach(function(p, idx){
+      var a = document.createElement("a");
+      a.className = "card" + (p.kiemelt ? " wide" : "");
+      a.href = "demos/" + p.fajl;
+      a.style.animationDelay = Math.min(idx * 40, 240) + "ms";
+
+      var tagek = (p.cimkek||[]).map(function(c){
+        return '<span class="tag">' + esc(c) + '</span>';
+      }).join("");
+
+      a.innerHTML =
+        '<div class="card-date">' + esc(honap(p.datum)) + '</div>' +
+        '<h2>' + esc(p.cim) + '</h2>' +
+        '<p>' + esc(p.leiras) + '</p>' +
+        '<div class="card-tags">' + tagek + '</div>' +
+        '<div class="card-open">Megnyitás &rarr;</div>';
+
+      grid.appendChild(a);
+    });
+  }
+
+  function frissit(){
+    chipeketRajzol();
+    gridFrissit();
+    queryFrissit(szurtLista().length);
+  }
+
+  frissit();
+})();
+</script>
+
+</body>
+</html>
