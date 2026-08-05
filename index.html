@@ -72,23 +72,28 @@ h1{
 
 .links{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:64px}
 
-.links a{
+.links a,
+.links button{
   display:inline-flex;
   align-items:center;
   gap:8px;
   font-family:"IBM Plex Mono",monospace;
   font-size:13px;
+  line-height:inherit;
   color:var(--ink);
   text-decoration:none;
   padding:9px 15px;
   border:1px solid var(--line);
   border-radius:var(--radius);
   background:var(--card);
+  cursor:pointer;
   transition:border-color .15s, color .15s, transform .15s;
 }
 
-.links a:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
-.links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.links a:hover,
+.links button:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.links a:focus-visible,
+.links button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .links svg{width:15px;height:15px;flex:none}
 
 /* ---------- szűrő ---------- */
@@ -304,10 +309,12 @@ footer a:hover{color:var(--accent)}
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3A2 2 0 0 1 21 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
         LinkedIn
       </a>
-      <a href="mailto:udvari.istvan2016@gmail.com">
+      <!-- Az e-mail cím szándékosan NINCS benne nyersen a forrásban (spamrobotok
+           ellen). A gomb kattintásra állítja össze — lásd a lenti szkriptet. -->
+      <button type="button" id="mailgomb">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
-        E-mail
-      </a>
+        <span id="mailfelirat">E-mail cím mutatása</span>
+      </button>
     </nav>
   </header>
 
@@ -339,6 +346,28 @@ footer a:hover{color:var(--accent)}
   var aktiv  = [];   // aktív címkék
 
   document.getElementById("ev").textContent = new Date().getFullYear();
+
+  /* ---------- e-mail cím, spamrobotok elől elrejtve ----------
+     A cím base64-ben van, hogy a forráskódban se legyen kereshető.
+     Első kattintás: megmutatja. Második: megnyitja a levelezőt.
+     Ha módosítanád: btoa("uj@cim.hu") a böngésző konzoljában. */
+  (function(){
+    var gomb = document.getElementById("mailgomb");
+    var felirat = document.getElementById("mailfelirat");
+    if(!gomb) return;
+
+    var cim = null;
+
+    gomb.addEventListener("click", function(){
+      if(cim === null){
+        cim = atob("dWR2YXJpLmlzdHZhbjIwMTZAZ21haWwuY29t");
+        felirat.textContent = cim;
+        gomb.setAttribute("title", "Kattints újra a levelezőprogram megnyitásához");
+        return;
+      }
+      window.location.href = "mailto:" + cim;
+    });
+  })();
 
   var lista = (typeof PROJEKTEK !== "undefined" ? PROJEKTEK.slice() : []);
 
