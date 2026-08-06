@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POI-CRM → HubSpot Workflow v2</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100vw; height:100vh; overflow:hidden; background:#020810; font-family:monospace; }
+#scroll-wrap {
+  width:100vw; height:100vh;
+  overflow-x:auto; overflow-y:auto;
+  cursor:grab;
+}
+#scroll-wrap:active { cursor:grabbing; }
+#stage {
+  position:relative;
+  /* sized by JS after layout */
+}
+canvas {
+  position:absolute; top:0; left:0;
+  display:block;
+}
+
+/* Tooltip */
+#tooltip {
+  position:fixed; pointer-events:none;
+  background:rgba(4,14,32,.97); border:1px solid #0055bb;
+  border-radius:6px; padding:10px 14px;
+  max-width:310px; z-index:200;
+  opacity:0; transition:opacity .12s;
+  box-shadow:0 0 18px rgba(0,80,255,.35);
+}
+#tooltip.show { opacity:1; }
+#tt-title { color:#00ccff; font-weight:bold; font-size:12px; margin-bottom:3px; letter-spacing:1px; }
+#tt-type  { color:#ff9900; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+#tt-desc  { color:#aaccee; font-size:11px; line-height:1.6; }
+#tt-io    { color:#556688; font-size:10px; margin-top:6px; line-height:1.5; }
+
+/* Header */
+#header {
+  position:fixed; top:0; left:0; right:0;
+  padding:14px 22px 10px;
+  background:linear-gradient(to bottom,rgba(2,8,16,.95),transparent);
+  pointer-events:none; z-index:100;
+}
+#header h1 { color:rgba(0,220,140,.7); font-size:22px; letter-spacing:3px; text-transform:uppercase; margin-bottom:2px; }
+#header p  { color:rgba(0,160,100,.4); font-size:10px; letter-spacing:2px; }
+
+/* Legend */
+#legend {
+  position:fixed; bottom:18px; left:22px;
+  display:flex; gap:16px; pointer-events:none; z-index:100;
+}
+.leg { display:flex; align-items:center; gap:6px; font-size:10px; color:rgba(255,255,255,.35); letter-spacing:1px; }
+.leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* Version */
+#ver { position:fixed; bottom:18px; right:20px; color:rgba(255,255,255,.12); font-size:10px; letter-spacing:2px; z-index:100; }
+
+/* Scrollbar */
+#scroll-wrap::-webkit-scrollbar { height:6px; width:6px; }
+#scroll-wrap::-webkit-scrollbar-track { background:rgba(255,255,255,.04); }
+#scroll-wrap::-webkit-scrollbar-thumb { background:rgba(0,100,200,.3); border-radius:3px; }
+</style>
+</head>
+<body>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:10px 20px;background:#15181C;color:#F2F3F0;position:sticky;top:0;z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
+  <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
+</div>
+
+<div id="header">
+  <h1>POI-CRM → HubSpot Automation Workflow</h1>
+  <p>n8n pipeline &nbsp;·&nbsp; SharePoint &nbsp;·&nbsp; HubSpot CRM &nbsp;·&nbsp; Google Sheets</p>
+</div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#0088ff"></div>Input / SharePoint</div>
+  <div class="leg"><div class="leg-dot" style="background:#00cc88"></div>Transzformáció</div>
+  <div class="leg"><div class="leg-dot" style="background:#ff9900"></div>Output / export</div>
+  <div class="leg"><div class="leg-dot" style="background:#cc44ff"></div>Mellékszál / ellenőrzés</div>
+  <div class="leg"><div class="leg-dot" style="background:#ff4466"></div>Merge / szinkron</div>
+</div>
+<div id="ver">v2.0</div>
+
+<div id="scroll-wrap">
+  <div id="stage">
+    <canvas id="c"></canvas>
+  </div>
+</div>
+
+<div id="tooltip">
+  <div id="tt-title"></div>
+  <div id="tt-type"></div>
+  <div id="tt-desc"></div>
+  <div id="tt-io"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// LAYOUT CONSTANTS
+// ═══════════════════════════════════════════════════════
+const NW   = 148;   // node width
+const NH   = 44;    // node height
+const HGAP = 68;    // horizontal gap between nodes
+const VGAP = 80;    // vertical gap between rows
+
+// Row Y centres (relative to stage top)
+// Main row: ROW_MID
+// POI arm top branch: ROW_TOP
+// HS arm bottom branch: ROW_BOT
+// Deep branches (POI dedup excel, HS dedup excel): ROW_DEEP_TOP / BOT
+const TOP_PAD = 70;
+const ROW_DEEP_TOP = TOP_PAD + 0   * VGAP;  // POI dedup Excel
+const ROW_TOP      = TOP_PAD + 1.2 * VGAP;  // POI arm + Companies arm
+const ROW_MID      = TOP_PAD + 3   * VGAP;  // main spine
+const ROW_BOT      = TOP_PAD + 4.8 * VGAP;  // HubSpot arm + Contacts arm
+const ROW_DEEP_BOT = TOP_PAD + 6.2 * VGAP;  // HS dedup Excel + Merge
+
+// Column X positions – place each node at col * (NW+HGAP)
+const X0 = 30;
+function cx(col){ return X0 + col*(NW+HGAP); }
+
+// ═══════════════════════════════════════════════════════
+// NODE COLOURS
+// ═══════════════════════════════════════════════════════
+const C = {
+  input:    { fill:'#001830', stroke:'#0066cc', head:'#003366', label:'#4499ff', glow:'#0055ff' },
+  transform:{ fill:'#001a0e', stroke:'#008844', head:'#004422', label:'#44dd88', glow:'#00aa55' },
+  output:   { fill:'#1a0e00', stroke:'#996600', head:'#442200', label:'#ffaa22', glow:'#cc7700' },
+  check:    { fill:'#150020', stroke:'#882299', head:'#330055', label:'#cc66ff', glow:'#9900cc' },
+  merge:    { fill:'#1a000a', stroke:'#cc2244', head:'#550011', label:'#ff6688', glow:'#cc0033' },
+};
+
+// ═══════════════════════════════════════════════════════
+// NODES  — x,y are absolute pixel positions, set below
+// ═══════════════════════════════════════════════════════
+const NODES = [
+  // ── MAIN SPINE ──────────────────────────────────────
+  { id:'trigger',   cat:'input',     label:'Manuális indítás', sub:'Trigger',
+    desc:'Manuális indítás tesztelési fázisban. Élesben időzített (Schedule) futás.',
+    io:'Output: workflow indul', col:0, row:'MID' },
+
+  { id:'sp_list',   cat:'input',     label:'SP fájlok listázása', sub:'HTTP Request',
+    desc:'SharePoint mappából lekéri az összes CSV fájl nevét, méretét, módosítási dátumát.',
+    io:'→ Name, TimeLastModified, ServerRelativeUrl', col:1, row:'MID' },
+
+  { id:'flatten',   cat:'transform', label:'Fájllista kiterítése', sub:'SplitOut',
+    desc:'A fájllista tömböt egyedi sorokra bontja. 1 sor = 1 fájl.',
+    io:'Input: d.results tömb → Output: egyedi sorok', col:2, row:'MID' },
+
+  // ── POI ARM (ROW_TOP) ────────────────────────────────
+  { id:'poi_filter',cat:'input',     label:'POI fájlok szűrése', sub:'Filter',
+    desc:'Csak a "poi_export" nevű fájlokat engedi tovább.',
+    io:'→ POI CSV sor', col:3, row:'TOP' },
+
+  { id:'poi_sort',  cat:'input',     label:'POI – legfrissebb', sub:'Sort',
+    desc:'Dátum alapján kiválasztja a legújabb POI exportot.',
+    io:'Output: 1 db legfrissebb fájl', col:4, row:'TOP' },
+
+  { id:'poi_dl',    cat:'input',     label:'POI CSV letöltése', sub:'HTTP Request',
+    desc:'Letölti a fájlt binary formátumban SharePointról.',
+    io:'Input: ServerRelativeUrl → Output: binary', col:5, row:'TOP' },
+
+  { id:'poi_parse', cat:'transform', label:'POI CSV feldolgozása', sub:'ExtractFromFile',
+    desc:'CSV parse, vesszős delimiter, fejléces. 4681 sor × 60+ oszlop.',
+    io:'Input: binary → Output: 4681 sor', col:6, row:'TOP' },
+
+  { id:'poi_trim',  cat:'transform', label:'Nehéz oszlopok eltávolítása', sub:'Code',
+    desc:'11 hosszú szöveges mező törlése a memória csökkentésére.\n(checked_required_services, description_hu/en/de/nl/it/sk/cz, missing_...)',
+    io:'Output: karcsúsított 4681 sor', col:7, row:'TOP' },
+
+  // ── POI DEDUP (ROW_DEEP_TOP) ─────────────────────────
+  { id:'poi_dedup', cat:'check',     label:'POI duplikáció\nellenőrzés', sub:'Code (mellékszál)',
+    desc:'POI id egyediségét ellenőrzi.',
+    io:'Output: duplikált id-k vagy "NINCS DUPLIKÁCIÓ"', col:8, row:'DEEP_TOP' },
+
+  { id:'poi_dedup_xl',cat:'check',   label:'POI duplikáció\nExcel', sub:'Convert to XLSX',
+    desc:'A duplikáció-ellenőrzés eredményét Excel fájlba exportálja.',
+    io:'Output: poi_duplicates.xlsx', col:9, row:'DEEP_TOP' },
+
+  // ── JOIN (ROW_MID) ───────────────────────────────────
+  { id:'join',      cat:'transform', label:'JOIN – HubSpot ID\nhozzárendelése', sub:'Code',
+    desc:'POI id = HubSpot "POI ID" alapján lookup. Minden POI sorhoz hozzáfűzi a HubSpot Record ID-t.',
+    io:'Input 0: POI sorok (4681)\nInput 1: HS export (4701)\n→ Output: POI + hubspot_record_id', col:8, row:'MID' },
+
+  // ── COMPANIES ARM (ROW_TOP, after join) ──────────────
+  { id:'companies', cat:'transform', label:'Companies\ntranszformáció', sub:'Code',
+    desc:'Dátumkonverzió + other_categories §§ placeholder logika + spoken_languages tisztítás.',
+    io:'Output: HubSpot-kompatibilis Companies sorok', col:9, row:'TOP' },
+
+  { id:'cat_check', cat:'check',     label:'Categories\nellenőrzés', sub:'Code (mellékszál)',
+    desc:'other_categories értékeit összeveti a main_category listával.',
+    io:'Output: egyezők / hiányzók táblázata', col:10, row:'TOP' },
+
+  { id:'cat_check_xl',cat:'check',   label:'Categories\nellenőrzés Excel', sub:'Convert to XLSX',
+    desc:'A category-ellenőrzés eredménye Excel fájlba exportálva.',
+    io:'Output: categories_check.xlsx', col:11, row:'TOP' },
+
+  { id:'companies_csv',cat:'output', label:'Companies CSV\nkészítés', sub:'Convert to CSV',
+    desc:'A transzformált Companies adatokat CSV-be írja.',
+    io:'Output: Companies_output_YYYYMMDD_HHmm.csv\n4681 sor · HubSpot Companies import', col:10, row:'MID' },
+
+  // ── HS ARM (ROW_BOT) ─────────────────────────────────
+  { id:'hs_filter', cat:'input',     label:'HubSpot fájlok\nszűrése', sub:'Filter',
+    desc:'Csak a "hubspot-crm-exports" nevű fájlokat engedi tovább.',
+    io:'→ HubSpot CSV sor', col:3, row:'BOT' },
+
+  { id:'hs_sort',   cat:'input',     label:'HubSpot –\nlegfrissebb', sub:'Sort',
+    desc:'Legújabb HubSpot export kiválasztása dátum alapján.',
+    io:'Output: 1 db legfrissebb fájl', col:4, row:'BOT' },
+
+  { id:'hs_dl',     cat:'input',     label:'HubSpot CSV\nletöltése', sub:'HTTP Request',
+    desc:'Binary letöltés SharePointról.',
+    io:'Output: binary', col:5, row:'BOT' },
+
+  { id:'hs_parse',  cat:'transform', label:'HubSpot CSV\nfeldolgozása', sub:'ExtractFromFile',
+    desc:'CSV parse, pontosvesszős delimiter (Excel magyar export). 4701 sor, BOM-os fejlécek.',
+    io:'Output: 4701 sor', col:6, row:'BOT' },
+
+  // ── HS DEDUP (ROW_DEEP_BOT) ──────────────────────────
+  { id:'hs_dedup',  cat:'check',     label:'HubSpot duplikáció\nellenőrzés', sub:'Code (mellékszál)',
+    desc:'HubSpot oldali POI ID egyediség ellenőrzése (BOM-safe).',
+    io:'Output: duplikált POI ID-k vagy "NINCS DUPLIKÁCIÓ"', col:7, row:'DEEP_BOT' },
+
+  { id:'hs_dedup_xl',cat:'check',    label:'HubSpot duplikáció\nExcel', sub:'Convert to XLSX',
+    desc:'A HS duplikáció-ellenőrzés Excel exportja.',
+    io:'Output: hs_duplicates.xlsx', col:8, row:'DEEP_BOT' },
+
+  // ── CONTACTS (ROW_BOT, after join) ───────────────────
+  { id:'contacts',  cat:'transform', label:'Contacts\ntranszformáció', sub:'Code',
+    desc:'3 email-forrásból (email, managers, pending_share_requests) kinyeri az email-címeket. 4 oszlopos dedup.',
+    io:'Output: hubspot_record_id + poi_id + poi_name + poi_email + source', col:9, row:'BOT' },
+
+  { id:'contacts_csv',cat:'output',  label:'Contacts CSV\nkészítés', sub:'Convert to CSV',
+    desc:'A Contacts adatokat CSV-be írja.',
+    io:'Output: Contacts_output_YYYYMMDD_HHmm.csv\nemail-cím lista · HubSpot Contacts import', col:10, row:'BOT' },
+
+  // ── MERGE + LOG + SHEETS (ROW_DEEP_BOT) ─────────────
+  { id:'merge',     cat:'merge',     label:'Merge', sub:'Merge (waitForAll)',
+    desc:'Megvárja a Contacts CSV és HubSpot duplikáció ágak befejezését.',
+    io:'Input 0: Contacts CSV\nInput 1: HS dedup Excel', col:11, row:'DEEP_BOT' },
+
+  { id:'log_build', cat:'transform', label:'Log összefoglaló\nösszeállítása', sub:'Code',
+    desc:'Összegyűjti a futási metaadatokat minden ágból: időpont, verzió, fájlnevek, sorok száma, duplikációk, category mismatch.',
+    io:'Output: log sor objektum', col:12, row:'DEEP_BOT' },
+
+  { id:'gsheets',   cat:'output',    label:'Log sor Google\nSheetsbe', sub:'Google Sheets',
+    desc:'Append sor a futási naplóba.',
+    io:'Sheet: poicrm_to_hubspot_n8n_run_log', col:13, row:'DEEP_BOT' },
+];
+
+// ── ROW Y MAP ────────────────────────────────────────────
+const ROW_Y = {
+  DEEP_TOP: ROW_DEEP_TOP,
+  TOP:      ROW_TOP,
+  MID:      ROW_MID,
+  BOT:      ROW_BOT,
+  DEEP_BOT: ROW_DEEP_BOT,
+};
+
+// assign absolute x,y
+NODES.forEach(n=>{
+  n.x = cx(n.col);
+  n.y = ROW_Y[n.row] - NH/2;
+});
+
+// ═══════════════════════════════════════════════════════
+// PIPES  — from/to node ids + routing hints
+// ═══════════════════════════════════════════════════════
+const PIPES = [
+  // main spine
+  { from:'trigger',      to:'sp_list',      col:'#0066cc' },
+  { from:'sp_list',      to:'flatten',      col:'#0066cc' },
+  // split up/down from flatten
+  { from:'flatten',      to:'poi_filter',   col:'#0077dd' },
+  { from:'flatten',      to:'hs_filter',    col:'#0077dd' },
+  // POI arm
+  { from:'poi_filter',   to:'poi_sort',     col:'#0077dd' },
+  { from:'poi_sort',     to:'poi_dl',       col:'#0077dd' },
+  { from:'poi_dl',       to:'poi_parse',    col:'#0077dd' },
+  { from:'poi_parse',    to:'poi_trim',     col:'#0088ee' },
+  // poi dedup branch (up)
+  { from:'poi_trim',     to:'poi_dedup',    col:'#9933cc', dashed:true },
+  { from:'poi_dedup',    to:'poi_dedup_xl', col:'#9933cc', dashed:true },
+  // poi → join
+  { from:'poi_trim',     to:'join',         col:'#0088ee' },
+  // HS arm
+  { from:'hs_filter',    to:'hs_sort',      col:'#0077dd' },
+  { from:'hs_sort',      to:'hs_dl',        col:'#0077dd' },
+  { from:'hs_dl',        to:'hs_parse',     col:'#0077dd' },
+  // hs dedup branch (down)
+  { from:'hs_parse',     to:'hs_dedup',     col:'#9933cc', dashed:true },
+  { from:'hs_dedup',     to:'hs_dedup_xl',  col:'#9933cc', dashed:true },
+  // hs → join
+  { from:'hs_parse',     to:'join',         col:'#0088ee' },
+  // join → companies + contacts
+  { from:'join',         to:'companies',    col:'#00aa55' },
+  { from:'join',         to:'contacts',     col:'#00aa55' },
+  // companies arm
+  { from:'companies',    to:'cat_check',    col:'#9933cc', dashed:true },
+  { from:'cat_check',    to:'cat_check_xl', col:'#9933cc', dashed:true },
+  { from:'companies',    to:'companies_csv',col:'#cc8800' },
+  // contacts arm
+  { from:'contacts',     to:'contacts_csv', col:'#cc8800' },
+  // merge inputs
+  { from:'contacts_csv', to:'merge',        col:'#cc2244' },
+  { from:'hs_dedup_xl',  to:'merge',        col:'#cc2244' },
+  // log → sheets
+  { from:'merge',        to:'log_build',    col:'#009966' },
+  { from:'log_build',    to:'gsheets',      col:'#cc8800' },
+];
+
+// ═══════════════════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const wrap   = document.getElementById('scroll-wrap');
+const stage  = document.getElementById('stage');
+const tip    = document.getElementById('tooltip');
+
+function setupCanvas(){
+  const maxX = Math.max(...NODES.map(n=>n.x)) + NW + 40;
+  const maxY = Math.max(...NODES.map(n=>n.y)) + NH + 40;
+  canvas.width  = maxX;
+  canvas.height = maxY;
+  stage.style.width  = maxX + 'px';
+  stage.style.height = maxY + 'px';
+}
+setupCanvas();
+
+// ═══════════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════════
+let hoveredNode = null;
+canvas.addEventListener('mousemove', e=>{
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  let found = null;
+  NODES.forEach(n=>{
+    if(mx>=n.x && mx<=n.x+NW && my>=n.y && my<=n.y+NH) found=n;
+  });
+  hoveredNode = found;
+  if(found){
+    document.getElementById('tt-title').textContent = found.label.replace('\n',' ');
+    document.getElementById('tt-type').textContent  = found.sub;
+    document.getElementById('tt-desc').textContent  = found.desc;
+    document.getElementById('tt-io').textContent    = found.io;
+    let tx = e.clientX+16, ty = e.clientY+10;
+    if(tx+320>innerWidth)  tx = e.clientX-330;
+    if(ty+160>innerHeight) ty = e.clientY-160;
+    tip.style.left = tx+'px'; tip.style.top = ty+'px';
+    tip.classList.add('show');
+  } else {
+    tip.classList.remove('show');
+  }
+});
+canvas.addEventListener('mouseleave',()=>tip.classList.remove('show'));
+
+// drag to scroll
+let dragging=false, dragX=0, dragY=0, scrollX=0, scrollY=0;
+wrap.addEventListener('mousedown',e=>{ dragging=true; dragX=e.clientX; dragY=e.clientY; scrollX=wrap.scrollLeft; scrollY=wrap.scrollTop; });
+window.addEventListener('mousemove',e=>{ if(!dragging)return; wrap.scrollLeft=scrollX-(e.clientX-dragX); wrap.scrollTop=scrollY-(e.clientY-dragY); });
+window.addEventListener('mouseup',()=>dragging=false);
+
+// ═══════════════════════════════════════════════════════
+// PACKETS
+// ═══════════════════════════════════════════════════════
+let pkts = [];
+function nodeById(id){ return NODES.find(n=>n.id===id); }
+function seedPackets(){
+  pkts=[];
+  PIPES.filter(p=>!p.dashed).forEach(p=>{
+    for(let i=0;i<2;i++) pkts.push({ pipe:p, t:Math.random(), speed:.003+Math.random()*.003 });
+  });
+}
+seedPackets();
+
+// ═══════════════════════════════════════════════════════
+// ROUTING: smart horizontal bezier with vertical routing
+// ═══════════════════════════════════════════════════════
+function routePipe(p){
+  const a = nodeById(p.from), b = nodeById(p.to);
+  if(!a||!b) return null;
+  // exit: right-center of source; enter: left-center of target
+  const ax = a.x + NW,        ay = a.y + NH/2;
+  const bx = b.x,             by = b.y + NH/2;
+  // if same row: simple horizontal bezier
+  if(Math.abs(ay-by) < 5){
+    const mx = (ax+bx)/2;
+    return { type:'bezier', ax,ay,bx,by, c1x:mx,c1y:ay,c2x:mx,c2y:by };
+  }
+  // different rows: S-curve via mid column
+  const mx = (ax+bx)/2;
+  return { type:'bezier', ax,ay,bx,by, c1x:mx,c1y:ay, c2x:mx,c2y:by };
+}
+
+function bezPt(r,t){
+  if(!r) return {x:0,y:0};
+  const {ax,ay,bx,by,c1x,c1y,c2x,c2y}=r;
+  return {
+    x:(1-t)**3*ax+3*(1-t)**2*t*c1x+3*(1-t)*t*t*c2x+t**3*bx,
+    y:(1-t)**3*ay+3*(1-t)**2*t*c1y+3*(1-t)*t*t*c2y+t**3*by,
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// DRAW
+// ═══════════════════════════════════════════════════════
+function drawNode(n){
+  const col = C[n.cat];
+  const glow = n===hoveredNode;
+  ctx.save();
+  ctx.shadowColor = col.glow; ctx.shadowBlur = glow ? 22 : 7;
+  // body
+  ctx.fillStyle=col.fill; ctx.strokeStyle=col.stroke; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.roundRect(n.x,n.y,NW,NH,5); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur=0;
+  // header
+  ctx.fillStyle=col.head;
+  ctx.beginPath(); ctx.roundRect(n.x,n.y,NW,18,5); ctx.fill();
+  ctx.beginPath(); ctx.rect(n.x,n.y+10,NW,8); ctx.fill();
+  // label (support \n)
+  ctx.fillStyle=col.label; ctx.font='bold 9.5px monospace';
+  const lines=n.label.split('\n');
+  if(lines.length===1){
+    ctx.fillText(lines[0], n.x+6, n.y+13);
+    ctx.fillStyle='rgba(255,255,255,.3)'; ctx.font='8.5px monospace';
+    ctx.fillText(n.sub, n.x+6, n.y+30);
+  } else {
+    ctx.fillText(lines[0], n.x+6, n.y+13);
+    ctx.fillStyle=col.label+'bb';
+    ctx.fillText(lines[1], n.x+6, n.y+26);
+    ctx.fillStyle='rgba(255,255,255,.25)'; ctx.font='8px monospace';
+    ctx.fillText(n.sub, n.x+6, n.y+38);
+  }
+  ctx.restore();
+}
+
+function drawPipeShape(p){
+  const r=routePipe(p); if(!r) return;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(r.ax,r.ay);
+  ctx.bezierCurveTo(r.c1x,r.c1y,r.c2x,r.c2y,r.bx,r.by);
+  ctx.strokeStyle = p.col+(p.dashed?'55':'40');
+  ctx.lineWidth = 1.5;
+  if(p.dashed) ctx.setLineDash([4,5]); else ctx.setLineDash([]);
+  ctx.stroke(); ctx.setLineDash([]);
+  // arrowhead at target
+  const angle = Math.atan2(r.by-r.c2y, r.bx-r.c2x);
+  ctx.translate(r.bx,r.by); ctx.rotate(angle);
+  ctx.fillStyle=p.col+'99';
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-9,-4); ctx.lineTo(-9,4); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawPkt(pk){
+  const r=routePipe(pk.pipe); if(!r) return;
+  const pt=bezPt(r,pk.t);
+  ctx.beginPath(); ctx.arc(pt.x,pt.y,3.5,0,Math.PI*2);
+  ctx.fillStyle=pk.pipe.col;
+  ctx.shadowColor=pk.pipe.col; ctx.shadowBlur=10;
+  ctx.fill(); ctx.shadowBlur=0;
+}
+
+// Row labels
+const ROW_LABELS=[
+  { y:ROW_DEEP_TOP, label:'POI DEDUP / EXCEL EXPORT', col:'rgba(150,50,200,.25)' },
+  { y:ROW_TOP,      label:'POI ÁG',                   col:'rgba(0,100,220,.2)'   },
+  { y:ROW_MID,      label:'FŐ SPINE',                 col:'rgba(0,180,100,.15)'  },
+  { y:ROW_BOT,      label:'HUBSPOT ÁG',               col:'rgba(0,100,220,.2)'   },
+  { y:ROW_DEEP_BOT, label:'HUBSPOT DEDUP / MERGE / LOG', col:'rgba(200,30,60,.2)' },
+];
+
+let frame=0;
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#020810'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // subtle grid
+  ctx.strokeStyle='rgba(0,80,180,.04)'; ctx.lineWidth=1;
+  for(let x=0;x<canvas.width;x+=50){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke(); }
+  for(let y=0;y<canvas.height;y+=50){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke(); }
+
+  // row bands + labels
+  ROW_LABELS.forEach(rl=>{
+    ctx.fillStyle=rl.col;
+    ctx.fillRect(0, rl.y-VGAP*.45, canvas.width, VGAP*.9);
+    ctx.fillStyle=rl.col.replace(/[\d.]+\)$/,'0.6)');
+    ctx.font='9px monospace'; ctx.letterSpacing='3px';
+    ctx.fillText('── '+rl.label+' ──────────────────────────────────────────────────────────────────', 8, rl.y-VGAP*.45+12);
+  });
+
+  // pipes
+  PIPES.forEach(drawPipeShape);
+
+  // packets
+  pkts.forEach(pk=>{
+    pk.t+=pk.speed; if(pk.t>1) pk.t=0;
+    drawPkt(pk);
+  });
+
+  // nodes
+  NODES.forEach(drawNode);
+
+  // pulse on gsheets
+  const gs=nodeById('gsheets');
+  if(gs){
+    const pulse=0.5+0.5*Math.abs(Math.sin(frame*.04));
+    ctx.beginPath();ctx.arc(gs.x+NW/2,gs.y+NH/2,NW*.55*pulse,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(200,130,0,${pulse*.2})`;ctx.lineWidth=1;ctx.stroke();
+  }
+
+  frame++;
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

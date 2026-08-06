@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="hu" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POI-CRM → HubSpot dataflow — demo</title>
+<style>
+  /* Azonos design-nyelv a portfólió demóval (viz/poicrm_portfolio_demo.html) — light+dark */
+  :root{
+    --bg:#f4f6fa; --bg2:#eef2f8;
+    --text-strong:#16233b; --text-mid:#5d6b82; --text-dim:#7a8699;
+    --panel:#ffffff; --panel-border:#dde3ed; --panel-soft:#f7f9fc;
+    --btn-bg:#ffffff; --btn-border:#c9d2e0; --btn-text:#3d4a61; --btn-hover:#eef2f8;
+    --accent:#2f6fdb; --accent-soft:#e7eefb;
+    --badge-bg:#e3e9f2; --badge-text:#4a5a75;
+    --badge-run-bg:#fdf0d5; --badge-run-text:#9a6700;
+    --badge-done-bg:#d9f2e0; --badge-done-text:#116632;
+    --badge-err-bg:#fde0e4; --badge-err-text:#a3132f;
+    --row-hover:#f0f5fc; --th-bg:#eef2f8;
+    --st-pending:#c2cbd9; --st-running:#e8a200; --st-done:#1a9e50; --st-error:#d94560;
+    --cat-input:#2f6fdb; --cat-transform:#1a9e78; --cat-check:#8a4bdb; --cat-output:#d97c10; --cat-merge:#d94560;
+    --warn:#d97c10; --good:#1a9e50; --shadow:0 8px 28px rgba(22,35,59,.10);
+    --canvas-bg:#f7f9fc; --grid:rgba(47,111,219,.06); --pipe:#c2cbd9;
+  }
+  :root[data-theme="dark"]{
+    --bg:#070d18; --bg2:#0b1424;
+    --text-strong:#e9f0ff; --text-mid:#93a5c4; --text-dim:#6b7f9f;
+    --panel:#0e1830; --panel-border:#1c2a44; --panel-soft:#0b1526;
+    --btn-bg:#0e1830; --btn-border:#2a3d61; --btn-text:#b9c7e0; --btn-hover:#16244077;
+    --accent:#41a6ff; --accent-soft:#122a49;
+    --badge-bg:#14213a; --badge-text:#8fa3c6;
+    --badge-run-bg:#2a2008; --badge-run-text:#ffcf6b;
+    --badge-done-bg:#062b1a; --badge-done-text:#3fe8ab;
+    --badge-err-bg:#2a0d15; --badge-err-text:#ff90a5;
+    --row-hover:#12203a; --th-bg:#0b1526;
+    --st-pending:#3c4d6c; --st-running:#ffbb33; --st-done:#27e07f; --st-error:#ff5f7e;
+    --cat-input:#41a6ff; --cat-transform:#22dfa0; --cat-check:#bf7bff; --cat-output:#ffb03a; --cat-merge:#ff5f7e;
+    --warn:#ffb03a; --good:#27e07f; --shadow:0 10px 32px rgba(0,0,0,.55);
+    --canvas-bg:#0a1424; --grid:rgba(65,166,255,.06); --pipe:#243a5e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background-color:var(--bg);color:var(--text-strong);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+       font-size:14px;line-height:1.5;min-height:100vh;transition:background-color .2s,color .2s;}
+  header{display:flex;align-items:flex-start;gap:16px;padding:18px 26px;border-bottom:1px solid var(--panel-border);position:sticky;top:0;background:var(--bg);z-index:30;}
+  header .brand h1{font-size:19px;font-weight:650;letter-spacing:.3px;} header .brand h1 .arrow{color:var(--cat-transform);}
+  header .brand p{font-size:12px;color:var(--text-dim);margin-top:2px;}
+  .demo-tag{display:inline-block;margin-left:8px;font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:10px;background:var(--accent-soft);color:var(--accent);vertical-align:middle;}
+  .run-state{display:inline-block;margin-top:9px;font-size:12.5px;font-weight:600;padding:4px 13px;border-radius:14px;background:var(--badge-bg);color:var(--badge-text);}
+  .run-state.running{background:var(--badge-run-bg);color:var(--badge-run-text);}
+  .run-state.done{background:var(--badge-done-bg);color:var(--badge-done-text);}
+  .run-state.error{background:var(--badge-err-bg);color:var(--badge-err-text);}
+  .spacer{flex:1;} .controls{display:flex;gap:8px;align-items:center;}
+  button{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--btn-text);background:var(--btn-bg);border:1px solid var(--btn-border);border-radius:16px;padding:7px 15px;cursor:pointer;transition:.15s;}
+  button:hover:not(:disabled){background:var(--btn-hover);border-color:var(--accent);}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  /* hover: marad a kék kitöltés + fehér betű, csak kicsit sötétebb árnyalat (olvasható marad) */
+  button.primary:hover:not(:disabled){background:var(--accent);border-color:var(--accent);color:#fff;filter:brightness(.9);box-shadow:0 2px 10px rgba(47,111,219,.35);}
+  .wrap{padding:24px 26px;max-width:1440px;margin:0 auto;}
+  .sources{display:flex;flex-wrap:wrap;gap:22px;background:var(--panel);border:1px solid var(--panel-border);border-radius:12px;padding:16px 20px;margin-bottom:18px;box-shadow:var(--shadow);align-items:flex-start;}
+  .src{display:flex;flex-direction:column;gap:7px;min-width:230px;} .src .lbl{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-dim);}
+  .seg{display:flex;border:1px solid var(--btn-border);border-radius:10px;overflow:hidden;}
+  .seg button{border:none;border-radius:0;padding:8px 15px;border-right:1px solid var(--btn-border);} .seg button:last-child{border-right:none;}
+  .seg button.on{background:var(--accent);color:#fff;} .seg button.soon{opacity:.5;}
+  .src-run{margin-left:auto;display:flex;align-items:flex-end;}
+  /* file-választó */
+  .filerow{display:flex;gap:6px;align-items:center;}
+  .filerow input[type=text]{font-family:inherit;font-size:12px;padding:7px 10px;border-radius:8px;border:1px solid var(--btn-border);background:var(--btn-bg);color:var(--text-strong);width:250px;}
+  .filerow select{font-family:inherit;font-size:12px;padding:7px 8px;border-radius:8px;border:1px solid var(--btn-border);background:var(--btn-bg);color:var(--text-strong);max-width:260px;}
+  .fileinfo{font-size:11px;color:var(--text-dim);min-height:15px;}
+  .fileinfo.warn{color:var(--warn);}
+  .chips{display:flex;flex-wrap:wrap;gap:11px;margin-bottom:10px;}
+  .chip{background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;padding:11px 15px;min-width:118px;box-shadow:var(--shadow);}
+  .chip .k{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;} .chip .v{font-size:22px;font-weight:680;}
+  .chip.warn .v{color:var(--warn);} .chip.good .v{color:var(--good);}
+  .meta{font-size:12px;color:var(--text-dim);margin-bottom:20px;} .meta b{color:var(--text-mid);font-weight:600;}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--panel-border);margin-bottom:16px;}
+  .tabs button{border:none;border-radius:0;background:transparent;color:var(--text-mid);padding:11px 18px;border-bottom:2px solid transparent;font-weight:600;}
+  .tabs button.on{color:var(--text-strong);border-bottom-color:var(--cat-transform);}
+  .view{display:none;} .view.on{display:block;animation:fade .25s;} @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;}}
+  .layout-toggle{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .layout-toggle .seg{border-radius:10px;} .lt-hint{font-size:11px;color:var(--text-dim);}
+  .canvas-box{position:relative;background:var(--canvas-bg);border:1px solid var(--panel-border);border-radius:12px;overflow:auto;box-shadow:var(--shadow);cursor:grab;}
+  .canvas-box.grabbing{cursor:grabbing;}
+  .canvas-box.full{height:64vh;} .canvas-box.strip{height:150px;margin-bottom:16px;cursor:default;}
+  .canvas-box canvas{display:block;}
+  .canvas-tools{display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;}
+  .legend .lg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-mid);}
+  .legend .dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .zoom{margin-left:auto;display:inline-flex;border:1px solid var(--btn-border);border-radius:10px;overflow:hidden;}
+  .zoom button{border:none;border-radius:0;padding:5px 12px;font-size:13px;border-right:1px solid var(--btn-border);min-width:40px;}
+  .zoom button:last-child{border-right:none;}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:300;display:flex;align-items:center;justify-content:center;}
+  .modal{background:var(--panel);border:1px solid var(--panel-border);border-radius:12px;width:min(560px,92vw);max-height:80vh;display:flex;flex-direction:column;box-shadow:var(--shadow);}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--panel-border);font-size:14px;}
+  .modal-head button{border:none;background:transparent;font-size:15px;padding:2px 8px;}
+  .dp-path{padding:8px 18px;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--panel-border);word-break:break-all;}
+  .dp-list{overflow:auto;flex:1;min-height:220px;}
+  .dp-item{display:flex;align-items:center;gap:8px;padding:9px 18px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--panel-soft);}
+  .dp-item:hover{background:var(--row-hover);}
+  .modal-foot{display:flex;align-items:center;gap:8px;padding:12px 18px;border-top:1px solid var(--panel-border);}
+  .dp-cur{flex:1;font-size:11px;color:var(--text-mid);word-break:break-all;}
+  #tooltip{position:fixed;pointer-events:none;z-index:200;max-width:300px;background:var(--panel);border:1px solid var(--panel-border);
+           border-radius:10px;padding:11px 14px;box-shadow:var(--shadow);opacity:0;transition:opacity .12s;}
+  #tooltip.show{opacity:1;} #tt-title{font-weight:650;font-size:13px;color:var(--text-strong);}
+  #tt-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin:2px 0 6px;}
+  #tt-desc{font-size:12px;color:var(--text-mid);line-height:1.5;} #tt-meta{font-size:11px;color:var(--text-dim);margin-top:6px;}
+  .flow{display:flex;flex-direction:column;gap:20px;}
+  .lane{display:flex;gap:12px;flex-wrap:wrap;}
+  .lane-label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-dim);width:100%;border-bottom:1px dashed var(--panel-border);padding-bottom:4px;font-weight:700;}
+  .node{background:var(--panel);border:1px solid var(--panel-border);border-radius:11px;padding:12px 15px;min-width:158px;box-shadow:var(--shadow);border-left:3px solid var(--nc,var(--accent));}
+  .node.input{--nc:var(--cat-input);} .node.transform{--nc:var(--cat-transform);} .node.check{--nc:var(--cat-check);} .node.output{--nc:var(--cat-output);}
+  .node .t{font-size:13px;font-weight:640;margin-bottom:2px;} .node .s{font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-dim);}
+  .node .badge{font-size:16px;font-weight:680;margin-top:7px;color:var(--nc);} .node .sub{font-size:10.5px;color:var(--text-dim);margin-top:3px;}
+  .node.check.warn{border-color:var(--warn);} .node.check.warn .badge{color:var(--warn);} .node.check.clean .badge{color:var(--good);}
+  .arrow-r{align-self:center;color:var(--text-dim);font-size:18px;}
+  .hint{font-size:11px;color:var(--text-dim);margin-top:14px;}
+  .browser{display:grid;grid-template-columns:240px 1fr;gap:18px;}
+  .tablist{display:flex;flex-direction:column;gap:7px;}
+  .tablist button{text-align:left;border-radius:9px;padding:11px 14px;display:flex;justify-content:space-between;gap:8px;}
+  .tablist button.on{border-color:var(--cat-transform);background:var(--accent-soft);}
+  .tablist .cnt{font-size:11px;color:var(--text-dim);font-weight:700;} .tablist button.warn .cnt{color:var(--warn);}
+  .panel{background:var(--panel);border:1px solid var(--panel-border);border-radius:11px;overflow:hidden;box-shadow:var(--shadow);}
+  .panel .head{padding:12px 16px;border-bottom:1px solid var(--panel-border);font-size:12px;color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;} .panel .head b{color:var(--text-strong);font-size:13px;}
+  .tscroll{overflow:auto;max-height:60vh;}
+  table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap;}
+  th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--panel-border);max-width:340px;overflow:hidden;text-overflow:ellipsis;}
+  th{position:sticky;top:0;background:var(--th-bg);color:var(--text-mid);font-weight:650;text-transform:uppercase;font-size:10px;letter-spacing:.5px;z-index:1;}
+  tbody tr:hover td{background:var(--row-hover);} td:first-child,th:first-child{color:var(--text-dim);}
+  .downloads{margin-bottom:20px;} .downloads h3{font-size:13px;font-weight:650;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .dl-opt{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--text-dim);}
+  .dl-opt select{font-family:inherit;font-size:11px;padding:4px 6px;border-radius:7px;border:1px solid var(--btn-border);background:var(--btn-bg);color:var(--text-strong);}
+  .fmt{display:inline-flex;border:1px solid var(--btn-border);border-radius:10px;overflow:hidden;} .fmt button{border:none;border-radius:0;padding:5px 12px;font-size:11.5px;} .fmt button.on{background:var(--accent);color:#fff;}
+  .dlgrid{display:flex;flex-wrap:wrap;gap:10px;}
+  .dl{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--panel-border);border-radius:10px;padding:10px 14px;box-shadow:var(--shadow);}
+  .dl .lab{font-weight:600;font-size:12.5px;} .dl .rows{font-size:11px;color:var(--text-dim);} .dl a{text-decoration:none;}
+  .dl.summary-dl{border-color:var(--accent);} .dl.summary-dl button{cursor:pointer;}
+  .future{margin-top:14px;font-size:11.5px;color:var(--text-dim);} .future button{margin-left:8px;}
+  .hitl{margin-bottom:20px;background:var(--panel);border:1px solid var(--panel-border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);}
+  .hitl h3{font-size:13px;font-weight:650;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .hitl .tag{font-size:9.5px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:10px;background:var(--accent-soft);color:var(--accent);}
+  .hitl label{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-strong);cursor:pointer;margin-bottom:8px;}
+  .hitl-note{font-size:11.5px;color:var(--text-dim);margin-bottom:12px;line-height:1.5;}
+  .hitl-diff{background:var(--panel-soft);border:1px solid var(--panel-border);border-radius:9px;padding:11px 14px;margin-bottom:12px;}
+  .hitl-cap{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-bottom:7px;}
+  .hitl-row{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;} .hitl-row b{color:var(--text-strong);}
+  .hitl-row.warn b{color:var(--warn);}
+  .hitl-soon{font-size:11px;color:var(--text-dim);font-style:italic;margin-top:7px;border-top:1px dashed var(--panel-border);padding-top:7px;}
+  .hitl-actions{display:flex;gap:10px;}
+  .banner{padding:14px 18px;border-radius:10px;border:1px solid var(--panel-border);margin-bottom:18px;font-size:13px;}
+  .banner.error{border-color:var(--st-error);background:var(--badge-err-bg);color:var(--badge-err-text);}
+  .banner.empty{border-color:var(--st-running);background:var(--badge-run-bg);color:var(--badge-run-text);}
+  .hidden{display:none!important;}
+  ::-webkit-scrollbar{height:10px;width:10px;} ::-webkit-scrollbar-track{background:var(--bg2);} ::-webkit-scrollbar-thumb{background:var(--panel-border);border-radius:5px;}
+</style>
+</head>
+<body>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:10px 20px;background:#15181C;color:#F2F3F0;position:sticky;top:0;z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
+  <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
+</div>
+
+<header>
+  <div class="brand">
+    <h1>POI-CRM <span class="arrow">→</span> HubSpot <span class="demo-tag">DEMO</span></h1>
+    <p data-i18n="tagline"></p>
+    <span class="run-state" id="runState">—</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="controls">
+    <div class="seg" style="border-radius:16px;">
+      <button id="langHu" class="on" onclick="setLang('hu')">HU</button>
+      <button id="langEn" onclick="setLang('en')">EN</button>
+    </div>
+    <button id="themeBtn" onclick="toggleTheme()">🌙</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="banner" class="banner hidden"></div>
+
+  <div class="sources">
+    <div class="src">
+      <span class="lbl" data-i18n="srcAdmin">Admin lista (POI CRM)</span>
+      <div class="seg">
+        <button data-i18n="srcLocal" onclick="pickSource('poi','file',this)">Lokál</button>
+        <button class="on" onclick="pickSource('poi','sharepoint',this)">SharePoint</button>
+      </div>
+      <div class="fileinfo" id="infoPoi"></div>
+    </div>
+    <div class="src">
+      <span class="lbl" data-i18n="srcHubspot">HubSpot lista</span>
+      <div class="seg">
+        <button data-i18n="srcLocal" onclick="pickSource('hubspot','file',this)">Lokál</button>
+        <button class="on" onclick="pickSource('hubspot','sharepoint',this)">SharePoint</button>
+        <button class="soon" disabled title="hamarosan">HubSpot API</button>
+      </div>
+      <div class="fileinfo" id="infoHubspot"></div>
+    </div>
+    <div class="src-run"><button class="primary" id="runBtn" onclick="onRunButton()">Futtatás</button></div>
+  </div>
+
+  <div class="chips" id="chips"></div>
+  <div class="meta" id="meta"></div>
+
+  <div class="tabs">
+    <button class="on" onclick="setTab('flow')" id="tabFlow" data-i18n="tabFlow"></button>
+    <button onclick="setTab('data')" id="tabData" data-i18n="tabData"></button>
+    <button onclick="setTab('log')" id="tabLog" data-i18n="tabLog"></button>
+  </div>
+
+  <div class="view on" id="viewFlow">
+    <div class="canvas-tools">
+      <div class="legend" id="legend"></div>
+      <div class="zoom">
+        <button onclick="zoomBy(-0.15)" title="kicsinyítés">−</button>
+        <button onclick="zoomReset()" title="alaphelyzet" id="zoomLabel">100%</button>
+        <button onclick="zoomBy(0.15)" title="nagyítás">+</button>
+      </div>
+    </div>
+    <div class="canvas-box full" id="boxFull"><canvas id="cvFull"></canvas></div>
+    <div class="hint" data-i18n="flowHint" style="margin:12px 0 18px;"></div>
+    <div class="flow" id="flow"></div>
+  </div>
+
+  <div class="view" id="viewData">
+    <div class="downloads" id="downloads"></div>
+    <div class="hitl" id="hitl"></div>
+    <div class="browser">
+      <div class="tablist" id="tablist"></div>
+      <div class="panel"><div class="head"><b id="tableTitle">—</b><span id="tableInfo"></span></div>
+        <div class="tscroll"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div></div>
+    </div>
+  </div>
+
+  <div class="view" id="viewLog">
+    <div class="panel"><div class="head"><b data-i18n="tabLog"></b><span id="logInfo"></span></div>
+      <div class="tscroll"><table><thead id="logThead"></thead><tbody id="logTbody"></tbody></table></div></div>
+  </div>
+</div>
+
+<div id="tooltip"><div id="tt-title"></div><div id="tt-type"></div><div id="tt-desc"></div><div id="tt-meta"></div></div>
+
+<script>
+/* ═══ Beágyazott, PII-MENTES szintetikus mintaadat (kitalált balatoni POI-k) ═══ */
+const DEMO = {"snapshot": {"generated_at": "2026-06-08T09:14:00", "status": "ok", "record": {"idopont": "2026-06-08 09:14", "verzio": "demo", "poi_filename": "poi_export_2026-06-08.csv", "hubspot_filename": "hubspot-crm-exports-2026-06-08.csv", "poi_sorok": 12, "hubspot_sorok": 13, "poi_duplikacio": 0, "hubspot_duplikacio": 1, "categories_mismatch": 1, "companies_sorok": 12, "contacts_sorok": 11, "join_matched": 10, "hubspot_orphan": 3, "futasi_ido_ms": 1599}, "join": {"matched": 10, "unmatched": 2, "hubspot_only": 3}, "diagnostics": [{"source": "poi", "encoding": "cp1250", "delimiter": ";", "rows": 12, "cols": 70}, {"source": "hubspot", "encoding": "utf-8", "delimiter": ",", "rows": 13, "cols": 58}], "duration_ms": 1599, "node_timings": [{"id": "trigger", "ms": 4, "failed": false}, {"id": "sp_list", "ms": 210, "failed": false}, {"id": "flatten", "ms": 9, "failed": false}, {"id": "poi_filter", "ms": 6, "failed": false}, {"id": "poi_sort", "ms": 5, "failed": false}, {"id": "poi_dl", "ms": 280, "failed": false}, {"id": "poi_parse", "ms": 168, "count": 12, "failed": false}, {"id": "poi_trim", "ms": 34, "failed": false}, {"id": "poi_dedup", "ms": 12, "count": 0, "failed": false}, {"id": "poi_dedup_xl", "ms": 52, "failed": false}, {"id": "join", "ms": 19, "count": 10, "failed": false}, {"id": "hs_filter", "ms": 6, "failed": false}, {"id": "hs_sort", "ms": 5, "failed": false}, {"id": "hs_dl", "ms": 265, "failed": false}, {"id": "hs_parse", "ms": 121, "count": 13, "failed": false}, {"id": "hs_dedup", "ms": 11, "count": 1, "failed": false}, {"id": "hs_dedup_xl", "ms": 50, "failed": false}, {"id": "hs_orphan", "ms": 9, "count": 3, "failed": false}, {"id": "companies", "ms": 70, "count": 12, "failed": false}, {"id": "cat_check", "ms": 8, "count": 1, "failed": false}, {"id": "cat_check_xl", "ms": 48, "failed": false}, {"id": "companies_csv", "ms": 132, "count": 12, "failed": false}, {"id": "contacts", "ms": 44, "count": 11, "failed": false}, {"id": "contacts_csv", "ms": 18, "count": 11, "failed": false}, {"id": "merge", "ms": 3, "failed": false}, {"id": "log_build", "ms": 10, "failed": false}], "written_files": [{"label": "Companies", "path": "Companies_output_demo.csv", "rows": 12}, {"label": "Contacts", "path": "Contacts_output_demo.csv", "rows": 11}, {"label": "poi export duplikáció", "path": "check_poi_duplicates_demo.csv", "rows": 0}, {"label": "HubSpot duplikáció", "path": "check_hubspot_duplicates_demo.csv", "rows": 1}, {"label": "Kategória-ellenőrzés", "path": "check_categories_demo.csv", "rows": 10}, {"label": "HubSpotban van, poi exportból hiányzik", "path": "check_hubspot_orphans_demo.csv", "rows": 3}], "tables": {"Companies": {"columns": ["id", "poi_name_hu", "address_city", "main_category", "other_categories", "email", "poi_crm_id", "created_at"], "rows": [["poi-1001", "Napfény Strand", "Aszófő", "Strand", "Strand", "info@napfenystrand-pelda.hu", "300000000137", "2021-04-10"], ["poi-1002", "Kék Öböl Panzió", "Balatonfüred", "Aktív helyszín", "Panzió, apartman", "foglalas@kekobol-pelda.hu", "300000000274", "2021-04-11"], ["poi-1003", "Bringás Büfé", "Tihany", "Aktív helyszín", "Büfé, lángosos, hekkes", "hello@bringasbufe-pelda.hu", "300000000411", "2021-04-12"], ["poi-1004", "Levendula Kávézó", "Tihany", "Kávézó, cukrászda, fagyizó", "Strand;Kávézó, cukrászda, fagyizó", "rendeles@levendula-pelda.hu", "300000000548", "2021-04-13"], ["poi-1005", "Öreghegyi Borpince", "Csopak", "Aktív helyszín", "Borászat, pince", "bor@oreghegy-pelda.hu", "300000000685", "2021-04-14"], ["poi-1006", "Móló Vendéglő", "Balatonalmádi", "Aktív helyszín", "Étterem", "asztal@molo-pelda.hu", "300000000822", "2021-04-15"], ["poi-1007", "Vitorlás Kikötő", "Balatonfüred", "Kikötő", "Kikötő", "kikoto@vitorlas-pelda.hu", "", "2021-04-16"], ["poi-1008", "Halász Tanya", "Szigliget", "Aktív helyszín", "Étterem", "halasz@tanya-pelda.hu", "300000001096", "2021-04-17"], ["poi-1009", "Present Múzeum", "Keszthely", "Aktív helyszín", "Múzeum, kiállítótér", "info@presentmuzeum-pelda.hu", "300000001233", "2021-04-18"], ["poi-1010", "Bringacentrum", "Balatonfüred", "Kerékpár bolt, szerviz", "Kerékpár bolt, szerviz", "szerviz@bringacentrum-pelda.hu", "300000001370", "2021-04-10"], ["poi-1011", "Kővár Panzió", "Szigliget", "Aktív helyszín", "Panzió, apartman", "", "300000001507", "2021-04-11"], ["poi-1012", "Tópart Camping", "Balatonszemes", "Aktív helyszín", "Kemping", "recepcio@topart-pelda.hu", "300000001644", "2021-04-12"]], "total": 12, "shown": 12}, "Contacts": {"columns": ["hubspot_record_id", "poi_id", "poi_name", "poi_email", "source"], "rows": [["300000000137", "poi-1001", "Napfény Strand", "info@napfenystrand-pelda.hu", "email"], ["300000000274", "poi-1002", "Kék Öböl Panzió", "foglalas@kekobol-pelda.hu", "email"], ["300000000411", "poi-1003", "Bringás Büfé", "hello@bringasbufe-pelda.hu", "email"], ["300000000548", "poi-1004", "Levendula Kávézó", "rendeles@levendula-pelda.hu", "email"], ["300000000685", "poi-1005", "Öreghegyi Borpince", "bor@oreghegy-pelda.hu", "email"], ["300000000822", "poi-1006", "Móló Vendéglő", "asztal@molo-pelda.hu", "email"], ["", "poi-1007", "Vitorlás Kikötő", "kikoto@vitorlas-pelda.hu", "email"], ["300000001096", "poi-1008", "Halász Tanya", "halasz@tanya-pelda.hu", "email"], ["300000001233", "poi-1009", "Present Múzeum", "info@presentmuzeum-pelda.hu", "email"], ["300000001370", "poi-1010", "Bringacentrum", "szerviz@bringacentrum-pelda.hu", "email"], ["300000001644", "poi-1012", "Tópart Camping", "recepcio@topart-pelda.hu", "email"]], "total": 11, "shown": 11}, "poi export duplikáció": {"columns": ["poi_id", "nev", "elofordulas"], "rows": [], "total": 0, "shown": 0}, "HubSpot duplikáció": {"columns": ["poi_id", "nev", "elofordulas"], "rows": [["poi-1007", "Vitorlás Kikötő", "2"]], "total": 1, "shown": 1}, "Kategória-ellenőrzés": {"columns": ["other_category", "megtalalhato_main_categoryben"], "rows": [["Kemping", "NEM"], ["Strand", "IGEN"], ["Panzió, apartman", "IGEN"], ["Büfé, lángosos, hekkes", "IGEN"], ["Kávézó, cukrászda, fagyizó", "IGEN"], ["Borászat, pince", "IGEN"], ["Étterem", "IGEN"], ["Kikötő", "IGEN"], ["Múzeum, kiállítótér", "IGEN"], ["Kerékpár bolt, szerviz", "IGEN"]], "total": 10, "shown": 10}, "HubSpotban van, poi exportból hiányzik": {"columns": ["Record ID", "Company name", "POI ID"], "rows": [["421746382065", "Szántódpusztai piac", "52646b4a-8c85-42cd"], ["183960547539", "Vánkos Panzió", "1d948361-d750-4a31"], ["556012774821", "Régi Hajóállomás", "aa77c1e0-9b34-4f22"]], "total": 3, "shown": 3}}}, "runs": [{"idopont": "2026-06-08 09:14", "verzio": "demo", "poi_filename": "poi_export_2026-06-08.csv", "poi_sorok": "12", "poi_duplikacio": "0", "hubspot_filename": "hubspot-crm-exports-2026-06-08.csv", "hubspot_sorok": "13", "hubspot_duplikacio": "1", "categories_mismatch": "1", "companies_sorok": "12", "contacts_sorok": "11", "futasi_ido_ms": "1599", "join_matched": "10", "hubspot_orphan": "3"}, {"idopont": "2026-06-01 08:52", "verzio": "demo", "poi_filename": "poi_export_2026-06-01.csv", "poi_sorok": "11", "poi_duplikacio": "0", "hubspot_filename": "hubspot-crm-exports-2026-06-01.csv", "hubspot_sorok": "12", "hubspot_duplikacio": "0", "categories_mismatch": "2", "companies_sorok": "11", "contacts_sorok": "9", "futasi_ido_ms": "1180", "join_matched": "9", "hubspot_orphan": "2"}, {"idopont": "2026-05-25 09:03", "verzio": "demo", "poi_filename": "poi_export_2026-05-25.csv", "poi_sorok": "10", "poi_duplikacio": "1", "hubspot_filename": "hubspot-crm-exports-2026-05-25.csv", "hubspot_sorok": "10", "hubspot_duplikacio": "0", "categories_mismatch": "1", "companies_sorok": "10", "contacts_sorok": "8", "futasi_ido_ms": "1090", "join_matched": "9", "hubspot_orphan": "1"}]};
+
+/* ═══ n8n node-gráf (közös a portfólió demóval) ═══ */
+const ROWS={DEEP_TOP:0, TOP:1.2, MID:3, BOT:4.8, DEEP_BOT:6.2};
+const NODES=[
+  {id:"trigger",cat:"input",label:"Manuális indítás",sub:"Trigger",col:0,row:"MID"},
+  {id:"sp_list",cat:"input",label:"SP fájllistázás",sub:"HTTP",col:1,row:"MID"},
+  {id:"flatten",cat:"transform",label:"Fájllista kiterítés",sub:"SplitOut",col:2,row:"MID"},
+  {id:"poi_filter",cat:"input",label:"POI szűrés",sub:"Filter",col:3,row:"TOP"},
+  {id:"poi_sort",cat:"input",label:"POI legfrissebb",sub:"Sort",col:4,row:"TOP"},
+  {id:"poi_dl",cat:"input",label:"POI letöltés",sub:"HTTP/local",col:5,row:"TOP"},
+  {id:"poi_parse",cat:"transform",label:"POI feldolgozás",sub:"ExtractFromFile",col:6,row:"TOP"},
+  {id:"poi_trim",cat:"transform",label:"Nehéz oszlopok",sub:"Code",col:7,row:"TOP"},
+  {id:"poi_dedup",cat:"check",label:"poi export duplikáció",sub:"Code",col:8,row:"DEEP_TOP"},
+  {id:"poi_dedup_xl",cat:"check",label:"poi export dup Excel",sub:"xlsx",col:9,row:"DEEP_TOP"},
+  {id:"join",cat:"transform",label:"JOIN",sub:"Code",col:8,row:"MID"},
+  {id:"companies",cat:"transform",label:"Companies",sub:"Code",col:9,row:"TOP"},
+  {id:"cat_check",cat:"check",label:"Kategória-ellenőrzés",sub:"Code",col:10,row:"TOP"},
+  {id:"cat_check_xl",cat:"check",label:"Kategória Excel",sub:"xlsx",col:11,row:"TOP"},
+  {id:"companies_csv",cat:"output",label:"Companies CSV",sub:"Convert",col:10,row:"MID"},
+  {id:"hs_filter",cat:"input",label:"HubSpot szűrés",sub:"Filter",col:3,row:"BOT"},
+  {id:"hs_sort",cat:"input",label:"HubSpot legfrissebb",sub:"Sort",col:4,row:"BOT"},
+  {id:"hs_dl",cat:"input",label:"HubSpot letöltés",sub:"HTTP/local",col:5,row:"BOT"},
+  {id:"hs_parse",cat:"transform",label:"HubSpot feldolgozás",sub:"ExtractFromFile",col:6,row:"BOT"},
+  {id:"hs_dedup",cat:"check",label:"HubSpot duplikáció",sub:"Code",col:7,row:"DEEP_BOT"},
+  {id:"hs_dedup_xl",cat:"check",label:"HubSpot dup Excel",sub:"xlsx",col:8,row:"DEEP_BOT"},
+  {id:"contacts",cat:"transform",label:"Contacts",sub:"Code",col:9,row:"BOT"},
+  {id:"contacts_csv",cat:"output",label:"Contacts CSV",sub:"Convert",col:10,row:"BOT"},
+  {id:"hs_orphan",cat:"check",label:"Árva HubSpot POI",sub:"anti-join",col:11,row:"BOT"},
+  {id:"merge",cat:"merge",label:"Merge",sub:"waitForAll",col:11,row:"DEEP_BOT"},
+  {id:"log_build",cat:"transform",label:"Log összeállítás",sub:"Code",col:12,row:"DEEP_BOT"},
+  {id:"gsheets",cat:"output",label:"Log → napló",sub:"Run log",col:13,row:"DEEP_BOT"},
+];
+const PIPES=[
+  ["trigger","sp_list"],["sp_list","flatten"],["flatten","poi_filter"],["flatten","hs_filter"],
+  ["poi_filter","poi_sort"],["poi_sort","poi_dl"],["poi_dl","poi_parse"],["poi_parse","poi_trim"],
+  ["poi_trim","poi_dedup"],["poi_dedup","poi_dedup_xl"],["poi_trim","join"],
+  ["hs_filter","hs_sort"],["hs_sort","hs_dl"],["hs_dl","hs_parse"],
+  ["hs_parse","hs_dedup"],["hs_dedup","hs_dedup_xl"],["hs_parse","join"],
+  ["join","companies"],["join","contacts"],["join","hs_orphan"],
+  ["companies","cat_check"],["cat_check","cat_check_xl"],["companies","companies_csv"],
+  ["contacts","contacts_csv"],["contacts_csv","merge"],["hs_dedup_xl","merge"],
+  ["merge","log_build"],["log_build","gsheets"],
+];
+const NODE=Object.fromEntries(NODES.map(n=>[n.id,n]));
+// rövid leírások a tooltiphez (n8n-logika)
+const DESC={
+  trigger:"Indítja a folyamatot. Élesben ütemezett (Schedule) futás.",
+  sp_list:"SharePoint mappa tartalmának listázása (local módban a fájlkeresés).",
+  flatten:"A fájllistát egyedi sorokra bontja.",
+  poi_filter:"A 'poi_export' nevű fájlokat szűri.", poi_sort:"Dátum szerint a legfrissebb poi export.",
+  poi_dl:"A kiválasztott POI fájl betöltése.", poi_parse:"CSV parse (auto encoding+delimiter, BOM-strip).",
+  poi_trim:"Opcionális: nehéz szöveges oszlopok elhagyása (config).",
+  poi_dedup:"POI 'id' egyediség ellenőrzése.", poi_dedup_xl:"A poi export duplikáció-riport kiírása.",
+  join:"POI.id ↔ HubSpot 'POI ID' lookup; a HubSpot Record ID rákerül a POI sorokra.",
+  companies:"Dátum, other_categories vessző-védelem, spoken_languages tisztítás.",
+  cat_check:"other_categories vs main_category — mismatch riport.", cat_check_xl:"A kategória-riport kiírása.",
+  companies_csv:"A HubSpot Companies import CSV kiírása.",
+  hs_filter:"A 'hubspot-crm-exports' nevű fájlokat szűri.", hs_sort:"Dátum szerint a legfrissebb HubSpot export.",
+  hs_dl:"A kiválasztott HubSpot fájl betöltése.", hs_parse:"CSV parse (auto encoding+delimiter, BOM-strip).",
+  hs_dedup:"HubSpot 'POI ID' egyediség ellenőrzése (BOM-safe).", hs_dedup_xl:"A HubSpot duplikáció-riport kiírása.",
+  contacts:"3 email-forrás (email, managers, pending) → split → @-szűrés → lowercase dedup.",
+  contacts_csv:"A HubSpot Contacts import CSV kiírása.",
+  hs_orphan:"HubSpotban van, de a poi exportból hiányzik (törölt POI, ott ragadt). Letölthető.",
+  merge:"Megvárja a párhuzamos ágakat (waitForAll).",
+  log_build:"Futási metaadatok összegyűjtése (sorok, duplikációk, mismatch).",
+  gsheets:"A futás naplózása (lokál run_log.csv; élesben Google Sheets).",
+};
+// mely node melyik adat/ellenőrző táblát nyitja kattintásra
+const NODE2TABLE={
+  poi_parse:"Companies", poi_trim:"Companies", join:"Companies", companies:"Companies", companies_csv:"Companies",
+  contacts:"Contacts", contacts_csv:"Contacts",
+  poi_dedup:"poi export duplikáció", poi_dedup_xl:"poi export duplikáció",
+  hs_dedup:"HubSpot duplikáció", hs_dedup_xl:"HubSpot duplikáció",
+  cat_check:"Kategória-ellenőrzés", cat_check_xl:"Kategória-ellenőrzés",
+  hs_orphan:"HubSpotban van, poi exportból hiányzik",
+};
+
+/* ═══ i18n ═══ */
+const I18N={
+ hu:{tagline:"admin export → CRM dataflow · Python port · szintetikus mintaadat",sampleTag:"(mintaadat)",run:"Futtatás",running:"Futtatás…",scan:"Keresés",
+   tabFlow:"Folyamat",tabData:"Adatok & ellenőrzések",tabLog:"Futáslog",
+   srcAdmin:"Admin lista (POI CRM)",srcHubspot:"HubSpot lista",srcLocal:"Lokál",
+   ltLabel:"Elrendezés:",ltA:"Canvas node-gráf",ltB:"Kártyák + mozi-sáv",
+   ltHintA:"A teljes n8n node-gráf, áramló pöttyökkel — futáskor a valós részidők ütemében.",
+   ltHintB:"A kártyás sávok, fölöttük animált canvas mozi-sáv.",
+   flowHint:"Futtatás → a valós node-részidők ütemében lejátszott replay. A lila ellenőrző-ág sárga, ha eltérést talál.",
+   ok:"Kész",error:"Hiba",empty:"Nincs futás — kattints a Futtatásra",
+   shown:"megjelenítve",of:"/",rows:"sor",download:"Letöltés",dlTitle:"Letöltés",
+   hubspotUpdate:"HubSpot update (hamarosan)",noMatch:"match nélkül",file:"fájl",totalTime:"teljes",
+   orphanChip:"Törölt POI",newHsChip:"HubSpotban még nincs",runtime:"Futásidő",histNote:"Korábbi futás visszajátszása",backToLive:"Élő nézet",noHit:"✓ nincs találat",ready:"Készen áll",
+   summaryCard:"Összefoglaló letöltése",summarySub:"szöveg e-mailhez / Teamshez (.txt)",summaryTitle:"összefoglaló",
+   dpTitle:"Könyvtár választása",dpSelect:"Kiválaszt",dpCancel:"Mégse",
+   replay:"Visszajátszás",replayNote:"▶ Csak visszajátszás — adatokat NEM ír a HubSpotba.",dlEnc:"Kódolás",dlDelim:"Elválasztó",
+   noRuns:"Még nincs korábbi futás.",found:"találat",cols:"oszlop",modified:"módosítva",
+   hitlTitle:"Jóváhagyás (human-in-the-loop)",hitlApprove:"Jóváhagyás kötelező a HubSpot-írás előtt",
+   hitlNote:"A 3. szinten a HubSpot-írás előtt itt lesz a diff-nézet (mi változna) + Jóváhagyás gomb. Ha ~10 futás rendben, a kapcsoló kivehető.",
+   hitlWrite:"Ami a HubSpotba kerülne:",hitlDiffSoon:"Mezőnkénti diff (új / változott / eltűnt rekordok) — a HubSpot API-írásnál lesz élő.",
+   hitlApproveBtn:"Jóváhagyás és írás",hitlReject:"Elvetés",hitlL3:"3. szint",checks:"Ellenőrzés"},
+ en:{tagline:"admin export → CRM dataflow · Python port · synthetic sample data",sampleTag:"(sample)",run:"Run",running:"Running…",scan:"Scan",
+   tabFlow:"Workflow",tabData:"Data & checks",tabLog:"Run log",
+   srcAdmin:"Admin list (POI CRM)",srcHubspot:"HubSpot list",srcLocal:"Local",
+   ltLabel:"Layout:",ltA:"Canvas node-graph",ltB:"Cards + film strip",
+   ltHintA:"The full n8n node-graph with flowing dots — paced by real timings on run.",
+   ltHintB:"The card lanes with an animated canvas film strip above.",
+   flowHint:"Run → replay paced by real node timings. Purple check branch turns amber on discrepancy.",
+   ok:"Done",error:"Error",empty:"No run yet — click Run",
+   shown:"shown",of:"of",rows:"rows",download:"Download",dlTitle:"Download",
+   hubspotUpdate:"HubSpot update (soon)",noMatch:"unmatched",file:"file",totalTime:"total",
+   orphanChip:"Deleted POI",newHsChip:"Not in HubSpot yet",runtime:"Runtime",histNote:"Replaying a past run",backToLive:"Live view",noHit:"✓ no results",ready:"Ready",
+   summaryCard:"Download summary",summarySub:"text for email / Teams (.txt)",summaryTitle:"summary",
+   dpTitle:"Choose folder",dpSelect:"Select",dpCancel:"Cancel",
+   replay:"Replay",replayNote:"▶ Replay only — nothing is written to HubSpot.",dlEnc:"Encoding",dlDelim:"Delimiter",
+   noRuns:"No previous runs yet.",found:"found",cols:"cols",modified:"modified",
+   hitlTitle:"Approval (human-in-the-loop)",hitlApprove:"Require approval before HubSpot write",
+   hitlNote:"At level 3, a diff view (what would change) + Approve button will appear here before the HubSpot write. After ~10 clean runs the toggle can be removed.",
+   hitlWrite:"What would be written to HubSpot:",hitlDiffSoon:"Per-field diff (new / changed / removed records) — live at the HubSpot API write.",
+   hitlApproveBtn:"Approve & write",hitlReject:"Discard",hitlL3:"level 3",checks:"Checks"}
+};
+let lang="hu",theme="light",data=null,activeTable=null,dlFormat="csv",dlEnc="utf-8",dlDelim="comma",anim=false,hitlOn=true;
+// alap: UTF-8 (BOM nélkül) + vessző = amit a HubSpot import elvár
+let dataShown=false, histRun=null, histIndex=0, flowing=false;   // J1 üres start; J6 historikus replay; K5 áramlás
+const chosen={poi:"sharepoint",hubspot:"sharepoint"};   // demó: a SharePoint-forrást mutatjuk alapból (mint az operatívban)
+const picked={poi:null,hubspot:null};   // explicit fájlválasztás (relatív path) vagy null=legfrissebb
+const t=k=>(I18N[lang][k]??k);
+const num=v=>(v==null||v===""?"—":Number(v).toLocaleString(lang==='hu'?'hu-HU':'en-US'));
+// node → count a futáslog-sorból (J6 historikus replay)
+const HIST_COUNT={poi_parse:'poi_sorok',hs_parse:'hubspot_sorok',join:'join_matched',companies:'companies_sorok',companies_csv:'companies_sorok',
+  contacts:'contacts_sorok',contacts_csv:'contacts_sorok',poi_dedup:'poi_duplikacio',poi_dedup_xl:'poi_duplikacio',
+  hs_dedup:'hubspot_duplikacio',hs_dedup_xl:'hubspot_duplikacio',cat_check:'categories_mismatch',cat_check_xl:'categories_mismatch',
+  hs_orphan:'hubspot_orphan'};
+function TIM(id){
+  if(histRun){const f=HIST_COUNT[id];const c=f&&histRun[f]!=null?+histRun[f]:null;return {id,ms:180,count:c};}
+  return (data&&data.node_timings||[]).find(e=>e.id===id);
+}
+
+try{theme=localStorage.getItem('poicrm-theme')||'light';}catch(e){}
+try{lang=localStorage.getItem('poicrm-lang')||'hu';}catch(e){}
+try{hitlOn=localStorage.getItem('poicrm-hitl')!=='0';}catch(e){}
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function applyTheme(){document.documentElement.dataset.theme=theme;document.getElementById('themeBtn').textContent=theme==='light'?'🌙':'☀️';try{localStorage.setItem('poicrm-theme',theme);}catch(e){}redrawStatic();}
+function toggleTheme(){theme=theme==='light'?'dark':'light';applyTheme();}
+function setLang(l){lang=l;document.getElementById('langHu').classList.toggle('on',l==='hu');document.getElementById('langEn').classList.toggle('on',l==='en');document.documentElement.lang=l;try{localStorage.setItem('poicrm-lang',l);}catch(e){}
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(I18N[l][k]!=null)el.textContent=I18N[l][k];});
+  renderLegend();updateRunBtn();renderSrcInfo('poi');renderSrcInfo('hubspot');
+  if(data&&data.status!=='empty'&&data.status!=='error') render();
+  renderRuns();}
+function pickSource(which,val,btn){chosen[which]=val;btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===btn));renderSrcInfo(which);}
+// demó forrás-metaadatok (kozmetikai — a futás mindig a beágyazott szintetikus adaton fut).
+// A SharePoint-változat a valós operatív viselkedést tükrözi: friss fájl, utf-8/vessző.
+const DEMO_SRC={
+  poi:{file:{name:'poi_export_2026-06-08.csv',n:12,enc:'cp1250/;'},sharepoint:{name:'poi_export_2026-07-06.csv',n:12,enc:'utf-8/,'}},
+  hubspot:{file:{name:'hubspot-crm-exports-2026-06-08.csv',n:13,enc:'utf-8/,'},sharepoint:{name:'hubspot-crm-exports-2026-07-06.csv',n:13,enc:'utf-8/,'}},
+};
+function renderSrcInfo(which){
+  const info=document.getElementById('info'+cap(which)); if(!info)return;
+  const m=DEMO_SRC[which][chosen[which]]||DEMO_SRC[which].file;
+  const pre=chosen[which]==='sharepoint'?'SharePoint · ':'';
+  info.innerHTML=`${pre}${m.name} · ${m.n} ${t('rows')} · ${m.enc} <em data-i18n="sampleTag">${t('sampleTag')}</em>`;
+}
+
+/* ═══ file-választó (H4): könyvtár → talált fájlok + metaadat ═══ */
+async function scanSource(which){
+  const dir=document.getElementById('dir'+cap(which)).value.trim();
+  const info=document.getElementById('info'+cap(which));
+  info.classList.remove('warn'); info.textContent='…';
+  try{
+    const q=new URLSearchParams({source:which}); if(dir)q.set('dir',dir);
+    const res=await fetch('/inspect-sources?'+q.toString(),{cache:'no-store'});
+    const j=await res.json();
+    if(j.error){info.classList.add('warn');info.textContent=j.error;return;}
+    const sel=document.getElementById('file'+cap(which));
+    sel.innerHTML=j.files.map((f,i)=>`<option value="${f.name.replace(/"/g,'&quot;')}">${i===0?'★ ':''}${f.name} — ${f.modified}</option>`).join('');
+    picked[which]=null; // legfrissebb (az első)
+    showFileInfo(which, j.file);   // részletes metaadat (sorok, oszlopok, encoding)
+  }catch(e){info.classList.add('warn');info.textContent='hiba: '+e;}
+}
+function pickFile(which){
+  const sel=document.getElementById('file'+cap(which));
+  picked[which]=sel.value||null;
+  // metaadat a kiválasztotthoz — lekérjük
+  fetchFileInfo(which, sel.value);
+}
+async function fetchFileInfo(which,name){
+  try{
+    const dir=document.getElementById('dir'+cap(which)).value.trim();
+    const q=new URLSearchParams({source:which,file:name}); if(dir)q.set('dir',dir);
+    const res=await fetch('/inspect-sources?'+q.toString(),{cache:'no-store'});
+    const j=await res.json();
+    if(j.file) showFileInfo(which,j.file);
+  }catch(e){}
+}
+function showFileInfo(which,f){
+  const info=document.getElementById('info'+cap(which)); info.classList.remove('warn');
+  if(!f){info.textContent='';return;}
+  const parts=[`${f.name}`];
+  if(f.rows!=null)parts.push(`${num(f.rows)} ${t('rows')}`);
+  if(f.cols!=null)parts.push(`${num(f.cols)} ${t('cols')}`);
+  if(f.modified)parts.push(`${t('modified')}: ${f.modified}`);
+  if(f.encoding)parts.push(`${f.encoding}/${f.delimiter}`);
+  info.textContent=parts.join(' · ');
+}
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+
+/* ═══ könyvtárválasztó modal (J2) ═══ */
+let dpWhich=null,dpPath="",dpParent=null;
+async function openDirPicker(which){dpWhich=which;document.getElementById('dirModal').style.display='flex';await dpLoad(document.getElementById('dir'+cap(which)).value.trim());}
+function dpClose(){document.getElementById('dirModal').style.display='none';}
+async function dpLoad(path){const list=document.getElementById('dpList');try{
+  const res=await fetch('/list-dir?path='+encodeURIComponent(path||''),{cache:'no-store'});
+  if(!res.ok){list.innerHTML=`<div class="dp-item" style="color:var(--warn)">A /list-dir végpont nem elérhető (HTTP ${res.status}). Valószínűleg régi szerver fut — állítsd le és indíts frisset: <b>python -m poicrm_dataflow serve</b></div>`;return;}
+  const j=await res.json();
+  if(j.error){list.innerHTML=`<div class="dp-item" style="color:var(--warn)">${j.error}</div>`;return;}
+  dpPath=j.path||"";dpParent=j.parent;
+  document.getElementById('dpPath').textContent=j.is_root?'—':(dpPath||'—');
+  document.getElementById('dpCur').textContent=dpPath?('▸ '+dpPath):'';
+  document.getElementById('dpUpBtn').style.visibility=(j.parent!==null)?'visible':'hidden';
+  list.innerHTML=(j.dirs||[]).map(d=>`<div class="dp-item" onclick='dpLoad(${JSON.stringify(d.path)})'>📁 ${d.name}</div>`).join('')
+    ||`<div class="dp-item" style="color:var(--text-dim)">(nincs almappa)</div>`;
+}catch(e){list.innerHTML='<div class="dp-item">hiba</div>';}}
+function dpUp(){if(dpParent!==null)dpLoad(dpParent);}
+function dpSelect(){if(dpWhich&&dpPath){document.getElementById('dir'+cap(dpWhich)).value=dpPath;dpClose();scanSource(dpWhich);}}
+
+/* ═══ canvas motor — KÖZÖS a portfólió demóval (viz/poicrm_portfolio_demo.html); módosításnál MINDKETTŐT! ═══ */
+const NW=150,NH=52,HGAP=52,VGAP=74,PADX=26,PADY=30;
+let Z=1, stripZ=0.2, hoverId=null, errorNode=null;   // zoom + hover + hibás node
+function nodeXY(n){return {x:PADX+n.col*(NW+HGAP), y:PADY+ROWS[n.row]*VGAP};}
+let state={}; NODES.forEach(n=>state[n.id]={st:'done',shown:0});
+let packets=[];
+function palette(){return {bg:cssVar('--canvas-bg'),grid:cssVar('--grid'),pipe:cssVar('--pipe'),text:cssVar('--text-strong'),dim:cssVar('--text-dim'),pending:cssVar('--st-pending'),running:cssVar('--st-running'),done:cssVar('--st-done'),error:cssVar('--st-error'),input:cssVar('--cat-input'),transform:cssVar('--cat-transform'),check:cssVar('--cat-check'),output:cssVar('--cat-output'),merge:cssVar('--cat-merge'),panel:cssVar('--panel')};}
+function fitCanvas(cv,gw,gh,z){if(!cv)return null;const dpr=window.devicePixelRatio||1;const cw=gw*z,ch=gh*z;cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);cv.style.width=cw+'px';cv.style.height=ch+'px';const c=cv.getContext('2d');c.setTransform(dpr*z,0,0,dpr*z,0,0);return c;}
+function graphSize(){const mx=Math.max(...NODES.map(n=>nodeXY(n).x))+NW+PADX;const my=Math.max(...NODES.map(n=>nodeXY(n).y))+NH+PADY;return {w:mx,h:my};}
+function resizeCanvases(){const g=graphSize();fitCanvas(document.getElementById('cvFull'),g.w,g.h,Z);}
+function fit(ctx,txt,max){let s=txt;while(ctx.measureText(s).width>max&&s.length>4)s=s.slice(0,-2);return s===txt?txt:s+'…';}
+function roundRect(ctx,x,y,w,h,r){r=Math.min(r,h/2,w/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function drawNode(ctx,n,mini){const {x,y}=nodeXY(n);const P=palette();const s=state[n.id];const col=P[n.cat]||P.transform;
+  const err=n.id===errorNode, hov=n.id===hoverId;
+  const stCol=err?P.error:(s.st==='running'?P.running:s.st==='done'?P.done:P.pending);
+  ctx.save();ctx.globalAlpha=s.st==='pending'?0.55:1;
+  ctx.fillStyle=P.panel;ctx.strokeStyle=stCol;ctx.lineWidth=(s.st==='running'||err||hov)?2.4:1.4;
+  if(s.st==='running'||err||hov){ctx.shadowColor=stCol;ctx.shadowBlur=hov?18:14;}
+  roundRect(ctx,x,y,NW,NH,9);ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=col;roundRect(ctx,x,y,4,NH,9);ctx.fill();
+  ctx.globalAlpha=1;ctx.fillStyle=P.text;ctx.font='600 11px "Segoe UI",sans-serif';ctx.fillText(fit(ctx,n.label,NW-16),x+11,y+17);
+  ctx.fillStyle=P.dim;ctx.font='9px "Segoe UI",sans-serif';ctx.fillText(n.sub.toUpperCase(),x+11,y+30);
+  if(!mini){const tim=TIM(n.id);
+    if(err){ctx.fillStyle=P.error;ctx.font='700 10px "Segoe UI",sans-serif';ctx.fillText("⚠ hiba",x+11,y+45);}
+    else if(tim){ctx.fillStyle=P.dim;ctx.font='9px "Segoe UI",sans-serif';ctx.fillText((s.st==='done'?tim.ms:0)+" ms",x+11,y+45);
+      if(tim.count!=null&&s.st!=='pending'){ctx.fillStyle=stCol;ctx.font='700 12px "Segoe UI",sans-serif';ctx.textAlign='right';ctx.fillText(num(s.shown),x+NW-11,y+44);ctx.textAlign='left';}}}
+  ctx.restore();}
+function pipeEnds(p){const a=NODE[p[0]],b=NODE[p[1]];if(!a||!b)return null;const A=nodeXY(a),B=nodeXY(b);return {ax:A.x+NW,ay:A.y+NH/2,bx:B.x,by:B.y+NH/2};}
+function drawPipe(ctx,p){const e=pipeEnds(p);if(!e)return;const P=palette();const active=state[p[0]].st==='done';const mx=(e.ax+e.bx)/2;
+  ctx.beginPath();ctx.moveTo(e.ax,e.ay);ctx.bezierCurveTo(mx,e.ay,mx,e.by,e.bx,e.by);ctx.strokeStyle=active?P.done:P.pipe;ctx.globalAlpha=active?0.55:0.35;ctx.lineWidth=1.5;ctx.stroke();ctx.globalAlpha=1;}
+function drawPacket(ctx,pk){const e=pipeEnds(pk.pipe);if(!e)return;const mx=(e.ax+e.bx)/2,tt=pk.t;
+  const x=Math.pow(1-tt,3)*e.ax+3*Math.pow(1-tt,2)*tt*mx+3*(1-tt)*tt*tt*mx+tt*tt*tt*e.bx;
+  const y=Math.pow(1-tt,3)*e.ay+3*Math.pow(1-tt,2)*tt*e.ay+3*(1-tt)*tt*tt*e.by+tt*tt*tt*e.by;
+  const P=palette();ctx.beginPath();ctx.arc(x,y,3.4,0,7);ctx.fillStyle=P.done;ctx.shadowColor=P.done;ctx.shadowBlur=9;ctx.fill();ctx.shadowBlur=0;}
+let rafFull=null;
+function drawOne(cv,mini){if(!cv)return;const ctx=cv.getContext('2d');const P=palette();const g=graphSize();
+  ctx.clearRect(0,0,g.w,g.h);ctx.fillStyle=P.bg;ctx.fillRect(0,0,g.w,g.h);
+  if(!mini){ctx.strokeStyle=P.grid;ctx.lineWidth=1;for(let x=0;x<g.w;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,g.h);ctx.stroke();}for(let y=0;y<g.h;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(g.w,y);ctx.stroke();}}
+  PIPES.forEach(p=>drawPipe(ctx,p));packets.forEach(pk=>{if(flowing){pk.t+=pk.speed;if(pk.t>1)pk.t=0;}drawPacket(ctx,pk);});NODES.forEach(n=>drawNode(ctx,n,mini));}
+function drawVisible(){drawOne(document.getElementById('cvFull'),false);}
+function loop(){drawVisible();rafFull=requestAnimationFrame(loop);}
+function redrawStatic(){drawVisible();}
+function refreshPackets(){packets=[];PIPES.forEach(p=>{if(state[p[0]].st==='done'){for(let i=0;i<2;i++)packets.push({pipe:p,t:Math.random(),speed:0.006+Math.random()*0.006});}});}
+function resetState(){NODES.forEach(n=>state[n.id]={st:'pending',shown:0});packets=[];}
+function countUpNode(id,target,dur){const t0=performance.now();(function step(now){const p=Math.min(1,(now-t0)/dur);state[id].shown=Math.round(target*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step);})(performance.now());}
+function markAllDone(){NODES.forEach(n=>{state[n.id].st='done';const tm=TIM(n.id);state[n.id].shown=tm&&tm.count!=null?tm.count:0;});refreshPackets();}
+function replay(done){resetState();flowing=true;if(!rafFull)loop();
+  const cols=[...new Set(NODES.map(n=>n.col))].sort((a,b)=>a-b);const SCALE=1.4,MINC=240,MAXC=620;let delay=0;
+  cols.forEach(c=>{const cn=NODES.filter(n=>n.col===c);const maxMs=Math.max(...cn.map(n=>(TIM(n.id)?.ms)||30));const dur=Math.max(MINC,Math.min(MAXC,maxMs*SCALE));
+    setTimeout(()=>{cn.forEach(n=>state[n.id].st='running');},delay);
+    setTimeout(()=>{cn.forEach(n=>{state[n.id].st='done';const tm=TIM(n.id);if(tm&&tm.count!=null)countUpNode(n.id,tm.count,Math.min(dur,500));});refreshPackets();},delay+dur);
+    delay+=dur;});
+  setTimeout(()=>{markAllDone();flowing=false;if(done)done();},delay+150);return delay+150;}
+
+/* ═══ zoom + legend + interaktivitás (I1/I2) ═══ */
+function zoomBy(d){Z=Math.max(0.6,Math.min(1.6,Math.round((Z+d)*100)/100));document.getElementById('zoomLabel').textContent=Math.round(Z*100)+'%';resizeCanvases();redrawStatic();}
+function zoomReset(){Z=1;document.getElementById('zoomLabel').textContent='100%';resizeCanvases();redrawStatic();}
+const LG={hu:['Bemenet','Transzformáció','Ellenőrzés','Kimenet','Merge'],en:['Input','Transform','Checks','Output','Merge']};
+function renderLegend(){const names=LG[lang]||LG.hu;const cats=['input','transform','check','output','merge'];
+  document.getElementById('legend').innerHTML=cats.map((c,i)=>`<span class="lg"><span class="dot" style="background:var(--cat-${c})"></span>${names[i]}</span>`).join('');}
+function nodeAt(clientX,clientY){const cv=document.getElementById('cvFull');const r=cv.getBoundingClientRect();
+  const gx=(clientX-r.left)/Z, gy=(clientY-r.top)/Z;
+  return NODES.find(n=>{const{x,y}=nodeXY(n);return gx>=x&&gx<=x+NW&&gy>=y&&gy<=y+NH;})||null;}
+let dragging=false,dragMoved=false,dsx=0,dsy=0,slx=0,sly=0;
+function bindCanvas(){const cv=document.getElementById('cvFull');const box=document.getElementById('boxFull');const tip=document.getElementById('tooltip');
+  cv.addEventListener('mousemove',e=>{if(dragging){tip.classList.remove('show');return;}const n=nodeAt(e.clientX,e.clientY);
+    if(n){if(hoverId!==n.id){hoverId=n.id;redrawStatic();}cv.style.cursor='pointer';
+      const tim=TIM(n.id);document.getElementById('tt-title').textContent=n.label;document.getElementById('tt-type').textContent=n.sub;
+      document.getElementById('tt-desc').textContent=DESC[n.id]||'';
+      const meta=[];if(tim){meta.push(tim.ms+' ms');if(tim.count!=null)meta.push(num(tim.count)+' '+t('rows'));}
+      if(NODE2TABLE[n.id])meta.push('▸ '+NODE2TABLE[n.id]);
+      document.getElementById('tt-meta').textContent=meta.join(' · ');
+      let tx=e.clientX+16,ty=e.clientY+14;if(tx+300>innerWidth)tx=e.clientX-312;if(ty+130>innerHeight)ty=e.clientY-130;
+      tip.style.left=tx+'px';tip.style.top=ty+'px';tip.classList.add('show');
+    }else{if(hoverId){hoverId=null;redrawStatic();}cv.style.cursor='';tip.classList.remove('show');}});
+  cv.addEventListener('mouseleave',()=>{if(hoverId){hoverId=null;redrawStatic();}tip.classList.remove('show');});
+  cv.addEventListener('click',e=>{if(dragMoved)return;const n=nodeAt(e.clientX,e.clientY);if(n&&NODE2TABLE[n.id]){setTab('data');showTable(NODE2TABLE[n.id]);}});
+  box.addEventListener('mousedown',e=>{dragging=true;dragMoved=false;dsx=e.clientX;dsy=e.clientY;slx=box.scrollLeft;sly=box.scrollTop;box.classList.add('grabbing');});
+  window.addEventListener('mousemove',e=>{if(!dragging)return;const dx=e.clientX-dsx,dy=e.clientY-dsy;if(Math.abs(dx)+Math.abs(dy)>4)dragMoved=true;box.scrollLeft=slx-dx;box.scrollTop=sly-dy;});
+  window.addEventListener('mouseup',()=>{if(dragging){dragging=false;box.classList.remove('grabbing');}});}
+
+/* ═══ chips / meta / cards / data / runs (DOM) ═══ */
+let chipTargets={};
+// JOIN számlálók a jelenlegi futáshoz. Élő: data.join. Historikus: a run_log join_matched-jéből,
+// az "unmatched" = poi_sorok − matched = a HubSpotban még nem szereplő sorok.
+function joinCounts(){
+  if(histRun){
+    const m=(histRun.join_matched!=null&&histRun.join_matched!=='')?+histRun.join_matched:null;
+    const poi=+histRun.poi_sorok;
+    return {matched:m,unmatched:(m!=null&&!isNaN(poi))?(poi-m):null};
+  }
+  return data.join||{};
+}
+function chipDefs(){const r=histRun||data.record||{},j=joinCounts();
+  const orphan=histRun?(+r.hubspot_orphan||0):(data.record||{}).hubspot_orphan;
+  const dur=histRun?(+r.futasi_ido_ms||null):data.duration_ms;
+  return [
+  {k:"poi export",v:r.poi_sorok,id:"poi_parse"},{k:"HubSpot",v:r.hubspot_sorok,id:"hs_parse"},{k:"JOIN match",v:j.matched,id:"join",cls:"good"},
+  {k:t('newHsChip'),v:j.unmatched,id:"join_new"},
+  {k:"Companies",v:r.companies_sorok,id:"companies"},{k:"Contacts",v:r.contacts_sorok,id:"contacts"},
+  {k:"poi export dup",v:r.poi_duplikacio,id:"poi_dedup",cls:r.poi_duplikacio>0?"warn":"good"},
+  {k:"HubSpot dup",v:r.hubspot_duplikacio,id:"hs_dedup",cls:r.hubspot_duplikacio>0?"warn":"good"},
+  {k:"Kat. mismatch",v:r.categories_mismatch,id:"cat_check",cls:r.categories_mismatch>0?"warn":"good"},
+  {k:t('orphanChip'),v:orphan,id:"hs_orphan",cls:orphan>0?"warn":"good"},
+  {k:t('runtime'),v:dur,id:"duration",suffix:" ms",noCount:true}];}
+function renderChips(){const c=chipDefs();document.getElementById('chips').innerHTML=c.map(x=>{
+    const val=dataShown?(x.v==null?'—':(x.suffix?num(x.v)+x.suffix:num(x.v))):'—';
+    return `<div class="chip ${dataShown?(x.cls||''):''}"><div class="k">${x.k}</div><div class="v" id="chip-${x.id}">${val}</div></div>`;}).join('');
+  chipTargets={};c.forEach(x=>{if(!x.noCount)chipTargets[x.id]=x.v;});}
+function blankFlow(){NODES.forEach(n=>state[n.id]={st:'pending',shown:0});packets=[];}
+function renderMeta(){const r=data.record||{},d=data.diagnostics||[];const diag=d.map(x=>`${x.source}: ${x.encoding||'?'} / ${x.delimiter==='\\t'?'TAB':(x.delimiter||'?')}`).join(' · ');
+  document.getElementById('meta').innerHTML=`<b>${r.idopont||''}</b> · ${r.verzio||''} &nbsp;|&nbsp; ${diag}`+(data.duration_ms?` &nbsp;|&nbsp; ⏱ ${num(data.duration_ms)} ms ${t('totalTime')}`:'');}
+function renderCards(){const r=histRun||data.record||{},j=joinCounts();const B=v=>dataShown?v:'—';
+  const files=histRun?[]:(data.written_files||[]);
+  const lanes=[
+  {lane:"Bemenet",nodes:[["input","poi export","CSV/Excel",B(num(r.poi_sorok)),dataShown?r.poi_filename:""],["input","HubSpot export","CSV/Excel",B(num(r.hubspot_sorok)),dataShown?r.hubspot_filename:""]]},
+  {lane:"Összekapcsolás",nodes:[["transform","JOIN","poi export id ↔ POI ID",B(num(j.matched)+" match"),dataShown?num(j.unmatched)+" "+t('noMatch'):""]]},
+  {lane:"Transzformáció",nodes:[["transform","Companies","transzformáció",B(num(r.companies_sorok)),""],["transform","Contacts","3 email + dedup",B(num(r.contacts_sorok)),""]]},
+  {lane:"Ellenőrzés",nodes:[["check","poi export duplikáció","id",B(num(r.poi_duplikacio)),"",dataShown&&r.poi_duplikacio>0],["check","HubSpot duplikáció","POI ID",B(num(r.hubspot_duplikacio)),"",dataShown&&r.hubspot_duplikacio>0],["check","Kategória-mismatch","other vs main",B(num(r.categories_mismatch)),"",dataShown&&r.categories_mismatch>0],["check","Törölt POI","HubSpotban van, poi exportból hiányzik",B(num(histRun?r.hubspot_orphan:(data.record||{}).hubspot_orphan)),"",dataShown&&(histRun?r.hubspot_orphan:(data.record||{}).hubspot_orphan)>0]]},
+  {lane:"Kimenet",nodes:files.map(w=>["output",w.label,t('file'),B(num(w.rows)+" "+t('rows')),dataShown?(w.path||'').split(/[\\/]/).pop():""])},
+];
+  document.getElementById('flow').innerHTML=lanes.map(L=>`<div class="lane"><div class="lane-label">${L.lane}</div>`+
+    L.nodes.map(nd=>{const warn=nd[5],clean=nd[0]==='check'&&!warn&&dataShown;return `<div class="node ${nd[0]} ${warn?'warn':''} ${clean?'clean':''}"><div class="t">${nd[1]}</div><div class="s">${nd[2]}</div><div class="badge">${nd[3]}</div>${nd[4]?`<div class="sub">${nd[4]}</div>`:''}</div>`;}).join('<span class="arrow-r">›</span>')+`</div>`).join('');}
+function renderDownloads(){const files=data.written_files||[];
+  const csvOpts = dlFormat==='csv' ? `
+    <span class="dl-opt"><label>${t('dlEnc')}</label>
+      <select onchange="dlEnc=this.value;renderDownloads()">
+        ${[['utf-8','UTF-8 (HubSpot)'],['utf-8-sig','UTF-8 BOM (Excel)'],['cp1250','Windows-1250'],['iso-8859-2','ISO-8859-2']].map(([v,l])=>`<option value="${v}" ${dlEnc===v?'selected':''}>${l}</option>`).join('')}
+      </select></span>
+    <span class="dl-opt"><label>${t('dlDelim')}</label>
+      <select onchange="dlDelim=this.value;renderDownloads()">
+        ${[['comma',', (vessző)'],['semicolon','; (pontosvessző)'],['tab','⇥ (tab)']].map(([v,l])=>`<option value="${v}" ${dlDelim===v?'selected':''}>${l}</option>`).join('')}
+      </select></span>` : '';
+  document.getElementById('downloads').innerHTML=`<h3>${t('dlTitle')}
+      <span class="fmt"><button class="${dlFormat==='csv'?'on':''}" onclick="setFmt('csv')">CSV</button><button class="${dlFormat==='xlsx'?'on':''}" onclick="setFmt('xlsx')">Excel</button></span>
+      ${csvOpts}</h3>
+    <div class="dlgrid">
+      <div class="dl summary-dl" title="A KPI-kártyák értékei szövegként — e-mailbe/Teamsbe másolható."><span class="lab">📋 ${t('summaryCard')}</span><span class="rows">${t('summarySub')}</span><button onclick="downloadSummary()">TXT ↓</button></div>`+
+    files.map((w,i)=>`<div class="dl"><span class="lab">${w.label}</span><span class="rows">${num(w.rows)} ${t('rows')}</span><button onclick="dlDemo(${i})">${t('download')} ↓</button></div>`).join('')+
+    `</div><div class="future">${t('hubspotUpdate')}<button disabled>HubSpot update ↑</button></div>`;}
+function setFmt(f){dlFormat=f;renderDownloads();}
+// ═══ Összefoglaló (KPI-kártyák szövegként) — e-mailhez/Teamshez, kliensoldali .txt ═══
+function summaryText(){
+  const r=histRun||data.record||{};
+  const L=[];
+  L.push('POI-CRM → HubSpot dataflow — '+t('summaryTitle'));
+  L.push((r.idopont||'')+'  ·  '+(r.verzio||'')+(histRun?('  ·  '+t('histNote')):''));
+  L.push('');
+  if(r.poi_filename||r.hubspot_filename){
+    const fl=lang==='en'?{poi:'poi export file',hs:'HubSpot file'}:{poi:'poi export fájl',hs:'HubSpot fájl'};
+    L.push(fl.poi+': '+(r.poi_filename||'—'));
+    L.push(fl.hs+': '+(r.hubspot_filename||'—'));
+    L.push('');
+  }
+  chipDefs().forEach(x=>{ if(x.v==null) return;
+    L.push(x.k+': '+(x.suffix?num(x.v)+x.suffix:num(x.v))); });
+  return L.join('\n');
+}
+function downloadSummary(){
+  const r=histRun||data.record||{};
+  const stamp=(r.idopont||'').replace(/[^0-9]/g,'').slice(0,12)||'demo';
+  const blob=new Blob([summaryText()],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='poicrm_osszefoglalo_'+stamp+'.txt';
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+}
+// DEMO: kliensoldali letöltés a beágyazott tábla-előnézetből (BOM + elválasztó kliensoldalon;
+// a cp1250/iso-8859-2 konverziót az éles app végzi szerveroldalon)
+function dlDemo(i){const w=(data.written_files||[])[i];if(!w)return;const tb=(data.tables||{})[w.label];if(!tb)return;
+  const dc={comma:',',semicolon:';',tab:'\t'}[dlDelim]||',';
+  const esc=v=>{v=String(v??'');return (v.includes(dc)||v.includes('"')||v.includes('\n'))?'"'+v.replace(/"/g,'""')+'"':v;};
+  const text=[tb.columns.map(esc).join(dc),...tb.rows.map(r=>r.map(esc).join(dc))].join('\r\n');
+  const blob=new Blob(dlEnc==='utf-8-sig'?['﻿'+text]:[text],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=w.path;a.click();URL.revokeObjectURL(a.href);}
+function toggleHitl(){hitlOn=document.getElementById('hitlChk').checked;try{localStorage.setItem('poicrm-hitl',hitlOn?'1':'0');}catch(e){}}
+function renderHitl(){const r=histRun||data.record||{};
+  const dupW=(r.poi_duplikacio>0||r.hubspot_duplikacio>0), mmW=r.categories_mismatch>0;
+  const checkTxt=`poi export dup ${num(r.poi_duplikacio)} · HubSpot dup ${num(r.hubspot_duplikacio)} · ${t('checks')} mismatch ${num(r.categories_mismatch)}`;
+  const histBanner=histRun?`<div class="hitl-soon" style="color:var(--warn);font-style:normal;font-weight:600;border:none;margin:0 0 8px;padding:0;">${t('replayNote')}</div>`:'';
+  document.getElementById('hitl').innerHTML=`
+    <h3>${t('hitlTitle')} <span class="tag">${t('hitlL3')}</span></h3>
+    ${histBanner}
+    <label><input type="checkbox" id="hitlChk" ${hitlOn?'checked':''} onchange="toggleHitl()"> ${t('hitlApprove')}</label>
+    <div class="hitl-note">${t('hitlNote')}</div>
+    <div class="hitl-diff">
+      <div class="hitl-cap">${t('hitlWrite')}</div>
+      <div class="hitl-row"><span>Companies</span><b>${num(r.companies_sorok)} ${t('rows')}</b></div>
+      <div class="hitl-row"><span>Contacts</span><b>${num(r.contacts_sorok)} ${t('rows')}</b></div>
+      <div class="hitl-row ${dupW||mmW?'warn':''}"><span>${t('checks')}</span><b>${checkTxt}</b></div>
+      <div class="hitl-soon">${t('hitlDiffSoon')}</div>
+    </div>
+    <div class="hitl-actions">
+      <button disabled title="${t('hitlL3')}">${t('hitlApproveBtn')} ↑</button>
+      <button disabled>${t('hitlReject')}</button>
+    </div>`;}
+function renderTableList(){const tables=data.tables||{},names=Object.keys(tables);if(!activeTable&&names.length)activeTable=names[0];
+  document.getElementById('tablist').innerHTML=names.map(name=>{const tb=tables[name];const isCheck=name.includes('duplik')||name.includes('Kategória');const warn=isCheck&&tb.total>0&&!(tb.rows[0]&&/NINCS|^-$/.test(tb.rows[0][0]||''));
+    return `<button class="${name===activeTable?'on':''} ${warn?'warn':''}" onclick="showTable('${name.replace(/'/g,"\\'")}')"><span>${name}</span><span class="cnt">${num(tb.total)}</span></button>`;}).join('');}
+function showTable(name){activeTable=name;renderTableList();const tb=(data.tables||{})[name];if(!tb)return;
+  document.getElementById('tableTitle').textContent=name;
+  document.getElementById('tableInfo').textContent=`${num(tb.total)} ${t('rows')}`+(tb.shown<tb.total?` (${num(tb.shown)} ${t('shown')})`:'');
+  document.getElementById('thead').innerHTML='<tr>'+tb.columns.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  if(!tb.rows.length){document.getElementById('tbody').innerHTML=`<tr><td colspan="${tb.columns.length}" style="color:var(--good);padding:16px;">${t('noHit')}</td></tr>`;return;}
+  document.getElementById('tbody').innerHTML=tb.rows.map(r=>'<tr>'+r.map(v=>`<td title="${(v||'').replace(/"/g,'&quot;')}">${v||''}</td>`).join('')+'</tr>').join('');}
+let logRuns=[];
+function renderRuns(){const runs=DEMO.runs||[];logRuns=runs;const info=document.getElementById('logInfo');
+  if(!runs.length){document.getElementById('logThead').innerHTML='';document.getElementById('logTbody').innerHTML=`<tr><td>${t('noRuns')}</td></tr>`;info.textContent='';return;}
+  info.textContent=`${num(runs.length)} ${t('rows')} · ▶ ${t('histNote').toLowerCase()}`;const cols=Object.keys(runs[0]);
+  document.getElementById('logThead').innerHTML='<tr><th></th>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  document.getElementById('logTbody').innerHTML=runs.map((r,i)=>`<tr style="cursor:pointer" title="${t('histNote')}" onclick="replayHistorical(${i})"><td>▶</td>`+cols.map(c=>`<td>${r[c]??''}</td>`).join('')+'</tr>').join('');}
+function replayHistorical(i){const row=logRuns[i];if(!row)return;histRun=row;histIndex=i;dataShown=false;updateRunBtn();
+  const banner=document.getElementById('banner');banner.className='banner empty';
+  banner.innerHTML=`▶ ${t('histNote')}: <b>${row.idopont||''}</b> &nbsp;<button onclick="exitHistorical()" style="padding:3px 12px;">${t('backToLive')}</button>`;
+  setTab('flow');render();
+  Object.keys(chipTargets).forEach(id=>{const el=document.getElementById('chip-'+id);if(el)el.textContent='0';});
+  setState('running','running');
+  const total=replay(()=>{dataShown=true;finalizeCounts();renderCards();setState('done','ok');});countUpChips(Math.min(total,1600));}
+function exitHistorical(){histRun=null;updateRunBtn();document.getElementById('banner').className='banner hidden';dataShown=true;flowing=false;finalizeCounts();renderChips();renderCards();renderHitl();markAllDone();redrawStatic();setState('done','ok');}
+function render(){renderChips();renderMeta();renderCards();renderDownloads();renderHitl();renderTableList();if(activeTable)showTable(activeTable);resizeCanvases();if(dataShown)markAllDone();else blankFlow();redrawStatic();}
+function setTab(w){['flow','data','log'].forEach(v=>{document.getElementById('view'+cap(v)).classList.toggle('on',v===w);document.getElementById('tab'+cap(v)).classList.toggle('on',v===w);});if(w==='log')renderRuns();if(w==='flow'){resizeCanvases();redrawStatic();}}
+function setState(kind,key){const el=document.getElementById('runState');el.className='run-state '+kind;el.textContent=t(key);}
+function countUpChips(dur){const t0=performance.now();(function step(now){const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);Object.entries(chipTargets).forEach(([id,tgt])=>{const el=document.getElementById('chip-'+id);if(el)el.textContent=num(Math.round(tgt*e));});if(p<1)requestAnimationFrame(step);})(performance.now());}
+function finalizeCounts(){chipDefs().forEach(x=>{const el=document.getElementById('chip-'+x.id);if(el)el.textContent=(x.v==null?'—':(x.suffix?num(x.v)+x.suffix:num(x.v)));});}
+
+function applyData(d,{doReplay=false}={}){
+  data=d;histRun=null;updateRunBtn();const banner=document.getElementById('banner');
+  if(d.status==='empty'){errorNode=null;dataShown=false;setState('','empty');banner.className='banner empty';banner.textContent=t('empty');document.getElementById('chips').innerHTML='';return;}
+  if(d.status==='error'){setState('error','error');banner.className='banner error';banner.textContent=d.error||'Hiba';errorNode=d.failed_node||null;redrawStatic();return;}
+  errorNode=null;banner.className='banner hidden';
+  if(doReplay){dataShown=false;render();setState('running','running');setTab('flow');
+    Object.keys(chipTargets).forEach(id=>{const el=document.getElementById('chip-'+id);if(el)el.textContent='0';});
+    const total=replay(()=>{dataShown=true;finalizeCounts();renderCards();setState('done','ok');});countUpChips(Math.min(total,1600));}
+  else{dataShown=false;render();setState('','ready');}
+}
+function updateRunBtn(){const b=document.getElementById('runBtn');if(b)b.textContent=histRun?t('replay'):t('run');}
+function onRunButton(){ if(histRun) replayHistorical(histIndex); else runPipeline(); }
+// DEMO: nincs szerver — a beágyazott snapshotból dolgozunk, a futtatás szimulált replay
+function load(){applyData(DEMO.snapshot);}
+function runPipeline(){const btn=document.getElementById('runBtn');btn.disabled=true;
+  applyData(DEMO.snapshot,{doReplay:true});renderRuns();
+  setTimeout(()=>{btn.disabled=false;}, 4200);}
+
+applyTheme();setLang(lang);renderLegend();bindCanvas();resizeCanvases();loop();load();renderRuns();
+window.addEventListener('resize',()=>{resizeCanvases();redrawStatic();});
+</script>
+</body>
+</html>

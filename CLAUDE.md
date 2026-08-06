@@ -48,8 +48,15 @@ Csak ezeket használd, pontosan így írva:
 ```
 SQL · Python · Power BI · Excel
 ML / Data Science · CRM · Szegmentáció · A/B teszt
-AI / LLM · Automatizálás · Web scraping · ETL / Adatpipeline
+AI / LLM · Claude · Automatizálás · n8n · Web scraping · ETL / Adatpipeline
+Vizualizáció · Tool
+Munka · Magán
 ```
+
+Minden projekthez tegyél **pontosan egy** típuscímkét: `Munka` vagy `Magán`.
+
+Az `AI / LLM` az általános címke; a `Claude` csak akkor, ha konkrétan
+az az eszköz. Ne tedd rá mindkettőt ugyanarra a projektre.
 
 Ha egy projekthez ezek egyike sem illik, **kérdezd meg**, mielőtt új címkét
 vezetsz be. Egy elgépelt vagy szinonim címke (pl. „python", „PowerBI")

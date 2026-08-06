@@ -18,20 +18,65 @@
 const PROJEKTEK = [
 
   {
-    cim: "Magyar nyelvű audio transcription pipeline",
-    leiras: "Lokálisan futó, GPU-gyorsított átirat-készítő faster-whisper alapon. Beszélő-felismerés, időbélyegek, batch feldolgozás.",
-    fajl: "transcription-pipeline.html",
-    cimkek: ["Python", "AI / LLM", "Automatizálás"],
-    datum: "2026-07",
+    cim: "Hűségprogram-dashboard szállodaláncnak",
+    leiras: "Szintetikus adatokon futó, szűrhető hűségprogram-elemzés: tagszintek, szegmensek, országok, szállodánkénti bontás. Minden név és érték fiktív.",
+    fajl: "hotel-demo-loyalty-dashboard.html",
+    cimkek: ["CRM", "Szegmentáció", "Vizualizáció", "Munka"],
+    datum: "2026-08",
     kiemelt: true
+  },
+
+  {
+    cim: "POI-adatbázis → HubSpot szinkron (Python)",
+    leiras: "CSV-exportok beolvasása, tisztítása, deduplikálása és összefésülése CRM-be tölthető kimenetté, futásnaplóval és ellenőrző riportokkal.",
+    fajl: "poi-crm-hubspot-python.html",
+    cimkek: ["Python", "ETL / Adatpipeline", "CRM", "Munka"],
+    datum: "2026-08",
+    kiemelt: false
+  },
+
+  {
+    cim: "Ugyanez n8n workflow-ként",
+    leiras: "A szinkron folyamat vizuális pipeline-ként: node-gráf, ágak, ellenőrző mellékszálak és merge-lépések végigkövethetően.",
+    fajl: "poi-crm-hubspot-n8n.html",
+    cimkek: ["n8n", "Automatizálás", "CRM", "Munka"],
+    datum: "2026-08",
+    kiemelt: false
+  },
+
+  {
+    cim: "Számla-tracker: e-mailből táblázatba",
+    leiras: "Két postafiókból gyűjti a számlákat, a PDF-mellékleteket rendezetten elmenti, az adatokat kinyeri és táblázatba írja. Szintetikus mintaadatokkal.",
+    fajl: "szamla-tracker-pipeline.html",
+    cimkek: ["Automatizálás", "Claude", "ETL / Adatpipeline", "Magán"],
+    datum: "2026-07",
+    kiemelt: false
+  },
+
+  {
+    cim: "Magyar nyelvű audio transcription pipeline",
+    leiras: "Lokálisan, GPU nélkül futó átirat-készítő faster-whisper alapon, LLM-es utótisztítással. Felhős szolgáltatáshoz mérve, nulla felhőköltséggel.",
+    fajl: "transcription-pipeline.html",
+    cimkek: ["Python", "AI / LLM", "Automatizálás", "Magán"],
+    datum: "2026-06",
+    kiemelt: true
+  },
+
+  {
+    cim: "Laboreredmények gyógyulási íve",
+    leiras: "Két időpont leletei egymásra vetítve a referencia-tartományokkal: mi változott, milyen irányba, és mit jelent. Interaktív magyarázatokkal.",
+    fajl: "laboreredmeny-vizualizacio.html",
+    cimkek: ["Vizualizáció", "Magán"],
+    datum: "2026-06",
+    kiemelt: false
   },
 
   {
     cim: "Ügyfélszegmentáció K-means klaszterezéssel",
     leiras: "Viselkedés-alapú klaszterek gördülő 12 hónapos ablakon, banki hűségprogram adatain. Anonimizált esettanulmány.",
     fajl: "kmeans-szegmentacio.html",
-    cimkek: ["Python", "ML / Data Science", "CRM"],
-    datum: "2026-06",
+    cimkek: ["Python", "ML / Data Science", "CRM", "Munka"],
+    datum: "2026-05",
     kiemelt: false
   },
 
@@ -39,8 +84,8 @@ const PROJEKTEK = [
     cim: "Conversational Analytics SQL adatbázison",
     leiras: "Természetes nyelvű lekérdezés éles adatbázison Claude + MCP kapcsolaton keresztül. Pilot koncepció és architektúra.",
     fajl: "conversational-analytics.html",
-    cimkek: ["AI / LLM", "SQL", "Power BI"],
-    datum: "2026-05",
+    cimkek: ["Claude", "SQL", "Power BI", "Munka"],
+    datum: "2026-04",
     kiemelt: false
   }
 
