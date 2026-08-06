@@ -96,6 +96,11 @@ h1{
 .links button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .links svg{width:15px;height:15px;flex:none}
 
+/* az e-mail cím két darabja képként — a méret és az alapvonal
+   a PNG-k pixelmérete alapján van beállítva (46px magas, 3x) */
+.links button img{height:15.33px;vertical-align:-3.5px}
+.mail-jelzes{color:var(--accent)}
+
 /* ---------- szűrő ---------- */
 .filterbar{
   border-top:1px solid var(--line);
@@ -348,24 +353,57 @@ footer a:hover{color:var(--accent)}
   document.getElementById("ev").textContent = new Date().getFullYear();
 
   /* ---------- e-mail cím, spamrobotok elől elrejtve ----------
-     A cím base64-ben van, hogy a forráskódban se legyen kereshető.
-     Első kattintás: megmutatja. Második: megnyitja a levelezőt.
-     Ha módosítanád: btoa("uj@cim.hu") a böngésző konzoljában. */
+     A cím SEHOL nem szerepel szövegesen: kattintásra két képdarabból
+     áll össze (assets/logo1.png + logo2.png), közöttük a @ és a .com
+     az egyetlen szöveges rész — az önmagában semmit nem árul el.
+     A képek alt szövege is csak futásidőben kerül a DOM-ba, hogy a
+     forrásban se legyen kereshető. Nincs mailto: link.
+     Ha módosítanád: btoa("uj@cim.hu") a böngésző konzoljában,
+     és rajzold újra a két PNG-t. */
   (function(){
-    var gomb = document.getElementById("mailgomb");
+    var gomb    = document.getElementById("mailgomb");
     var felirat = document.getElementById("mailfelirat");
-    if(!gomb) return;
+    if(!gomb || !felirat) return;
 
-    var cim = null;
+    var cim = null, jelzes = null, ido = null;
+
+    function kep(fajl, alt){
+      var i = document.createElement("img");
+      i.src = fajl;
+      i.alt = alt;
+      return i;
+    }
+
+    function felfed(){
+      cim = atob("dWR2YXJpLmlzdHZhbjIwMTZAZ21haWwuY29t");
+      // a kép alt szövegei a dekódolt címből, hogy a forrásban ne legyenek meg
+      var elotte = cim.split("@")[0];
+      var utana  = cim.split("@")[1].split(".")[0];
+
+      felirat.textContent = "";
+      felirat.appendChild(kep("assets/logo1.png", elotte));
+      felirat.appendChild(document.createTextNode("@"));
+      felirat.appendChild(kep("assets/logo2.png", utana));
+      felirat.appendChild(document.createTextNode(".com"));
+
+      jelzes = document.createElement("span");
+      jelzes.className = "mail-jelzes";
+      felirat.appendChild(jelzes);
+
+      gomb.setAttribute("title", "Kattints a cím vágólapra másolásához");
+    }
+
+    function masol(){
+      if(!navigator.clipboard) return;
+      navigator.clipboard.writeText(cim).then(function(){
+        jelzes.textContent = "  ✓ vágólapra másolva";
+        clearTimeout(ido);
+        ido = setTimeout(function(){ jelzes.textContent = ""; }, 1800);
+      }, function(){});
+    }
 
     gomb.addEventListener("click", function(){
-      if(cim === null){
-        cim = atob("dWR2YXJpLmlzdHZhbjIwMTZAZ21haWwuY29t");
-        felirat.textContent = cim;
-        gomb.setAttribute("title", "Kattints újra a levelezőprogram megnyitásához");
-        return;
-      }
-      window.location.href = "mailto:" + cim;
+      if(cim === null){ felfed(); } else { masol(); }
     });
   })();
 
