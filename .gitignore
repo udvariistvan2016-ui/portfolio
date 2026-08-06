@@ -1,6 +1,9 @@
 # Claude Code helyi beállítások – nem való publikus repóba
 .claude/
 
+# nyilvántartás (a Google Sheet tartalma) – ügyfélnév-utalásokat tartalmaz
+portfolio-nyilvantartas.tsv
+
 # Windows
 Thumbs.db
 desktop.ini
