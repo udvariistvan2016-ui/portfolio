@@ -178,7 +178,7 @@ h1{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:var(--radius);
-  padding:26px 26px 22px;
+  overflow:hidden;
   text-decoration:none;
   color:inherit;
   display:flex;
@@ -187,6 +187,32 @@ h1{
   transition:border-color .18s, transform .18s, box-shadow .18s;
   animation:rise .32s ease both;
 }
+
+.card-body{
+  padding:26px 26px 22px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
+}
+
+/* bélyegkép: a demó tartalmas részéből vágva.
+   Az enyhe szűrő tompítja, hogy a hat eltérő stílusú demó
+   egy rendszerré álljon össze a rácsban. */
+.thumb{
+  display:block;
+  width:100%;
+  aspect-ratio:16/10;
+  object-fit:cover;
+  object-position:top center;
+  border-bottom:1px solid var(--line);
+  background:var(--paper);
+  filter:saturate(.88) contrast(.97);
+  transition:filter .18s;
+}
+
+.card:hover .thumb{filter:none}
+
+.card-body:first-child{padding-top:26px}
 
 .card.wide{grid-column:span 2}
 
@@ -523,12 +549,22 @@ footer a:hover{color:var(--accent)}
         return '<span class="tag">' + esc(c) + '</span>';
       }).join("");
 
+      // bélyegkép a fájlnévből: assets/thumbs/<fájlnév>.jpg
+      // Ha nincs ilyen kép, a csempe egyszerűen kép nélkül marad.
+      var kepUt = "assets/thumbs/" + p.fajl.replace(/\.html$/, "") + ".jpg";
+
       a.innerHTML =
-        '<div class="card-date">' + esc(honap(p.datum)) + '</div>' +
-        '<h2>' + esc(p.cim) + '</h2>' +
-        '<p>' + esc(p.leiras) + '</p>' +
-        '<div class="card-tags">' + tagek + '</div>' +
-        '<div class="card-open">Megnyitás &rarr;</div>';
+        '<img class="thumb" src="' + esc(kepUt) + '" alt="" loading="lazy" decoding="async">' +
+        '<div class="card-body">' +
+          '<div class="card-date">' + esc(honap(p.datum)) + '</div>' +
+          '<h2>' + esc(p.cim) + '</h2>' +
+          '<p>' + esc(p.leiras) + '</p>' +
+          '<div class="card-tags">' + tagek + '</div>' +
+          '<div class="card-open">Megnyitás &rarr;</div>' +
+        '</div>';
+
+      var kep = a.querySelector(".thumb");
+      kep.addEventListener("error", function(){ kep.remove(); });
 
       grid.appendChild(a);
     });
