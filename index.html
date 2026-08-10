@@ -140,6 +140,38 @@ h1{
 
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 
+/* három szűrősor: technológia · típus · kategória.
+   Soron belül VAGY (több technológia = bármelyik jó),
+   sorok között ÉS (technológia ÉS típus ÉS kategória). */
+.chip-sor{
+  display:grid;
+  grid-template-columns:98px 1fr;
+  gap:14px;
+  align-items:start;
+  margin-bottom:11px;
+}
+
+.sor-cim{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted);
+  padding-top:9px;
+}
+
+.szuro-labl{
+  margin-top:15px;
+  padding-left:112px;
+  min-height:1px;
+}
+
+@media (max-width:599px){
+  .chip-sor{grid-template-columns:1fr;gap:5px;margin-bottom:15px}
+  .sor-cim{padding-top:0}
+  .szuro-labl{padding-left:0}
+}
+
 .chip{
   font-family:"IBM Plex Mono",monospace;
   font-size:12.5px;
@@ -376,10 +408,11 @@ footer a:hover{color:var(--accent)}
 
   <section class="filterbar" aria-labelledby="filter-label">
     <div class="filter-head">
-      <span class="filter-label" id="filter-label">Szűrés címke szerint</span>
+      <span class="filter-label" id="filter-label">Szűrés</span>
       <span class="query" id="query" aria-live="polite"></span>
     </div>
-    <div class="chips" id="chips" role="group" aria-labelledby="filter-label"></div>
+    <div id="csoportok"></div>
+    <div class="szuro-labl"><div class="chips" id="reset-doboz"></div></div>
   </section>
 
   <main class="grid" id="grid"></main>
@@ -396,10 +429,36 @@ footer a:hover{color:var(--accent)}
 (function(){
   "use strict";
 
-  var grid   = document.getElementById("grid");
-  var chips  = document.getElementById("chips");
-  var query  = document.getElementById("query");
-  var aktiv  = [];   // aktív címkék
+  var grid      = document.getElementById("grid");
+  var csoportok = document.getElementById("csoportok");
+  var resetDoboz= document.getElementById("reset-doboz");
+  var query     = document.getElementById("query");
+
+  /* ---------- a szűrő három tengelye ----------
+     A címkék eddig egy kupacban voltak, és három különböző dolog
+     keveredett bennük. Innentől külön sorban:
+       technológia — a cimkek tömbből, a Munka/Magán és a Tool nélkül
+       típus       — a tipus mezőből
+       kategória   — Munka / Magán
+     Soron belül VAGY, sorok között ÉS. */
+  var KATEGORIAK = ["Munka", "Magán"];
+  var NEM_TECH   = ["Tool"];   // ezt már a típus-tengely hordozza
+
+  var CSOPORTOK = [
+    { kulcs:"tech", cim:"Technológia", ertekek:function(p){
+        return (p.cimkek||[]).filter(function(c){
+          return KATEGORIAK.indexOf(c) === -1 && NEM_TECH.indexOf(c) === -1;
+        });
+      }},
+    { kulcs:"tipus", cim:"Típus", ertekek:function(p){
+        return p.tipus ? [p.tipus] : [];
+      }},
+    { kulcs:"kat", cim:"Kategória", ertekek:function(p){
+        return (p.cimkek||[]).filter(function(c){ return KATEGORIAK.indexOf(c) > -1; });
+      }}
+  ];
+
+  var aktiv = { tech:[], tipus:[], kat:[] };
 
   document.getElementById("ev").textContent = new Date().getFullYear();
 
@@ -460,17 +519,15 @@ footer a:hover{color:var(--accent)}
 
   var lista = (typeof PROJEKTEK !== "undefined" ? PROJEKTEK.slice() : []);
 
-  // újabb elöl
-  lista.sort(function(a,b){ return (b.datum||"").localeCompare(a.datum||""); });
-
-  // minden előforduló címke, ábécésorrendben
-  var cimkek = [];
-  lista.forEach(function(p){
-    (p.cimkek||[]).forEach(function(c){
-      if(cimkek.indexOf(c) === -1) cimkek.push(c);
-    });
+  // SORREND: előbb a rang (nagyobb = előrébb), azonos rangnál a dátum.
+  // A rangot a projects.js-ben állítod — ez a szerkesztői kontroll afölött,
+  // hogy mi fogadja a látogatót.
+  lista.sort(function(a,b){
+    var ra = (typeof a.rang === "number" ? a.rang : 0);
+    var rb = (typeof b.rang === "number" ? b.rang : 0);
+    if(ra !== rb) return rb - ra;
+    return (b.datum||"").localeCompare(a.datum||"");
   });
-  cimkek.sort(function(a,b){ return a.localeCompare(b,"hu"); });
 
   function honap(d){
     if(!d) return "";
@@ -486,43 +543,96 @@ footer a:hover{color:var(--accent)}
     });
   }
 
+  function vanAktiv(){
+    return CSOPORTOK.some(function(cs){ return aktiv[cs.kulcs].length > 0; });
+  }
+
   function chipeketRajzol(){
-    chips.innerHTML = "";
+    csoportok.innerHTML = "";
 
-    var mind = document.createElement("button");
-    mind.className = "chip reset";
-    mind.type = "button";
-    mind.textContent = "Mind";
-    mind.setAttribute("aria-pressed", aktiv.length === 0 ? "true" : "false");
-    mind.addEventListener("click", function(){ aktiv = []; frissit(); });
-    chips.appendChild(mind);
+    CSOPORTOK.forEach(function(cs){
+      // az adott tengelyen előforduló összes érték, ábécésorrendben
+      var ertekek = [];
+      lista.forEach(function(p){
+        cs.ertekek(p).forEach(function(v){
+          if(ertekek.indexOf(v) === -1) ertekek.push(v);
+        });
+      });
+      if(ertekek.length === 0) return;
+      ertekek.sort(function(a,b){ return a.localeCompare(b,"hu"); });
 
-    cimkek.forEach(function(c){
-      var b = document.createElement("button");
-      b.className = "chip";
-      b.type = "button";
-      b.textContent = c;
-      b.setAttribute("aria-pressed", aktiv.indexOf(c) > -1 ? "true" : "false");
-      b.addEventListener("click", function(){
-        var i = aktiv.indexOf(c);
-        if(i > -1){ aktiv.splice(i,1); } else { aktiv.push(c); }
+      var sor = document.createElement("div");
+      sor.className = "chip-sor";
+
+      var cim = document.createElement("span");
+      cim.className = "sor-cim";
+      cim.id = "sor-" + cs.kulcs;
+      cim.textContent = cs.cim;
+      sor.appendChild(cim);
+
+      var doboz = document.createElement("div");
+      doboz.className = "chips";
+      doboz.setAttribute("role", "group");
+      doboz.setAttribute("aria-labelledby", cim.id);
+
+      ertekek.forEach(function(v){
+        var b = document.createElement("button");
+        b.className = "chip";
+        b.type = "button";
+        b.textContent = v;
+        b.setAttribute("aria-pressed", aktiv[cs.kulcs].indexOf(v) > -1 ? "true" : "false");
+        b.addEventListener("click", function(){
+          var t = aktiv[cs.kulcs], i = t.indexOf(v);
+          if(i > -1){ t.splice(i, 1); } else { t.push(v); }
+          frissit();
+        });
+        doboz.appendChild(b);
+      });
+
+      sor.appendChild(doboz);
+      csoportok.appendChild(sor);
+    });
+
+    // a törlőgomb csak akkor látszik, ha van mit törölni
+    resetDoboz.innerHTML = "";
+    if(vanAktiv()){
+      var t = document.createElement("button");
+      t.className = "chip reset";
+      t.type = "button";
+      t.textContent = "×  Szűrők törlése";
+      t.addEventListener("click", function(){
+        CSOPORTOK.forEach(function(cs){ aktiv[cs.kulcs] = []; });
         frissit();
       });
-      chips.appendChild(b);
-    });
+      resetDoboz.appendChild(t);
+    }
   }
 
   function szurtLista(){
-    if(aktiv.length === 0) return lista;
+    if(!vanAktiv()) return lista;
     return lista.filter(function(p){
-      return aktiv.every(function(c){ return (p.cimkek||[]).indexOf(c) > -1; });
+      // sorok között ÉS
+      return CSOPORTOK.every(function(cs){
+        var valasztott = aktiv[cs.kulcs];
+        if(valasztott.length === 0) return true;
+        var sajat = cs.ertekek(p);
+        // soron belül VAGY
+        return valasztott.some(function(v){ return sajat.indexOf(v) > -1; });
+      });
     });
   }
 
   function queryFrissit(db){
-    var felt = aktiv.length
-      ? '<span class="kw">WHERE</span> címke <span class="kw">IN</span> (<span class="val">' +
-        aktiv.map(esc).join(", ") + '</span>)'
+    var reszek = [];
+    CSOPORTOK.forEach(function(cs){
+      if(aktiv[cs.kulcs].length){
+        reszek.push(esc(cs.cim.toLowerCase()) +
+          ' <span class="kw">IN</span> (<span class="val">' +
+          aktiv[cs.kulcs].map(esc).join(", ") + '</span>)');
+      }
+    });
+    var felt = reszek.length
+      ? '<span class="kw">WHERE</span> ' + reszek.join(' <span class="kw">AND</span> ')
       : '<span class="kw">SELECT</span> <span class="val">*</span>';
     query.innerHTML = felt + ' &rarr; <span class="val">' + db + ' projekt</span>';
   }
