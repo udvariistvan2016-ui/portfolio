@@ -5,6 +5,10 @@
 portfolio-nyilvantartas.tsv
 BACKLOG.md
 
+# Sheet-szinkron: hitelesítés és a táblázat azonosítója SOHA ne kerüljön fel
+scripts/sa-kulcs.json
+scripts/sheet-config.json
+
 # Windows
 Thumbs.db
 desktop.ini
