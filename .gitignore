@@ -1,8 +1,9 @@
 # Claude Code helyi beállítások – nem való publikus repóba
 .claude/
 
-# nyilvántartás (a Google Sheet tartalma) – ügyfélnév-utalásokat tartalmaz
+# saját jegyzetek – ügyfélnév-utalásokat tartalmaznak
 portfolio-nyilvantartas.tsv
+BACKLOG.md
 
 # Windows
 Thumbs.db
