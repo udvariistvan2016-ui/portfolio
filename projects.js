@@ -18,6 +18,24 @@
 const PROJEKTEK = [
 
   {
+    cim: "Opera Koktélrepertoár",
+    leiras: "Bejelölöd, mi van otthon a polcon, és megmutatja, melyik koktélt tudod most azonnal elkeverni — és melyikhez hiányzik egyetlen hozzávaló.",
+    fajl: "opera-koktelrepertoar.html",
+    cimkek: ["Claude", "Vizualizáció", "Tool", "Magán"],
+    datum: "2026-08",
+    kiemelt: false
+  },
+
+  {
+    cim: "Sörkalauz",
+    leiras: "Sörstílusok az SRM-színskála szerint szűrve, a főzés nyolc lépése, és egy extrakt→alkohol számoló csúszkákkal.",
+    fajl: "sorkalauz.html",
+    cimkek: ["Claude", "Vizualizáció", "Tool", "Magán"],
+    datum: "2026-08",
+    kiemelt: false
+  },
+
+  {
     cim: "Hűségprogram-dashboard szállodaláncnak",
     leiras: "Szintetikus adatokon futó, szűrhető hűségprogram-elemzés: tagszintek, szegmensek, országok, szállodánkénti bontás. Minden név és érték fiktív.",
     fajl: "hotel-demo-loyalty-dashboard.html",

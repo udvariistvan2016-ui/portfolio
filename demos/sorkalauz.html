@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sörkalauz — stílusok, főzés, márkák, Browar Amber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tile:#E4EAE4;
+  --tile-deep:#D2DCD5;
+  --tile-line:#C2CFC7;
+  --paper:#F0E6D2;
+  --paper-line:#DDCFB2;
+  --ink:#16231F;
+  --ink-soft:#51625A;
+  --copper:#9C5B1E;
+  --copper-lt:#C07A31;
+  --brass:#DCA53C;
+  --cellar:#10312B;
+  --foam:#FBFAF5;
+  --r:3px;
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--tile);color:var(--ink);
+  font-family:"Inter Tight",system-ui,sans-serif;font-size:16px;line-height:1.55;
+  background-image:linear-gradient(var(--tile-line) 1px,transparent 1px),linear-gradient(90deg,var(--tile-line) 1px,transparent 1px);
+  background-size:56px 56px;background-position:-1px -1px;
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:900;line-height:1.02;margin:0;letter-spacing:-.015em}
+.mono{font-family:"IBM Plex Mono",monospace}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+/* ---------- fejléc ---------- */
+header{position:sticky;top:0;z-index:40;background:rgba(228,234,228,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--ink)}
+.bar{max-width:var(--maxw);margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.mark{font-family:"Fraunces",serif;font-weight:900;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+.mark i{width:15px;height:20px;border-radius:2px 2px 5px 5px;background:linear-gradient(180deg,var(--foam) 0 22%,var(--brass) 22% 100%);border:1.5px solid var(--ink);display:inline-block}
+nav.layers{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav.layers button{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+  background:none;border:1px solid transparent;color:var(--ink-soft);padding:7px 11px;cursor:pointer;border-radius:var(--r)
+}
+nav.layers button span{opacity:.5;margin-right:6px}
+nav.layers button:hover{color:var(--ink);background:var(--tile-deep)}
+nav.layers button[aria-selected="true"]{background:var(--ink);color:var(--tile);border-color:var(--ink)}
+nav.layers button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2.5px solid var(--copper);outline-offset:2px}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 26px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
+.hero h1{font-size:clamp(46px,9vw,104px);margin:14px 0 0}
+.hero h1 em{font-style:italic;font-weight:400;color:var(--copper)}
+.lede{max-width:56ch;margin-top:18px;color:var(--ink-soft);font-size:17px}
+
+/* ---------- SRM létra: aláírás-elem ---------- */
+.ladder-block{margin:38px 0 8px;border-top:1px solid var(--ink);padding-top:14px}
+.ladder-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+.ladder-head p{margin:0;font-size:13px;color:var(--ink-soft);max-width:44ch}
+.ladder{display:flex;gap:2px;margin-top:14px;height:82px}
+.ladder button{
+  flex:1;border:1px solid rgba(22,35,31,.35);border-radius:2px 2px 0 0;cursor:pointer;position:relative;padding:0;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.ladder button:hover,.ladder button.on{transform:translateY(-9px);box-shadow:0 6px 0 -2px var(--ink)}
+.ladder button.on{outline:2px solid var(--ink);outline-offset:1px}
+.ladder-scale{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-soft);margin-top:7px;border-top:1px solid var(--ink-soft);padding-top:5px}
+.readout{min-height:24px;margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink)}
+.readout b{color:var(--copper)}
+
+/* ---------- vezérlők ---------- */
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:26px 0 22px}
+.chip{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--ink);color:var(--ink);padding:7px 12px;border-radius:100px;cursor:pointer
+}
+.chip:hover{background:var(--tile-deep)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--tile)}
+input[type="search"]{
+  font-family:"Inter Tight",sans-serif;font-size:14px;padding:8px 12px;border:1px solid var(--ink);
+  background:var(--foam);border-radius:var(--r);min-width:220px;flex:1;max-width:320px;color:var(--ink)
+}
+.count{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-soft);margin-left:auto}
+
+/* ---------- stíluskártyák ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px}
+.card{background:var(--foam);border:1px solid var(--ink);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.card>button.head{
+  display:flex;gap:14px;align-items:flex-start;text-align:left;background:none;border:0;padding:16px;cursor:pointer;width:100%;color:inherit;font:inherit
+}
+.card:hover{box-shadow:4px 4px 0 var(--ink)}
+.glass{width:34px;flex:0 0 34px;height:52px;border:1.5px solid var(--ink);border-radius:3px 3px 8px 8px;overflow:hidden;position:relative;background:var(--foam)}
+.glass i{position:absolute;inset:auto 0 0 0;height:78%;display:block}
+.glass em{position:absolute;inset:0 0 auto 0;height:22%;background:var(--foam);border-bottom:1.5px solid rgba(22,35,31,.25);display:block}
+.card h3{font-size:19px;line-height:1.1}
+.card .fam{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--copper);margin-top:5px;display:block}
+.stats{display:flex;gap:12px;margin-top:9px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-soft)}
+.stats b{color:var(--ink);font-weight:600}
+.body{padding:0 16px 16px;border-top:1px dashed var(--tile-line);display:none}
+.card.open .body{display:block}
+.card.open{box-shadow:4px 4px 0 var(--ink)}
+.body p{font-size:14.5px;margin:13px 0}
+.kv{font-family:"IBM Plex Mono",monospace;font-size:12px;display:grid;grid-template-columns:88px 1fr;gap:3px 10px;margin-top:12px}
+.kv dt{color:var(--ink-soft)}
+.kv dd{margin:0}
+.tags{margin-top:13px;display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(--copper);color:var(--copper);padding:3px 7px;border-radius:100px}
+.tag.hu{border-color:var(--cellar);color:var(--cellar);background:rgba(16,49,43,.06)}
+
+/* ---------- szekciók ---------- */
+section.layer{display:none;padding-bottom:80px}
+section.layer.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.sec-head{padding:56px 0 8px;border-bottom:1px solid var(--ink);margin-bottom:26px}
+.sec-head h2{font-size:clamp(32px,5vw,52px)}
+.sec-head p{color:var(--ink-soft);max-width:60ch;margin:12px 0 18px}
+
+/* ---------- főzés ---------- */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;margin-bottom:22px}
+.step{
+  background:var(--foam);border:1px solid var(--ink);border-radius:var(--r);padding:12px 11px;cursor:pointer;text-align:left;
+  font:inherit;color:inherit;position:relative
+}
+.step:hover{background:var(--tile-deep)}
+.step[aria-pressed="true"]{background:var(--cellar);color:var(--paper);border-color:var(--cellar)}
+.step .n{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;opacity:.65;display:block}
+.step .t{font-family:"Fraunces",serif;font-weight:600;font-size:15px;display:block;margin-top:4px;line-height:1.15}
+.step .d{font-family:"IBM Plex Mono",monospace;font-size:10.5px;margin-top:6px;display:block;opacity:.8}
+.panel{background:var(--foam);border:1px solid var(--ink);border-radius:var(--r);padding:24px;box-shadow:5px 5px 0 var(--ink)}
+.panel h3{font-size:26px}
+.panel .sub{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--copper);margin:6px 0 14px}
+.panel p{margin:0 0 12px;max-width:70ch}
+.panel ul{margin:0;padding-left:18px;font-size:14.5px;color:var(--ink-soft)}
+.panel li{margin-bottom:5px}
+.panel li b{color:var(--ink)}
+
+/* ---------- kalkulátor ---------- */
+.calc{margin-top:34px;background:var(--cellar);color:var(--paper);border-radius:var(--r);padding:26px;border:1px solid var(--cellar)}
+.calc h3{font-size:24px;color:var(--paper)}
+.calc .note{font-size:13.5px;opacity:.75;max-width:60ch;margin:10px 0 20px}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:22px;align-items:end}
+.calc label{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-bottom:8px}
+.calc output{font-family:"Fraunces",serif;font-weight:900;font-size:52px;line-height:.9;color:var(--brass);display:block}
+input[type="range"]{width:100%;accent-color:var(--brass)}
+.val{font-family:"IBM Plex Mono",monospace;font-size:14px;margin-top:6px}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:20px}
+.presets button{font-family:"IBM Plex Mono",monospace;font-size:11px;background:transparent;border:1px solid rgba(240,230,210,.4);color:var(--paper);padding:6px 10px;border-radius:100px;cursor:pointer}
+.presets button:hover{background:rgba(240,230,210,.14)}
+
+/* ---------- márkák ---------- */
+.brand{background:var(--foam);border:1px solid var(--ink);border-radius:var(--r);padding:15px}
+.brand:hover{box-shadow:4px 4px 0 var(--ink)}
+.brand h3{font-size:18px}
+.brand .owner{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--copper);margin-top:5px}
+.brand p{font-size:14px;color:var(--ink-soft);margin:9px 0 0}
+.brand .list{font-size:13.5px;margin-top:10px;padding-top:9px;border-top:1px dashed var(--tile-line)}
+
+/* ---------- Amber réteg ---------- */
+#amber{background:var(--paper);padding-bottom:80px;background-image:linear-gradient(var(--paper-line) 1px,transparent 1px),linear-gradient(90deg,var(--paper-line) 1px,transparent 1px);background-size:56px 56px}
+#amber.active{display:block;box-shadow:0 0 0 100vmax var(--paper);clip-path:inset(0 -100vmax)}
+#amber .sec-head{border-color:var(--cellar)}
+#amber .card,#amber .panel{background:#F8F2E4;border-color:var(--cellar)}
+#amber .card:hover,#amber .card.open{box-shadow:4px 4px 0 var(--cellar)}
+#amber .chip{border-color:var(--cellar);color:var(--cellar)}
+#amber .chip[aria-pressed="true"]{background:var(--cellar);color:var(--paper)}
+#amber input[type="search"]{border-color:var(--cellar);background:#F8F2E4}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--cellar);border:1px solid var(--cellar);margin:0 0 34px;border-radius:var(--r);overflow:hidden}
+.fact{background:var(--paper);padding:16px}
+.fact b{font-family:"Fraunces",serif;font-size:29px;font-weight:900;display:block;line-height:1}
+.fact span{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-top:7px}
+.bars{margin:34px 0 8px;border-top:1px solid var(--cellar);padding-top:18px}
+.bars h3{font-size:22px;margin-bottom:4px}
+.bars .cap{font-size:13.5px;color:var(--ink-soft);margin:0 0 16px}
+.bar{display:grid;grid-template-columns:150px 1fr 54px;gap:10px;align-items:center;margin-bottom:5px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+.bar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .track{height:15px;background:rgba(16,49,43,.09);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;background:var(--cellar);width:0;transition:width .7s cubic-bezier(.2,.8,.3,1)}
+.bar .v{text-align:right}
+.medal{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;border:1px solid var(--brass);background:rgba(220,165,60,.14);color:#7A5510;padding:3px 7px;border-radius:100px;margin:3px 3px 0 0}
+
+/* ---------- lábléc ---------- */
+footer{border-top:1px solid var(--ink);background:var(--tile-deep);padding:34px 0 46px;font-size:13px;color:var(--ink-soft)}
+footer a{color:var(--copper)}
+footer h4{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px;color:var(--ink)}
+.foot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:26px}
+.age{border:1px solid var(--ink);border-radius:100px;padding:5px 12px;display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink)}
+@media (max-width:760px){
+  .calc-grid{grid-template-columns:1fr}
+  .ladder{height:56px}
+  .bar{grid-template-columns:106px 1fr 46px}
+  .hero{padding:38px 0 18px}
+}
+</style>
+</head>
+<body>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:10px 20px;background:#15181C;color:#F2F3F0;position:sticky;top:0;z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
+  <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
+</div>
+
+<header>
+  <div class="bar">
+    <div class="mark"><i></i>Sörkalauz</div>
+    <nav class="layers" role="tablist" aria-label="Rétegek">
+      <button role="tab" aria-selected="true" data-layer="stilusok"><span>01</span>Stílusok</button>
+      <button role="tab" aria-selected="false" data-layer="fozes"><span>02</span>Főzés</button>
+      <button role="tab" aria-selected="false" data-layer="markak"><span>03</span>Márkák</button>
+      <button role="tab" aria-selected="false" data-layer="amber"><span>04</span>Amber főzde</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ===================== 01 STÍLUSOK ===================== -->
+<section class="layer active" id="stilusok" role="tabpanel">
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">01 — réteg · sörstílusok</div>
+    <h1>A szín az első,<br>amit <em>megkóstolsz</em></h1>
+    <p class="lede">Egy sörről a pohárba töltés pillanatában eldől a legtöbb: mennyi pörkölt malátát látott, felül vagy alul erjedt, mennyi komlót kapott. Kezdd a színskálával — a többi utána jön.</p>
+  </div>
+
+  <div class="ladder-block">
+    <div class="ladder-head">
+      <div>
+        <div class="eyebrow">Színskála · SRM</div>
+      </div>
+      <p>A Standard Reference Method a sör színmélységét méri. Kattints egy fokra, és csak az abba a tartományba eső stílusok maradnak.</p>
+    </div>
+    <div class="ladder" id="ladder" role="group" aria-label="Szűrés szín szerint"></div>
+    <div class="ladder-scale"><span>SRM 2 · szalmasárga</span><span>10 · borostyán</span><span>20 · vörösbarna</span><span>40+ · fekete</span></div>
+    <div class="readout" id="readout">Vidd rá az egeret a skálára, vagy kattints a szűréshez.</div>
+  </div>
+
+  <div class="controls">
+    <button class="chip" data-fam="all" aria-pressed="true">Mind</button>
+    <button class="chip" data-fam="lager" aria-pressed="false">Alsó erjesztésű</button>
+    <button class="chip" data-fam="ale" aria-pressed="false">Felső erjesztésű</button>
+    <button class="chip" data-fam="vad" aria-pressed="false">Vad / savanyú</button>
+    <input type="search" id="q" placeholder="Keresés: IPA, porter, búza…" aria-label="Keresés a stílusok között">
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="grid" id="styleGrid"></div>
+</div>
+</section>
+
+<!-- ===================== 02 FŐZÉS ===================== -->
+<section class="layer" id="fozes" role="tabpanel">
+<div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow">02 — réteg · a folyamat</div>
+    <h2>Négy alapanyag, nyolc lépés</h2>
+    <p>Víz, maláta, komló, élesztő. Minden stílus ugyanezen az úton megy végig — a különbség a hőfokokban, az időkben és abban, hogy melyik lépésnél mit tesznek hozzá. Kattints egy lépésre a részletekért.</p>
+  </div>
+
+  <div class="steps" id="steps"></div>
+  <div class="panel" id="stepPanel"></div>
+
+  <div class="calc">
+    <h3>Extrakttól az alkoholig</h3>
+    <p class="note">A lengyel és cseh címkéken az eredeti extrakt (°Plato / °Blg) szerepel: ennyi oldott anyag van a sörlében erjesztés előtt. Az élesztő ennek egy részét alakítja alkohollá — az arány az erjedési fok. Állítsd be a két csúszkát, és megkapod a várható alkoholtartalmat.</p>
+    <div class="calc-grid">
+      <div>
+        <label for="oe">Eredeti extrakt (°Plato)</label>
+        <input type="range" id="oe" min="7" max="22" step="0.1" value="12.1">
+        <div class="val"><span id="oeVal">12,1</span> °P</div>
+      </div>
+      <div>
+        <label for="adf">Látszólagos erjedési fok</label>
+        <input type="range" id="adf" min="50" max="88" step="1" value="75">
+        <div class="val"><span id="adfVal">75</span> %</div>
+      </div>
+      <div>
+        <label for="abvOut">Várható alkohol</label>
+        <output id="abvOut">5,0%</output>
+      </div>
+    </div>
+    <div class="presets" id="presets"></div>
+  </div>
+</div>
+</section>
+
+<!-- ===================== 03 MÁRKÁK ===================== -->
+<section class="layer" id="markak" role="tabpanel">
+<div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow">03 — réteg · a magyar polc</div>
+    <h2>Ami itthon a hűtőben van</h2>
+    <p>A hazai sörpiacot négy gyár uralja — Dreher, Borsodi, Heineken Hungária és a jóval kisebb Pécsi Sörfőzde —, mellettük az importmárkák és a 2010-es években felfutó kisüzemi főzdék osztoznak. Alább márkák kategóriánként.</p>
+  </div>
+
+  <div class="controls">
+    <button class="chip" data-cat="all" aria-pressed="true">Mind</button>
+    <button class="chip" data-cat="hazai" aria-pressed="false">Hazai nagyüzem</button>
+    <button class="chip" data-cat="import" aria-pressed="false">Import világmárka</button>
+    <button class="chip" data-cat="kezmuves" aria-pressed="false">Magyar kézműves</button>
+    <button class="chip" data-cat="lengyel" aria-pressed="false">Lengyel</button>
+    <span class="count" id="brandCount"></span>
+  </div>
+
+  <div class="grid" id="brandGrid"></div>
+</div>
+</section>
+
+<!-- ===================== 04 AMBER ===================== -->
+<section class="layer" id="amber" role="tabpanel">
+<div class="wrap">
+  <div class="sec-head">
+    <div class="eyebrow">04 — külön réteg · Browar Amber, Bielkówko</div>
+    <h2>Egy pomerániai családi főzde</h2>
+    <p>A Gdańsktól pár kilométerre fekvő Bielkówkóban működő Amber saját mélyfúrású kútból dolgozik, saját élesztő-propagáló állomást tart fenn, és a malátáihoz jórészt saját árpát termeszt. Az alábbi adatok — extrakt, alkohol, stílus, szín, eltarthatóság, alapanyagok — a főzde hivatalos termékoldalairól származnak.</p>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><b>1994</b><span>a főzde építésének befejezése</span></div>
+    <div class="fact"><b>11.24.</b><span>az első főzet napja, 1994</span></div>
+    <div class="fact"><b>12,5%</b><span>az első sör (Amber Green) extraktja</span></div>
+    <div class="fact"><b>1997</b><span>saját élesztő-propagáló állomás</span></div>
+    <div class="fact"><b>16</b><span>termék a jelenlegi kínálatban</span></div>
+  </div>
+
+  <div class="controls">
+    <button class="chip" data-astyle="all" aria-pressed="true">Mind</button>
+    <button class="chip" data-astyle="lager" aria-pressed="false">Lager</button>
+    <button class="chip" data-astyle="ale" aria-pressed="false">Felső erjesztésű</button>
+    <button class="chip" data-astyle="porter" aria-pressed="false">Porter</button>
+    <button class="chip" data-astyle="mentes" aria-pressed="false">Alkoholmentes</button>
+    <input type="search" id="aq" placeholder="Keresés: Koźlak, porter, Citra…" aria-label="Keresés az Amber termékei között">
+    <span class="count" id="amberCount"></span>
+  </div>
+
+  <div class="grid" id="amberGrid"></div>
+
+  <div class="bars">
+    <h3>Alkoholtartalom a teljes kínálatban</h3>
+    <p class="cap">A skála 0-tól 8%-ig fut. Jól látszik a főzde súlypontja: erős, magas extraktú lagerek, a csúcson a 18,1 °P-os balti porterrel.</p>
+    <div id="abvBars"></div>
+  </div>
+</div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <h4>Adatforrások</h4>
+      <p>Az Amber-termékek adatai (extrakt, alkohol, stílus, szín, eltarthatóság, összetevők, díjak) a főzde hivatalos oldaláról: <a href="https://www.browar-amber.pl/pl/nasze-produkty/amber-pils/" target="_blank" rel="noopener">browar-amber.pl</a>. A stílusparaméterek a nemzetközi stílusleírások (BJCP) szokásos tartományai — az egyes sörök ezektől eltérhetnek.</p>
+    </div>
+    <div>
+      <h4>Amiben ez nem segít</h4>
+      <p>A magyar polcon szereplő márkák listája nem teljes és nem sorrend: pillanatkép a jellemzően kapható tételekről. A forgalmazás és a receptúrák évről évre változnak.</p>
+    </div>
+    <div>
+      <h4>Egy dolog a végére</h4>
+      <p><span class="age">18+</span></p>
+      <p style="margin-top:10px">Alkoholtartalmú italokról szóló ismeretterjesztő oldal. A mértékletes fogyasztás az egyetlen mód, ahogy mindebből valóban ízlelés lesz.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============ SRM színek ============ */
+const SRM = {1:"#FFE699",2:"#FFD878",3:"#FFCA5A",4:"#FFBF42",5:"#FBB123",6:"#F8A600",7:"#F39C00",8:"#EA8F00",9:"#E58500",10:"#DE7C00",12:"#CF6900",14:"#BC5400",16:"#A64B00",18:"#8D3800",20:"#7C3000",24:"#641F00",28:"#4C1200",32:"#361100",36:"#261000",40:"#0F0B0A"};
+const srmColor = v => {const k=Object.keys(SRM).map(Number); let best=k[0]; k.forEach(x=>{if(Math.abs(x-v)<Math.abs(best-v))best=x}); return SRM[best];};
+
+/* ============ Stílusadatok ============ */
+const STYLES = [
+{n:"Világos lager",alt:"Helles / euro pale lager",fam:"lager",famL:"Alsó erjesztésű",abv:"4,5–5,4%",ibu:"16–24",srm:[3,5],temp:"6–8 °C",glass:"Pokál, korsó",
+ desc:"A világ legtöbbet ivott sörtípusa. Tiszta, kenyeres malátaíz, visszafogott komló, semmi, ami elvonná a figyelmet. Nehéz jól főzni: nincs mögé rejthető aroma.",
+ orig:"Bajorország, 1894 — a Spaten válasza a pilzeni sikerre",ex:["Augustiner Helles","Weihenstephaner Original"],hu:["Soproni","Borsodi","Arany Ászok","Kőbányai","Heineken"]},
+{n:"Pilsner",alt:"Cseh és német pils",fam:"lager",famL:"Alsó erjesztésű",abv:"4,2–5,8%",ibu:"25–45",srm:[2,6],temp:"6–8 °C",glass:"Magas, karcsú pohár",
+ desc:"Ragyogóan tiszta, szalmasárga, határozott komlókeserűvel. A cseh változat kerekebb, kenyeresebb, a német szárazabb és pattogósabb.",
+ orig:"Plzeň, 1842 — Josef Groll bajor sörfőző receptje az első alul erjesztett világos sör",ex:["Pilsner Urquell","Bitburger"],hu:["Pilsner Urquell","Zlatý Bažant","Bitburger","Steiger"]},
+{n:"Bécsi lager",alt:"Vienna lager",fam:"lager",famL:"Alsó erjesztésű",abv:"4,7–5,5%",ibu:"18–30",srm:[9,15],temp:"7–9 °C",glass:"Pokál",
+ desc:"Rezes-borostyán szín, kekszes-karamelles malátaközép, száraz befejezés. A magyar sörtörténet szempontjából fontos stílus.",
+ orig:"Bécs, 1841 — Dreher Antal fejlesztése; ugyanaz a Dreher, akinek a neve a kőbányai gyáron van",ex:["Negra Modelo","Samuel Adams Boston Lager"],hu:["Dreher Classic (rokon karakter)"]},
+{n:"Märzen",alt:"Oktoberfestbier",fam:"lager",famL:"Alsó erjesztésű",abv:"5,6–6,3%",ibu:"18–24",srm:[8,16],temp:"8–10 °C",glass:"Maßkrug, pokál",
+ desc:"Teltebb, malátásabb ünnepi lager. Nevét onnan kapta, hogy márciusban főzték, és hűvös pincében nyáron át érlelték.",
+ orig:"München — a hűtőgép előtti korban a nyári főzési tilalom szülte",ex:["Paulaner Oktoberfest","Ayinger Oktober Fest-Märzen"],hu:["Szezonális importtételek"]},
+{n:"Bak",alt:"Bock / koźlak",fam:"lager",famL:"Alsó erjesztésű",abv:"6,3–7,2%",ibu:"20–27",srm:[14,22],temp:"10–13 °C",glass:"Tulipán, pokál",
+ desc:"Erős, malátaközpontú lager rubinos-barna színnel. Kenyérhéj, karamell, aszalt szilva és mazsola — a komló csak egyensúlyt tart.",
+ orig:"Einbeck, 13. század; a bajor kiejtésben lett »Bock« = bak, innen a kecskés címkék",ex:["Einbecker Ur-Bock","Aecht Schlenkerla Fastenbier"],hu:["Dreher Bak","Amber Koźlak (import)"]},
+{n:"Doppelbock",alt:"Kettős bak",fam:"lager",famL:"Alsó erjesztésű",abv:"7,0–10,0%",ibu:"16–26",srm:[14,26],temp:"10–14 °C",glass:"Tulipán",
+ desc:"A bak sűrűbb testvére: szirupos malátamélység, kenyér, csoki, aszalt gyümölcs. A böjt »folyékony kenyere«.",
+ orig:"Paulánus szerzetesek, München — innen az »-ator« végű nevek",ex:["Paulaner Salvator","Ayinger Celebrator"],hu:["Paulaner Salvator"]},
+{n:"Búzasör",alt:"Hefeweizen",fam:"ale",famL:"Felső erjesztésű",abv:"4,3–5,6%",ibu:"8–15",srm:[2,6],temp:"7–9 °C",glass:"Weizen pohár",
+ desc:"Legalább félig búzamalátából, szűretlenül. Az élesztő adja a banán- és szegfűszegjegyeket — nem aroma, hanem erjedési melléktermék.",
+ orig:"Bajorország; a búza használatát sokáig a hercegi ház monopolizálta",ex:["Weihenstephaner Hefeweissbier","Schneider Weisse"],hu:["Erdinger","Paulaner Weissbier","Franziskaner","Edelweiss"]},
+{n:"Witbier",alt:"Belga búzasör",fam:"ale",famL:"Felső erjesztésű",abv:"4,5–5,5%",ibu:"8–20",srm:[2,4],temp:"5–7 °C",glass:"Vaskos hatszögletű pohár",
+ desc:"Sápadt, tejfehéren zavaros, maláttalan búzával. Korianderrel és curaçao-narancshéjjal fűszerezik — ez a stílus definíciója, nem extra.",
+ orig:"Leuven környéke; a stílus az 1960-as években kihalt, Pierre Celis támasztotta fel",ex:["Hoegaarden","Allagash White"],hu:["Hoegaarden"]},
+{n:"Angol pale ale",alt:"Bitter",fam:"ale",famL:"Felső erjesztésű",abv:"4,0–5,5%",ibu:"25–45",srm:[6,14],temp:"10–13 °C",glass:"Nonic pint",
+ desc:"Kekszes maláta, földes-virágos angol komló, alacsony szénsav. Csapról a legjobb, majdnem pincehőmérsékleten.",
+ orig:"Burton upon Trent; a helyi kemény, gipszes víz emelte ki a komlót",ex:["Fuller's London Pride","Timothy Taylor Landlord"],hu:["Sörspecialista boltok kínálatában"]},
+{n:"APA",alt:"American pale ale",fam:"ale",famL:"Felső erjesztésű",abv:"4,5–6,2%",ibu:"30–50",srm:[5,10],temp:"8–10 °C",glass:"Nonic pint",
+ desc:"Az angol pale ale amerikai komlókkal: citrus, fenyőgyanta, trópusi gyümölcs, tiszta malátaalapon. A kézműves forradalom belépőkártyája.",
+ orig:"Kalifornia, 1980 — a Sierra Nevada Pale Ale Cascade komlóval",ex:["Sierra Nevada Pale Ale"],hu:["Reketye","Első Magyar Sörfőzde","Amber APA (import)"]},
+{n:"IPA",alt:"India pale ale",fam:"ale",famL:"Felső erjesztésű",abv:"5,5–7,5%",ibu:"40–70",srm:[6,14],temp:"8–10 °C",glass:"Nonic pint, tulipán",
+ desc:"Komlóközpontú, határozott keserűvel és intenzív aromával. A hidegkomlózás — erjedés után adagolt komló — adja az illatot, keserűt már alig.",
+ orig:"18. századi angol exportsörök; a mai értelmű IPA-t az amerikai kézműves főzdék teremtették újra",ex:["Stone IPA","BrewDog Punk IPA"],hu:["Soproni Óvatos Duhaj IPA","Mad Scientist","Horizont","Monyo"]},
+{n:"NEIPA",alt:"Hazy / New England IPA",fam:"ale",famL:"Felső erjesztésű",abv:"6,0–9,0%",ibu:"25–60",srm:[4,7],temp:"8–10 °C",glass:"Tulipán",
+ desc:"Gyümölcslére emlékeztetően zavaros, lágy testű, alig keserű, ugyanakkor tömény komlóaromával. Zab és búza adja a selymességet.",
+ orig:"Vermont, 2010-es évek",ex:["The Alchemist Heady Topper","Tree House Julius"],hu:["Mad Scientist","Horizont","Fehér Nyúl"]},
+{n:"Amber ale",alt:"Red ale",fam:"ale",famL:"Felső erjesztésű",abv:"4,5–6,2%",ibu:"25–40",srm:[10,17],temp:"9–11 °C",glass:"Nonic pint",
+ desc:"Karamellmaláta és komló egyensúlyban, borostyán-vörös színnel. Ott áll a pale ale és a barna ale között.",
+ orig:"Egyesült Államok, kézműves szcéna; ír rokona a red ale",ex:["Fat Tire","Kilkenny (ír irány)"],hu:["Kilkenny","hazai kézműves tételek"]},
+{n:"Barna ale",alt:"Brown ale",fam:"ale",famL:"Felső erjesztésű",abv:"4,2–5,9%",ibu:"20–30",srm:[12,22],temp:"10–12 °C",glass:"Nonic pint",
+ desc:"Mogyoró, kenyérhéj, enyhe karamell, kevés keserű. Kényelmes, hétköznapi sör, ma inkább a kézműves polcon él tovább.",
+ orig:"Észak-Anglia, Newcastle",ex:["Newcastle Brown Ale","Samuel Smith's Nut Brown Ale"],hu:["Kézműves tételek"]},
+{n:"Porter",alt:"Angol porter",fam:"ale",famL:"Felső erjesztésű",abv:"4,0–5,4%",ibu:"18–35",srm:[20,30],temp:"10–13 °C",glass:"Pint, pokál",
+ desc:"Sötétbarna, kávés-csokis, de nem éles pörköltségű sör, lágyabb és kerekebb a stoutnál.",
+ orig:"London, 1720-as évek — az első ipari méretekben, nagy hordókban érlelt sör",ex:["Fuller's London Porter"],hu:["Kézműves és import tételek"]},
+{n:"Balti porter",alt:"Porter bałtycki",fam:"lager",famL:"Alsó erjesztésű",abv:"6,5–9,5%",ibu:"20–40",srm:[17,30],temp:"12–14 °C",glass:"Kehely, goblet",
+ desc:"A ritka sötét sör, amit alul erjesztenek és hosszan érlelnek. Keserűcsokoládé, kávé, aszalt gyümölcs, sűrű krémes hab — a pörköltség simább, mint egy stoutnál.",
+ orig:"19. századi Balti-tenger melléke: az Angliából importált imperial stout helyi, lagerélesztős válasza",ex:["Żywiec Porter","Okocim Porter"],hu:["Amber Grand Baltic Porter (import)"]},
+{n:"Stout",alt:"Ír száraz stout",fam:"ale",famL:"Felső erjesztésű",abv:"4,0–4,5%",ibu:"25–45",srm:[25,40],temp:"8–10 °C",glass:"Tulipán pint",
+ desc:"Pörkölt árpa adja az espresszós keserűt és a szinte fekete színt. Nitrogénnel csapolva selymes, sűrű habbal.",
+ orig:"Dublin — eredetileg »stout porter«, azaz erős porter",ex:["Guinness Draught","Murphy's"],hu:["Guinness"]},
+{n:"Imperial stout",alt:"Russian imperial stout",fam:"ale",famL:"Felső erjesztésű",abv:"8,0–12,0%",ibu:"50–90",srm:[30,40],temp:"12–14 °C",glass:"Snifter",
+ desc:"Sűrű, olajos, tömény: keserűcsoki, melasz, feketekávé, sötét gyümölcs. Évekig érlelhető, hordós változatai külön világ.",
+ orig:"London, 18. század — a cári udvarba exportált, erősre főzött stout",ex:["Courage Imperial Russian Stout"],hu:["Mad Scientist","Horizont","import tételek"]},
+{n:"Belga dubbel",alt:"Apátsági barna",fam:"ale",famL:"Felső erjesztésű",abv:"6,0–7,6%",ibu:"15–25",srm:[10,17],temp:"10–13 °C",glass:"Kehely",
+ desc:"Sötét kandiscukor, szilva, mazsola, borsos élesztőkarakter. Erős, mégis könnyen csúszó — ez a veszélye.",
+ orig:"Belga trappista és apátsági főzdék",ex:["Westmalle Dubbel","Chimay Rouge"],hu:["Leffe Brune","Chimay"]},
+{n:"Belga tripel",alt:"Erős világos",fam:"ale",famL:"Felső erjesztésű",abv:"7,5–9,5%",ibu:"20–40",srm:[4,7],temp:"8–10 °C",glass:"Kehely",
+ desc:"Világos, mégis nagy erejű: fűszeres élesztő, körte, citrus, száraz befejezés, magas szénsav.",
+ orig:"Westmalle, 1930-as évek",ex:["Westmalle Tripel","La Chouffe"],hu:["Karmeliet Tripel","Leffe Tripel"]},
+{n:"Saison",alt:"Farmház-ale",fam:"ale",famL:"Felső erjesztésű",abv:"5,0–7,0%",ibu:"20–35",srm:[5,14],temp:"8–10 °C",glass:"Kehely, tulipán",
+ desc:"Száraz, borsos, citrusos, magas szénsavval. Az élesztő szinte teljesen kierjeszti — innen a szomjoltó karakter.",
+ orig:"Vallónia — eredetileg a mezei idénymunkásoknak télen főzött sör",ex:["Saison Dupont"],hu:["Kézműves tételek"]},
+{n:"Lambic és gueuze",alt:"Spontán erjesztés",fam:"vad",famL:"Vad / savanyú",abv:"5,0–8,0%",ibu:"0–10",srm:[3,7],temp:"8–12 °C",glass:"Flûte, kehely",
+ desc:"Nem oltják be élesztővel: a levegőben és a hordókban élő vadélesztők és baktériumok dolgoznak benne évekig. Savas, bőrös, citrusos, szinte bor.",
+ orig:"A Zenne folyó völgye Brüsszel körül — máshol nem reprodukálható mikroflóra",ex:["Cantillon Gueuze","3 Fonteinen"],hu:["Lindemans","Timmermans","Belle-Vue"]},
+{n:"Berliner Weisse és gose",alt:"Savanyú búza",fam:"vad",famL:"Vad / savanyú",abv:"2,8–5,0%",ibu:"3–12",srm:[2,4],temp:"5–7 °C",glass:"Kehely, tumbler",
+ desc:"Tejsavas savasság, alacsony alkohol, üdítő karakter. A gose sót és koriandert is kap — sós-savanyú, szokatlan és nagyon szomjoltó.",
+ orig:"Berlin és Goslar; mindkettő majdnem kihalt, a kézműves szcéna hozta vissza",ex:["Professor Fritz Briem 1809","Ritterguts Gose"],hu:["Kézműves gyümölcsös savanyúk"]},
+{n:"Kellerbier",alt:"Zwickl, szűretlen lager",fam:"lager",famL:"Alsó erjesztésű",abv:"4,7–5,6%",ibu:"20–35",srm:[4,17],temp:"7–9 °C",glass:"Kőkorsó, pokál",
+ desc:"Szűretlen, gyakran pasztőrözetlen lager, közvetlenül az érlelőtankból. Teltebb, kenyeresebb, élőbb, mint a szűrt testvérei — cserébe rövid a szavatossága.",
+ orig:"Franken; a pincékben érlelt sört hordóból mérték ki",ex:["Mahrs Bräu Ungespundet"],hu:["Amber Piwo Żywe (import)","hazai főzdék friss tételei"]},
+{n:"Alkoholmentes",alt:"0,0–0,5%",fam:"lager",famL:"Alsó erjesztésű",abv:"0,0–0,5%",ibu:"10–40",srm:[3,8],temp:"5–7 °C",glass:"Bármi",
+ desc:"Vagy elvonják az alkoholt a kész sörből, vagy eleve úgy erjesztik, hogy alig keletkezzen. Az utóbbi években ez lett a leggyorsabban javuló kategória — a komlós, IPA-jellegű változatok a legjobbak.",
+ orig:"Ipari eljárás, de a kézműves főzdék tették élvezhetővé",ex:["Athletic Brewing","Erdinger Alkoholfrei"],hu:["Soproni 0,0","Heineken 0.0","Dreher 24","Amber Bezalkoholowe IPA (import)"]}
+];
+
+/* ============ Stílusok renderelése ============ */
+const grid = document.getElementById("styleGrid");
+const countEl = document.getElementById("count");
+let famFilter="all", srmFilter=null, qFilter="";
+
+function renderStyles(){
+  const list = STYLES.filter(s=>{
+    if(famFilter!=="all" && s.fam!==famFilter) return false;
+    if(srmFilter!==null && !(srmFilter>=s.srm[0]-1 && srmFilter<=s.srm[1]+1)) return false;
+    if(qFilter){
+      const hay=(s.n+" "+s.alt+" "+s.desc+" "+s.famL+" "+s.ex.join(" ")+" "+s.hu.join(" ")).toLowerCase();
+      if(!hay.includes(qFilter)) return false;
+    }
+    return true;
+  });
+  countEl.textContent = list.length+" / "+STYLES.length+" stílus";
+  grid.innerHTML = list.map((s,i)=>{
+    const mid=(s.srm[0]+s.srm[1])/2, col=srmColor(mid);
+    const tags = s.ex.map(e=>'<span class="tag">'+e+'</span>').join("")
+               + s.hu.map(e=>'<span class="tag hu">'+e+'</span>').join("");
+    return '<article class="card" data-i="'+STYLES.indexOf(s)+'">'
+      +'<button class="head" aria-expanded="false">'
+      +'<span class="glass"><i style="background:'+col+'"></i><em></em></span>'
+      +'<span style="flex:1"><h3>'+s.n+'</h3><span class="fam">'+s.famL+' · '+s.alt+'</span>'
+      +'<span class="stats"><span><b>'+s.abv+'</b></span><span>IBU <b>'+s.ibu+'</b></span><span>SRM <b>'+s.srm[0]+'–'+s.srm[1]+'</b></span></span></span>'
+      +'</button>'
+      +'<div class="body"><p>'+s.desc+'</p>'
+      +'<dl class="kv"><dt>Eredet</dt><dd>'+s.orig+'</dd><dt>Tálalás</dt><dd>'+s.temp+' · '+s.glass+'</dd></dl>'
+      +'<div class="tags">'+tags+'</div></div></article>';
+  }).join("");
+  if(!list.length) grid.innerHTML='<p style="color:var(--ink-soft)">Erre a szűrésre nincs stílus. Vedd le a színszűrőt, vagy írj be mást a keresőbe.</p>';
+}
+grid.addEventListener("click",e=>{
+  const btn=e.target.closest("button.head"); if(!btn) return;
+  const card=btn.closest(".card"); const open=card.classList.toggle("open");
+  btn.setAttribute("aria-expanded",open?"true":"false");
+});
+
+/* ============ SRM létra ============ */
+const ladder=document.getElementById("ladder"), readout=document.getElementById("readout");
+const steps=[2,3,4,5,6,8,10,12,14,16,18,20,24,28,32,36,40];
+ladder.innerHTML=steps.map(v=>'<button data-srm="'+v+'" style="background:'+srmColor(v)+'" title="SRM '+v+'" aria-label="SRM '+v+'"></button>').join("");
+function stylesAt(v){return STYLES.filter(s=>v>=s.srm[0]-1&&v<=s.srm[1]+1).map(s=>s.n);}
+ladder.addEventListener("mouseover",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const v=+b.dataset.srm, names=stylesAt(v);
+  readout.innerHTML='<b>SRM '+v+'</b> — '+(names.length?names.join(" · "):"nincs jellemző stílus ezen a fokon");
+});
+ladder.addEventListener("mouseleave",()=>{ if(srmFilter===null) readout.textContent="Vidd rá az egeret a skálára, vagy kattints a szűréshez."; });
+ladder.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const v=+b.dataset.srm;
+  [...ladder.children].forEach(x=>x.classList.remove("on"));
+  if(srmFilter===v){ srmFilter=null; readout.textContent="Színszűrő kikapcsolva."; }
+  else { srmFilter=v; b.classList.add("on"); readout.innerHTML='Szűrve: <b>SRM '+v+'</b> körüli stílusok.'; }
+  renderStyles();
+});
+document.querySelectorAll("[data-fam]").forEach(c=>c.addEventListener("click",()=>{
+  document.querySelectorAll("[data-fam]").forEach(x=>x.setAttribute("aria-pressed","false"));
+  c.setAttribute("aria-pressed","true"); famFilter=c.dataset.fam; renderStyles();
+}));
+document.getElementById("q").addEventListener("input",e=>{qFilter=e.target.value.trim().toLowerCase();renderStyles();});
+renderStyles();
+
+/* ============ Főzési lépések ============ */
+const STEPS=[
+{t:"Malátázás",d:"3–5 nap",sub:"Az árpából maláta lesz",
+ p:"A nyers árpa keményítője a sörélesztő számára emészthetetlen. A malátázás során az árpát beáztatják, csíráztatják — ilyenkor termelődnek meg a keményítőt cukorrá bontó enzimek —, majd a csírázást aszalással állítják le.",
+ li:["<b>Áztatás:</b> a szem nedvességtartalma 12%-ról kb. 45%-ra nő","<b>Csíráztatás:</b> 4–6 nap, alfa- és béta-amiláz termelődik","<b>Aszalás:</b> világos maláta 80–85 °C-on; a karamell- és pörkölt maláták magasabb hőn kapják a színüket és az ízüket","A sör színének 90%-a itt dől el"]},
+{t:"Darálás",d:"percek",sub:"Törni, nem lisztté őrölni",
+ p:"A malátát úgy zúzzák meg, hogy a keményítőtest felnyíljon, de a héj lehetőleg épen maradjon: a héj lesz később a természetes szűrőréteg a szűrőkádban.",
+ li:["Túl finom őrlés = beragadó szűrés","Túl durva = kevesebb kinyert cukor"]},
+{t:"Cefrézés",d:"60–90 perc",sub:"Keményítőből cukor",
+ p:"A darát meleg vízzel keverik össze. Az enzimek itt bontják a keményítőt cukrokká — és a tartott hőfok dönti el, milyen lesz a sör teste és mennyire erjeszthető a lé.",
+ li:["<b>62–65 °C:</b> a béta-amiláz dolgozik — jól erjeszthető, szárazabb, vékonyabb sör","<b>68–72 °C:</b> az alfa-amiláz — teltebb testű, maradékcukros sör","A jódpróba mutatja meg, elfogyott-e a keményítő","A lengyel és cseh címkéken szereplő °Plato itt születik meg"]},
+{t:"Szűrés",d:"60–90 perc",sub:"Lé és törköly szétválasztása",
+ p:"A cefrét szűrőkádba engedik, ahol a maláta héja szűrőágyat képez. Az elfolyó első lé után 76–78 °C-os vízzel mossák ki a maradék cukrot a törkölyből.",
+ li:["A visszamaradó törköly takarmányként hasznosul","78 °C fölött cserzőanyagok oldódnának ki — fanyar lenne a sör"]},
+{t:"Sörléfőzés",d:"60–90 perc",sub:"Itt kerül bele a komló",
+ p:"A sörlevet felforralják: sterilizálódik, bepárlódik, kicsapódnak a zavarosító fehérjék — és itt adagolják a komlót. Az adagolás időzítése dönti el, keserűt vagy illatot kapunk.",
+ li:["<b>Elején adagolt komló:</b> az alfasavak izomerizálódnak — ez adja a keserűt, az IBU-t","<b>Végén vagy a whirlpoolban:</b> az illóolajok megmaradnak — ez adja az aromát","Az illóolajok hosszú forralás alatt elszállnak, ezért két külön adagolás"]},
+{t:"Erjesztés",d:"3–10 nap",sub:"Az élesztő munkája",
+ p:"A lehűtött sörlevet beoltják élesztővel. A cukorból alkohol és szén-dioxid lesz — de az élesztő ízeket is termel, és a hőfok dönti el, mennyit.",
+ li:["<b>Alsó erjesztés (lager):</b> 8–14 °C, tiszta, semleges ízkép","<b>Felső erjesztés (ale):</b> 16–24 °C, gyümölcsös észterek, fűszeres fenolok","A búzasör banán- és szegfűszegjegye tisztán élesztőmunka","<b>Spontán erjesztés:</b> nincs beoltás — a levegő vadélesztői dolgoznak, évekig"]},
+{t:"Érlelés",d:"2–8 hét",sub:"Lagerezés, hidegkomlózás",
+ p:"Hideg érlelés alatt letisztul az íz, leülepszik az élesztő, elfogynak a nyers melléktermékek. A német »Lagerung« szó jelentése: tárolás — innen a lager név.",
+ li:["Lagereknél 0–4 °C, gyakran 4–8 hét","A balti porter és a bak hosszú érlelést kíván","<b>Hidegkomlózás:</b> az IPA-k itt kapják a komlóaromát, keserű nélkül"]},
+{t:"Töltés",d:"—",sub:"Szűrés, pasztőrözés vagy sem",
+ p:"A kész sört szűrik és általában pasztőrözik, hogy stabil maradjon. Aki ezt kihagyja, sokkal élénkebb sört kap — cserébe hetekben mérhető szavatossággal.",
+ li:["<b>Pasztőrözött:</b> 6–12 hónap eltarthatóság","<b>Pasztőrözetlen, szűretlen:</b> az Amber Piwo Żywe például 45 nap","A szűretlen sör zavarossága nem hiba, hanem stílusjegy"]}
+];
+const stepsEl=document.getElementById("steps"), stepPanel=document.getElementById("stepPanel");
+stepsEl.innerHTML=STEPS.map((s,i)=>'<button class="step" data-i="'+i+'" aria-pressed="'+(i===0)+'"><span class="n">'+String(i+1).padStart(2,"0")+'</span><span class="t">'+s.t+'</span><span class="d">'+s.d+'</span></button>').join("");
+function showStep(i){
+  const s=STEPS[i];
+  stepPanel.innerHTML='<h3>'+s.t+'</h3><div class="sub">'+String(i+1).padStart(2,"0")+' — '+s.sub+' · '+s.d+'</div><p>'+s.p+'</p><ul>'+s.li.map(x=>'<li>'+x+'</li>').join("")+'</ul>';
+  stepsEl.querySelectorAll(".step").forEach(b=>b.setAttribute("aria-pressed", b.dataset.i==i ? "true":"false"));
+}
+stepsEl.addEventListener("click",e=>{const b=e.target.closest(".step"); if(b) showStep(+b.dataset.i);});
+showStep(0);
+
+/* ============ Extrakt → alkohol kalkulátor ============ */
+const oe=document.getElementById("oe"), adf=document.getElementById("adf");
+const sg=p=>1+p/(258.6-(p/258.2)*227.1);
+function calc(){
+  const P=+oe.value, A=+adf.value/100, AE=P*(1-A);
+  const abv=(sg(P)-sg(AE))*131.25;
+  document.getElementById("oeVal").textContent=P.toFixed(1).replace(".",",");
+  document.getElementById("adfVal").textContent=A*100|0;
+  document.getElementById("abvOut").textContent=abv.toFixed(1).replace(".",",")+"%";
+}
+oe.addEventListener("input",calc); adf.addEventListener("input",calc); calc();
+const PRESETS=[["Amber Pils · 11,3 °P",11.3,73],["Pszeniczniak · 12,1 °P",12.1,72],["Piwo Żywe · 14,5 °P",14.5,71],["Koźlak · 15,1 °P",15.1,71],["Grand Baltic Porter · 18,1 °P",18.1,80]];
+document.getElementById("presets").innerHTML=PRESETS.map((p,i)=>'<button data-p="'+i+'">'+p[0]+'</button>').join("");
+document.getElementById("presets").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const p=PRESETS[+b.dataset.p]; oe.value=p[1]; adf.value=p[2]; calc();
+});
+
+/* ============ Márkák ============ */
+const BRANDS=[
+{n:"Dreher",cat:"hazai",owner:"Dreher Sörgyárak Zrt. · Asahi-csoport",p:"A kőbányai gyár Dreher Antal nevét viseli, aki a bécsi lager stílusát megalkotta. Mennyiségben évek óta a hazai piac élmezőnyében.",l:"Dreher Classic · Dreher Bak · Dreher 24 · Arany Ászok · Kőbányai"},
+{n:"Soproni",cat:"hazai",owner:"Heineken Hungária Sörgyárak Zrt.",p:"Az Első Soproni Serfőzde 1895-ös alapítású, 2003 óta a Heineken-csoport tagja. Az Óvatos Duhaj sorozattal vitte a stílussörök nyelvét a nagyáruházi polcra.",l:"Soproni Klasszikus · Óvatos Duhaj IPA / Búza / Meggy · Soproni 0,0"},
+{n:"Borsodi",cat:"hazai",owner:"Borsodi Sörgyár Kft. · Molson Coors",p:"Bőcsi gyár, 1973-tól. A klasszikus világos mellett a Bivaly erős lager és a friss, szűretlen tételek adják a portfólió gerincét.",l:"Borsodi Friss · Borsodi Bivaly · Miller Genuine Draft · Coors"},
+{n:"Pécsi Szalon",cat:"hazai",owner:"Pécsi Sörfőzde Zrt.",p:"A négy hazai gyár közül a legkisebb, jogelődje 1848-ban indult Pécsett. Regionálisan erős, országosan szűkebb jelenléttel.",l:"Szalon Sör · Szalon Barna"},
+{n:"Heineken",cat:"import",owner:"Heineken",p:"Holland világmárka, jellegzetes élesztőkarakterrel. Magyarországon a csoport gyárt is (Sopron), az importált testvérmárkákkal együtt széles a kínálat.",l:"Heineken · Heineken 0.0 · Heineken Silver"},
+{n:"Gösser és Zipfer",cat:"import",owner:"Brau Union / Heineken",p:"Osztrák lagerek, a magyar polcokon régóta jelen. A Gösser inkább malátás, a Zipfer szárazabb, komlósabb.",l:"Gösser Naturgold · Zipfer Urtyp"},
+{n:"Edelweiss",cat:"import",owner:"Brau Union / Heineken",p:"Osztrák búzasör, alpesi gyógynövénykivonattal. A legkönnyebben elérhető weizen a hazai boltokban.",l:"Edelweiss Hefetrüb · Edelweiss Snowfresh"},
+{n:"Pilsner Urquell",cat:"import",owner:"Asahi",p:"A stílus névadója: 1842 óta Plzeňben főzik, hármas cefrézéssel és cseh Saaz komlóval. Referenciapont minden pilsnerhez.",l:"Pilsner Urquell"},
+{n:"Staropramen",cat:"import",owner:"Molson Coors",p:"Prágai lager, a hazai vendéglátásban gyakori csapolt tétel.",l:"Staropramen Světlý · Staropramen Nefiltrovaný"},
+{n:"Kozel",cat:"import",owner:"Asahi",p:"Cseh lager; a sötét változat (Černý) karamelles, alacsony alkoholú, nagyon népszerű belépő a sötét sörök felé.",l:"Kozel Světlý · Kozel Černý"},
+{n:"Guinness",cat:"import",owner:"Diageo",p:"Az ír száraz stout etalonja. Nitrogénnel csapolva krémes, sűrű habbal, pörkölt árpás keserűvel.",l:"Guinness Draught"},
+{n:"Paulaner és Erdinger",cat:"import",owner:"Paulaner / Erdinger",p:"Bajor búzasörök, a hazai polcokon a hefeweizen stílus fő képviselői. A Salvator doppelbock is elérhető.",l:"Paulaner Weissbier · Erdinger Weissbier · Paulaner Salvator"},
+{n:"Hoegaarden és Leffe",cat:"import",owner:"AB InBev",p:"Belga klasszikusok: a Hoegaarden a witbier stílust hozta vissza a halálból, a Leffe az apátsági sörök legelterjedtebb márkája.",l:"Hoegaarden Wit · Leffe Blonde · Leffe Brune"},
+{n:"Corona és Birra Moretti",cat:"import",owner:"AB InBev / Heineken",p:"Könnyű, semleges lagerek, amelyeket inkább a fogyasztási helyzet ad el, mint az ízprofil.",l:"Corona Extra · Birra Moretti"},
+{n:"Mad Scientist",cat:"kezmuves",owner:"Budapest",p:"A hazai kézműves szcéna legismertebb neve. Erősen komlós tételek, NEIPA-k, imperial stoutok, gyakori kollaborációk.",l:"Változó, szezonális kínálat"},
+{n:"MONYO",cat:"kezmuves",owner:"Budapest / Duna­haraszti",p:"Széles stílusskála a könnyű lagertől a barrel aged tételekig, saját söröző-hálózattal.",l:"Rise & Shine · szezonális IPA-k"},
+{n:"Horizont",cat:"kezmuves",owner:"Balatonfüred",p:"Következetes, díjnyertes főzde; erős NEIPA- és stoutvonal.",l:"Változó kínálat"},
+{n:"Reketye",cat:"kezmuves",owner:"Budapest",p:"Klasszikus amerikai stílusok tisztán megfőzve — pale ale, IPA, porter.",l:"Reketye Beer Company tételek"},
+{n:"Első Magyar Sörfőzde",cat:"kezmuves",owner:"Fót",p:"Az egyik legkorábbi hazai kézműves főzde, sok kereskedelmi láncban is elérhető.",l:"Fóti Keserű · Fóti Világos"},
+{n:"Fehér Nyúl",cat:"kezmuves",owner:"Budapest",p:"Kísérletező főzde, savanyú és komlós tételekkel egyaránt.",l:"Változó kínálat"},
+{n:"Csíki Sör",cat:"kezmuves",owner:"Csíkszentsimon, Erdély",p:"Erdélyi főzde, Magyarországon széles körben forgalmazott.",l:"Csíki Sör · Tiltott Csíki Sör"},
+{n:"Tyskie és Żywiec",cat:"lengyel",owner:"Asahi / Heineken",p:"A lengyel piac két legnagyobb világos lager márkája; itthon lengyel élelmiszerboltokban és nagyobb üzletláncokban bukkannak fel.",l:"Tyskie Gronie · Żywiec Jasne"},
+{n:"Żywiec Porter",cat:"lengyel",owner:"Heineken",p:"9,5%-os balti porter, a stílus egyik referenciatétele — érdemes összevetni az Amber Grand Baltic Porterrel.",l:"Żywiec Porter"},
+{n:"Browar Amber",cat:"lengyel",owner:"Bielkówko, Pomeránia",p:"Regionális családi főzde a gdański térségben. Magyarországon nem általánosan forgalmazott — lengyel importboltokban és sörspecialistáknál kereshető. Részletek a 04. rétegben.",l:"Piwo Żywe · Koźlak · Grand Baltic Porter"}
+];
+const brandGrid=document.getElementById("brandGrid"), brandCount=document.getElementById("brandCount");
+let catFilter="all";
+function renderBrands(){
+  const list=BRANDS.filter(b=>catFilter==="all"||b.cat===catFilter);
+  brandCount.textContent=list.length+" márka";
+  brandGrid.innerHTML=list.map(b=>'<article class="brand"><h3>'+b.n+'</h3><div class="owner">'+b.owner+'</div><p>'+b.p+'</p><div class="list">'+b.l+'</div></article>').join("");
+}
+document.querySelectorAll("[data-cat]").forEach(c=>c.addEventListener("click",()=>{
+  document.querySelectorAll("[data-cat]").forEach(x=>x.setAttribute("aria-pressed","false"));
+  c.setAttribute("aria-pressed","true"); catFilter=c.dataset.cat; renderBrands();
+}));
+renderBrands();
+
+/* ============ AMBER — hivatalos termékadatok ============ */
+const AMBER=[
+{n:"Amber Pils",g:"lager",styl:"pils",abv:5.0,oe:"11,3%",col:"világos szalmasárga",pas:"pasztőrözött",exp:"270 nap",since:"2013",
+ d:"Kizárólag lengyel komlókkal, hidegkomlózva. Négy fajta: Lubelski, Marynka, Puławski és Sybilla.",
+ ing:"saját mélyfúrású kút vize; világos árpamaláta; aroma- és keserítőkomló; saját propagálású alsó erjesztésű élesztő",
+ srv:"8–10 °C, pohárban",med:["Meininger's arany 2022 (pils, bohemian)","World Beer Awards ezüst 2022","Good Beer ezüst 2024"]},
+{n:"Amber Mocny Red",g:"lager",styl:"erős lager",abv:7.0,oe:"14,5%",col:"borostyán",pas:"pasztőrözött",exp:"180 nap",since:"1995",
+ d:"A főzde egyik legelső söre, jellegzetes 0,33 literes »bączek« palackban. Malátás karakter, finom gyümölcsös jegyekkel, harmonikus keserűvel.",
+ ing:"saját kút vize; világos árpamaláta; aroma- és keserítőkomló; saját propagálású alsó erjesztésű élesztő",
+ srv:"8–10 °C, korsóban",med:["Arany, X. Lengyel Sörfesztivál, Łódź 1997"]},
+{n:"Pszeniczniak",g:"ale",styl:"búzasör",abv:5.2,oe:"12,1%",col:"világos szalmasárga, zavaros",pas:"pasztőrözött",exp:"180 nap",since:"2012",
+ d:"Felső erjesztésű búzasör, klasszikus banán–szegfűszeg jegyekkel. Szűretlen, ezért természetesen zavaros, bő habbal.",
+ ing:"saját kút vize; búza- és árpamaláta; aroma- és keserítőkomló; saját propagálású felső erjesztésű élesztő",
+ srv:"8–10 °C, weizen pohárban",med:["Kraft Roku ezüst 2023","Greater Poland Beer Cup bronz 2022","Kraft Roku arany 2018"]},
+{n:"Piwo Żywe",g:"lager",styl:"világos lager, pasztőrözetlen",abv:6.2,oe:"14,5%",col:"borostyán",pas:"NEM pasztőrözött",exp:"45 nap",since:"2004",
+ d:"A főzde legismertebb söre. Pasztőrözetlen, hosszan érlelt — ezért mindössze 45 nap a szavatossága. Az első lengyel sör, amit a Slow Food ajánlott.",
+ ing:"saját kút vize; árpamaláta; aroma- és keserítőkomló; saját propagálású alsó erjesztésű élesztő",
+ srv:"8–10 °C, pokálban",med:["Slow Food ajánlás 2004 — elsőként Lengyelországban","»Poznaj Dobrą Żywność« minisztériumi védjegy 2005","Good Beer bronz 2020"]},
+{n:"Koźlak",g:"lager",styl:"bak (bock)",abv:6.5,oe:"15,1%",col:"rubinvörös",pas:"pasztőrözött",exp:"270 nap",since:"2003",
+ d:"Malátaközpontú bak: karamell, sötét kenyér, szilva és mazsola, kiegyensúlyozott keserűvel. Világos, tartós habbal.",
+ ing:"saját kút vize; világos és karamell árpamaláta; aroma- és keserítőkomló; saját propagálású alsó erjesztésű élesztő",
+ srv:"12–14 °C, tulipán pohárban",med:["Greater Poland Beer Cup arany 2024","New York International Beer Competition 3. hely 2019","Kézműves Sörverseny arany 2016"]},
+{n:"Grand Baltic Porter",g:"porter",styl:"balti porter",abv:8.0,oe:"18,1%",col:"fekete",pas:"pasztőrözött",exp:"365 nap",since:"2008",
+ d:"Pörkölt gabona, csokoládé, kávé, karamell és aszalt gyümölcs, rendkívül sűrű krémes habbal. Alsó erjesztés, hosszú érlelés — a stílus lényege.",
+ ing:"saját kút vize; világos és sötét pörkölt árpamaláta; aroma- és keserítőkomló; saját propagálású alsó erjesztésű élesztő",
+ srv:"12–14 °C, goblet pohárban",med:["European Beer Star bronz 2023","Golden Beer Poland ezüst 2015","Piwo Roku 2010 — Bractwo Piwne"]},
+{n:"Chili Grand Baltic Porter",g:"porter",styl:"balti porter chilivel",abv:8.0,oe:"18,1%",col:"fekete",pas:"pasztőrözött",exp:"18 hónap",since:"—",
+ d:"A balti porter őrölt piros chilipaprikával. Keserűcsokoládés porterjegyek és csípősség együtt — a világon is kevés hasonló sör készül.",
+ ing:"saját kút vize; világos és sötét árpamaláta; aroma- és keserítőkomló; őrölt piros chilipaprika; saját propagálású élesztő",
+ srv:"12–14 °C, goblet pohárban",med:[]},
+{n:"Złote Lwy",g:"lager",styl:"világos lager",abv:5.6,oe:"12,2%",col:"világos borostyán",pas:"pasztőrözött",exp:"270 nap",since:"2007",
+ d:"A főzde »tökéletes gdański lagernek« szánta. Keserű-malátás ízközép, gazdag aromabukett; a komlók között a lengyel IUNGA fajta is szerepel.",
+ ing:"saját kút vize; világos és sötét árpamaláta; aroma- és keserítőkomló; saját propagálású alsó erjesztésű élesztő",
+ srv:"8–10 °C, pohárban",med:["Greater Poland Beer Cup arany 2023 (világos lager)"]},
+{n:"Johannes",g:"lager",styl:"erős lager",abv:6.5,oe:"14,5%",col:"borostyán",pas:"pasztőrözött",exp:"270 nap",since:"2011",
+ d:"Johannes Hevelius gdański csillagász és sörfőző emlékére. A márka a Gdański Múzeummal közös kezdeményezés: a bevétel egy része múzeumi műtárgyvásárlásra megy.",
+ ing:"saját kút vize; árpamaláta; aroma- és keserítőkomló; saját propagálású alsó erjesztésű élesztő",
+ srv:"8–10 °C, pohárban",med:["Good Beer arany 2023 (erős lager)"]},
+{n:"Czarny Bez",g:"lager",styl:"lager bodzavirággal",abv:5.5,oe:"12,8%",col:"világos borostyán",pas:"pasztőrözött",exp:"180 nap",since:"2013",
+ d:"Klasszikus lager 2% bodzavirág-sziruppal. A virágot május végén, június elején kézzel szedik; a szirup receptje Hieronim Błażejak mestertől való.",
+ ing:"saját kút vize; árpamaláta; bodzavirágszirup 2% (bodzavirág, víz, cukor, citrom); keserítő és aromakomló; alsó erjesztésű élesztő",
+ srv:"8–10 °C, pohárban",med:["Piwne Akordy bronz 2021 (gyümölcsös)","Złoty Paragon elismerés 2016"]},
+{n:"APA",g:"ale",styl:"american pale ale",abv:5.2,oe:"12,1%",col:"borostyán, zavaros",pas:"pasztőrözött, szűretlen",exp:"270 nap",since:"2016",
+ d:"Citrus és trópusi gyümölcs gyantás jegyekkel, hidegkomlózva. Három amerikai komló: Chinook, Cascade, Citra.",
+ ing:"saját kút vize; pale ale és pilzeni maláta; Chinook, Cascade, Citra komló; saját propagálású felső erjesztésű élesztő",
+ srv:"8–10 °C, nonic pint pohárban",med:["World Beer Awards ezüst 2022","Chmielaki Krasnostawskie 2. hely 2023"]},
+{n:"IPA",g:"ale",styl:"india pale ale",abv:5.7,oe:"14,5%",col:"borostyán, zavaros",pas:"pasztőrözött, szűretlen",exp:"180 nap",since:"2021",
+ d:"Citrusos, trópusi és gyantás komlókarakter határozott keserűvel. Amerikai komlók: Citra, Cascade, Sabro, Chinook — az összetevőlistán Strata is szerepel.",
+ ing:"saját kút vize; pale ale és pilzeni maláta; Cascade, Chinook, Strata komló; saját propagálású felső erjesztésű élesztő",
+ srv:"10–12 °C, nonic pint pohárban",med:[]},
+{n:"Bezalkoholowe IPA",g:"mentes",styl:"alkoholmentes IPA",abv:0.4,oe:"—",col:"világos szalmasárga, opalizáló",pas:"pasztőrözött, szűretlen",exp:"270 nap",since:"2020",
+ d:"Amerikai és lengyel komlók keveréke — Citra, Sabro, Cascade, Marynka, Sybilla —, hidegkomlózva. A lengyel Bractwo Piwne 2024-ben az év sörének választotta.",
+ ing:"saját kút vize; árpamaláta; Citra, Sabro, Cascade, Marynka, Sybilla komló; saját propagálású élesztő",
+ srv:"8–10 °C, nonic pint pohárban",med:["Piwo Roku 2024 — Bractwo Piwne","Greater Poland Beer Cup arany 2024","Kraft Roku bronz 2024"]},
+{n:"Marango",g:"lager",styl:"lager maracuja- és mangólével",abv:4.5,oe:"12%",col:"borostyán",pas:"pasztőrözött",exp:"270 nap",since:"2022",
+ d:"Könnyű lager sűrített maracuja- és mangólével, természetes aromákkal. Grillételekhez és egzotikus szószokhoz ajánlják.",
+ ing:"saját kút vize; árpamaláta; cukor; sűrített citrom-, maracuja- és mangólé; természetes aromák; komló; C-vitamin; saját élesztő",
+ srv:"8–10 °C, nonic pint pohárban",med:["Good Beer díj 2025","Piwne Akordy ezüst 2023","Chmielaki Krasnostawskie 1. hely 2023"]},
+{n:"Zanzi",g:"mentes",styl:"alkoholmentes lager gyümölccsel",abv:0.4,oe:"—",col:"világos szalmasárga",pas:"pasztőrözött",exp:"270 nap",since:"2022",
+ d:"A Marango alkoholmentes változata. Amerikai komlók adják a citrusos jegyeket a maracuja–mangó páros mellé.",
+ ing:"saját kút vize; árpamaláta; cukor; sűrített citrom-, maracuja- és mangólé; Citra, Cascade, Marynka, Sybilla komló; természetes aromák; C-vitamin",
+ srv:"6–8 °C, pohárban",med:["Chmielaki Krasnostawskie 3. hely 2024"]},
+{n:"Amber Czarny Bez alkoholmentes",g:"mentes",styl:"alkoholmentes lager bodzavirággal",abv:0.4,oe:"—",col:"világos borostyán",pas:"pasztőrözött",exp:"—",since:"—",
+ d:"A bodzavirágos lager alkoholmentes párja, a kínálat legújabb tagjai közül.",
+ ing:"saját kút vize; árpamaláta; bodzavirágszirup; komló; saját propagálású élesztő",
+ srv:"6–8 °C, pohárban",med:[]}
+];
+const amberGrid=document.getElementById("amberGrid"), amberCount=document.getElementById("amberCount");
+let aFilter="all", aq="";
+function renderAmber(){
+  const list=AMBER.filter(a=>{
+    if(aFilter!=="all"&&a.g!==aFilter) return false;
+    if(aq){const hay=(a.n+" "+a.styl+" "+a.d+" "+a.ing+" "+a.col).toLowerCase(); if(!hay.includes(aq)) return false;}
+    return true;
+  });
+  amberCount.textContent=list.length+" / "+AMBER.length+" termék";
+  amberGrid.innerHTML=list.map(a=>{
+    const col = a.g==="porter" ? SRM[36] : (a.g==="mentes" ? SRM[3] : (a.n==="Koźlak" ? SRM[18] : (a.col.indexOf("borostyán")>=0 ? SRM[10] : SRM[4])));
+    const med=a.med.map(m=>'<span class="medal">'+m+'</span>').join("");
+    return '<article class="card"><button class="head" aria-expanded="false">'
+    +'<span class="glass"><i style="background:'+col+'"></i><em></em></span>'
+    +'<span style="flex:1"><h3>'+a.n+'</h3><span class="fam">'+a.styl+(a.since!=="—"?" · "+a.since+" óta":"")+'</span>'
+    +'<span class="stats"><span><b>'+a.abv.toFixed(1).replace(".",",")+'%</b></span><span>extrakt <b>'+a.oe+'</b></span></span></span></button>'
+    +'<div class="body"><p>'+a.d+'</p>'
+    +'<dl class="kv"><dt>Stílus</dt><dd>'+a.styl+'</dd><dt>Szín</dt><dd>'+a.col+'</dd><dt>Kezelés</dt><dd>'+a.pas+'</dd><dt>Eltarthatóság</dt><dd>'+a.exp+'</dd><dt>Tálalás</dt><dd>'+a.srv+'</dd><dt>Összetevők</dt><dd>'+a.ing+'</dd></dl>'
+    +(med?'<div class="tags">'+med+'</div>':'')+'</div></article>';
+  }).join("");
+  if(!list.length) amberGrid.innerHTML='<p style="color:var(--ink-soft)">Erre a szűrésre nincs termék.</p>';
+}
+amberGrid.addEventListener("click",e=>{
+  const btn=e.target.closest("button.head"); if(!btn) return;
+  const card=btn.closest(".card"); const open=card.classList.toggle("open");
+  btn.setAttribute("aria-expanded",open?"true":"false");
+});
+document.querySelectorAll("[data-astyle]").forEach(c=>c.addEventListener("click",()=>{
+  document.querySelectorAll("[data-astyle]").forEach(x=>x.setAttribute("aria-pressed","false"));
+  c.setAttribute("aria-pressed","true"); aFilter=c.dataset.astyle; renderAmber();
+}));
+document.getElementById("aq").addEventListener("input",e=>{aq=e.target.value.trim().toLowerCase();renderAmber();});
+renderAmber();
+
+/* ---- alkohol-diagram ---- */
+const bars=document.getElementById("abvBars");
+bars.innerHTML=[...AMBER].sort((a,b)=>b.abv-a.abv).map(a=>
+  '<div class="bar"><span class="n">'+a.n+'</span><span class="track"><span class="fill" data-w="'+(a.abv/8*100)+'"></span></span><span class="v">'+a.abv.toFixed(1).replace(".",",")+'%</span></div>'
+).join("");
+function animateBars(){bars.querySelectorAll(".fill").forEach((f,i)=>setTimeout(()=>{f.style.width=f.dataset.w+"%"},i*35));}
+
+/* ============ rétegváltás ============ */
+document.querySelectorAll("nav.layers button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("nav.layers button").forEach(x=>x.setAttribute("aria-selected","false"));
+  b.setAttribute("aria-selected","true");
+  document.querySelectorAll("section.layer").forEach(s=>s.classList.remove("active"));
+  document.getElementById(b.dataset.layer).classList.add("active");
+  window.scrollTo({top:0,behavior:"instant"});
+  if(b.dataset.layer==="amber") animateBars();
+}));
+</script>
+</body>
+</html>
