@@ -713,6 +713,14 @@ hbars.innerHTML=HEDON.filter(a=>a.abv).sort((a,b)=>b.abv-a.abv).map(a=>
 
 renderStyles();renderFruit();
 
+/* ================= kártyák nyitása ================= */
+document.addEventListener("click",e=>{
+  const btn=e.target.closest("button.head");if(!btn)return;
+  const card=btn.closest(".card");if(!card)return;
+  const open=card.classList.toggle("open");
+  btn.setAttribute("aria-expanded",open?"true":"false");
+});
+
 /* ================= rétegváltás ================= */
 function animateBars(box){box.querySelectorAll(".fill").forEach((f,i)=>setTimeout(()=>{f.style.width=f.dataset.w+"%"},i*35))}
 document.querySelectorAll("nav.layers button").forEach(b=>b.addEventListener("click",()=>{
