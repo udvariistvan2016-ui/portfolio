@@ -20,7 +20,7 @@ A repó **publikus**. Minden fájl bárki számára letölthető, nem csak a
 megjelenített oldal.
 
 Új demó feldolgozásakor **mindig nézd át** a fájlt, és jelezd, ha találsz:
-- ügyfél- vagy cégnevet (Raiffeisen, Nitro, konkrét megbízók)
+- ügyfél- vagy cégnevet (konkrét megbízók, korábbi munkahelyek)
 - valódi ügyfélszintű adatot, e-mail címet, ügyfélazonosítót
 - belső rendszernevet, szerver- vagy adatbázisnevet, connection stringet
 - API kulcsot, tokent, jelszót
@@ -32,15 +32,38 @@ Ha bizonytalan vagy, inkább kérdezz.
 Elfogadott anonimizálás: „egy hazai bank hűségprogramja", arányosított
 vagy kerekített számok, kitalált minta-adatok.
 
-### 2. Minden HTML-be kell noindex
-Minden oldal `<head>` részébe, kivétel nélkül:
+### 2. Indexelés — oldalanként dől el
+
+**Ez a szabály 2026 augusztusában megfordult.** Korábban minden oldalon
+rajta volt a `noindex`. Mostantól a cél a megtalálhatóság: az oldal a
+LinkedIn kiterjesztése, a munkáltató is láthatja.
+
+**Indexelhető** (nincs rajtuk `noindex`): a főoldal és a szakmai demók.
+
+**`noindex` MARAD** ezeken — ne vedd le kérés nélkül:
+
+```
+demos/laboreredmeny-vizualizacio.html   – magánjellegű egészségügyi adat
+demos/sorkalauz.html                    – 18+ tartalom
+demos/opera-koktelrepertoar.html        – 18+ tartalom, idegen márkafotók
+demos/kmeans-szegmentacio.html          – helykitöltő, kínos lenne találatban
+demos/conversational-analytics.html     – helykitöltő, kínos lenne találatban
+```
+
+A sor, ha kell:
 
 ```html
 <meta name="robots" content="noindex, nofollow">
 ```
 
-Ez azért kell, mert a tulaj aktívan állást keres, és nem akarja, hogy az oldal
-a nevére rákeresve felbukkanjon. Soha ne távolítsd el kérés nélkül.
+Új demónál **kérdezd meg**, melyik csoportba tartozik. Ha bizonytalan vagy,
+tedd rá a `noindex`-et — azt később levenni egy sor, visszacsinálni a
+Google-indexből viszont hetek.
+
+Ha egy oldal indexelhetővé válik, vedd fel a `sitemap.xml`-be is.
+A `robots.txt` szándékosan nem tiltja a noindexes oldalakat: ha tiltaná,
+a Google nem olvasná be a noindex sort, és külső link alapján mégis
+indexelhetné őket.
 
 ### 3. Címke-szótár — ne találj ki újat
 Csak ezeket használd, pontosan így írva:

@@ -1,0 +1,12 @@
+# A keresők feltérképezhetik az oldalt.
+#
+# FONTOS: a nem indexelendő oldalakat (laborlelet, sörkalauz,
+# koktélrepertoár, a két helykitöltő) SZÁNDÉKOSAN nem tiltjuk itt.
+# Ha a robots.txt kizárná őket, a Google nem tudná beolvasni a bennük
+# lévő noindex sort — és külső hivatkozás alapján mégis felvehetné őket
+# a találatok közé. Így viszont beolvassa a noindexet, és kihagyja őket.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://udvariistvan2016-ui.github.io/portfolio/sitemap.xml

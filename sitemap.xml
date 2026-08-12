@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Csak az indexelhető oldalak. A noindexes demók (laborlelet,
+     sörkalauz, koktélrepertoár, a két helykitöltő) nincsenek benne. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/hotel-demo-loyalty-dashboard.html</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/poi-crm-hubspot-python.html</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/poi-crm-hubspot-n8n.html</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/szamla-tracker-pipeline.html</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/transcription-pipeline.html</loc>
+    <lastmod>2026-08-12</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>
