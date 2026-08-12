@@ -208,7 +208,9 @@ h1{
 .card{
   grid-column:span 1;
   background:var(--card);
-  border:1px solid var(--line);
+  /* vastagabb keret: ez fogja össze a bélyegképet és a szöveget
+     egyetlen egységgé — 1px-nél a kettő szétesett */
+  border:2px solid var(--line);
   border-radius:var(--radius);
   overflow:hidden;
   text-decoration:none;
