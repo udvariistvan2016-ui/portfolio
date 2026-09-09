@@ -32,7 +32,7 @@ const PROJEKTEK = [
     tipus: "interaktív demó",
     rang: 100,
     datum: "2026-08",
-    kiemelt: true
+    kiemelt: false
   },
 
   {
@@ -43,7 +43,7 @@ const PROJEKTEK = [
     tipus: "esettanulmány",
     rang: 95,
     datum: "2026-08",
-    kiemelt: false
+    kiemelt: true
   },
 
   {
@@ -87,7 +87,7 @@ const PROJEKTEK = [
     tipus: "esettanulmány",
     rang: 80,
     datum: "2026-06",
-    kiemelt: true
+    kiemelt: false
   },
 
   {
@@ -142,7 +142,7 @@ const PROJEKTEK = [
     tipus: "esettanulmány",
     rang: 92,
     datum: "2026-09",
-    kiemelt: false
+    kiemelt: true
   },
 
   {
