@@ -36,6 +36,28 @@ const PROJEKTEK = [
   },
 
   {
+    cim: "E-mail kampány benchmark riport",
+    leiras: "73 kampány teljesítménye egy közös viszonyítási alaphoz mérve: tölcsér a kiküldéstől a beváltásig, szűrhető szegmensbontás, súlyozott és átlagolt számítás.",
+    fajl: "email-kampany-benchmark.html",
+    cimkek: ["SQL", "Vizualizáció", "CRM", "Munka"],
+    tipus: "esettanulmány",
+    rang: 95,
+    datum: "2026-08",
+    kiemelt: false
+  },
+
+  {
+    cim: "Engagement Colours — szegmens-mátrix",
+    leiras: "Havi vásárlói besorolás a rendelések és az appmegnyitások mátrixán, mátrix- és treemap-nézetben, éves KPI-célkövetéssel. Fiktív adatokon.",
+    fajl: "engagement-colours-szegmentacio.html",
+    cimkek: ["Szegmentáció", "Vizualizáció", "CRM", "Munka"],
+    tipus: "interaktív demó",
+    rang: 88,
+    datum: "2026-09",
+    kiemelt: false
+  },
+
+  {
     cim: "POI-adatbázis → HubSpot szinkron (Python)",
     leiras: "CSV-exportok beolvasása, tisztítása, deduplikálása és összefésülése CRM-be tölthető kimenetté, futásnaplóval és ellenőrző riportokkal.",
     fajl: "poi-crm-hubspot-python.html",
@@ -114,12 +136,12 @@ const PROJEKTEK = [
 
   {
     cim: "Ügyfélszegmentáció K-means klaszterezéssel",
-    leiras: "Viselkedés-alapú klaszterek gördülő 12 hónapos ablakon, banki hűségprogram adatain. Anonimizált esettanulmány.",
+    leiras: "Végigvezetett módszertan a feature-öktől a klaszterszám melletti döntésig: hét viselkedési mutató gördülő 12 hónapos ablakon, öt metrika, GMM-ellenőrzés és havi stabilitás. Kétnyelvű, szintetikus adatokon.",
     fajl: "kmeans-szegmentacio.html",
-    cimkek: ["Python", "ML / Data Science", "CRM", "Munka"],
-    tipus: "helykitöltő",
-    rang: -10,
-    datum: "2026-05",
+    cimkek: ["Python", "ML / Data Science", "Szegmentáció", "Munka"],
+    tipus: "esettanulmány",
+    rang: 92,
+    datum: "2026-09",
     kiemelt: false
   },
 

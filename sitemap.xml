@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Csak az indexelhető oldalak. A noindexes demók (laborlelet,
-     sörkalauz, koktélrepertoár, a két helykitöltő) nincsenek benne. -->
+     sörkalauz, koktélrepertoár, a maradék helykitöltő) nincsenek benne. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   <url>
@@ -36,6 +36,24 @@
   <url>
     <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/transcription-pipeline.html</loc>
     <lastmod>2026-08-12</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/email-kampany-benchmark.html</loc>
+    <lastmod>2026-09-09</lastmod>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/kmeans-szegmentacio.html</loc>
+    <lastmod>2026-09-09</lastmod>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/engagement-colours-szegmentacio.html</loc>
+    <lastmod>2026-09-09</lastmod>
     <priority>0.8</priority>
   </url>
 

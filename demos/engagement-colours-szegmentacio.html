@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nordvia · Engagement Colours – interaktív szegmens-vizualizáció (demó)</title>
+<style>
+  :root{--ink:#1c1c28;--muted:#6b6b7b;--line:#e6e6ee;--bg:#f4f5f9;--card:#ffffff;--accent:#B39DE0;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 22px 60px;}
+  header.bar{display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:10px 0 16px;border-bottom:2px solid var(--ink);}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;letter-spacing:-.2px;}
+  .brand .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#B39DE0,#1565D8);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;}
+  .brand small{display:block;font-size:9.5px;font-weight:600;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;}
+  header.bar .title{flex:1;text-align:center;}
+  header.bar .title h1{margin:0;font-size:20px;letter-spacing:.2px;}
+  header.bar .title p{margin:3px 0 0;font-size:12.5px;color:var(--muted);}
+  .demo-badge{font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+    color:#8a6fc4;background:#f0eafc;border:1px solid #ddd0f5;border-radius:20px;padding:5px 12px;white-space:nowrap;}
+  .note{background:#fffbe9;border:1px solid #f2e4b8;border-radius:10px;padding:9px 14px;
+    font-size:12px;color:#7a6425;margin:14px 0 0;}
+  .controls{display:flex;flex-wrap:wrap;gap:22px;align-items:center;margin:18px 0 8px;}
+  .ctrl-group{display:flex;flex-direction:column;gap:6px;}
+  .ctrl-group .lab{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+  .seg-toggle{display:inline-flex;flex-wrap:wrap;background:#ececf3;border-radius:10px;padding:3px;max-width:100%;}
+  .seg-toggle button{border:0;background:transparent;padding:7px 12px;border-radius:8px;
+    font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s;}
+  .seg-toggle button.active{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  .kpi{display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:var(--card);
+    border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:12px;padding:12px 18px;margin:14px 0 6px;}
+  .kpi .big{font-size:26px;font-weight:800;line-height:1;}
+  .kpi .lab{font-size:12.5px;color:var(--muted);}
+  .kpi .bar{flex:1;min-width:160px;max-width:320px;height:10px;background:#e7e7ef;border-radius:6px;overflow:hidden;}
+  .kpi .bar > i{display:block;height:100%;background:var(--accent);transition:width .3s;}
+  .kpi .tgt{font-size:12.5px;color:var(--muted);white-space:nowrap;}
+  .kpi-sep{width:1px;align-self:stretch;background:var(--line);margin:0 4px;}
+  .total-box{text-align:right;}
+  .total-box .lab{display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+  .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+    border-radius:50%;background:#c9c9d4;color:#fff;font-size:10px;font-weight:700;cursor:help;
+    font-family:Georgia,'Times New Roman',serif;}
+  .info:hover,.info:focus{background:var(--accent);outline:none;}
+  .info .info-pop{position:absolute;bottom:135%;right:0;width:240px;background:#1c1c28;color:#fff;
+    font-size:11.5px;font-weight:400;line-height:1.45;text-align:left;padding:9px 11px;border-radius:9px;
+    box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;visibility:hidden;transition:.12s;z-index:60;}
+  .info:hover .info-pop,.info:focus .info-pop{opacity:1;visibility:visible;}
+  .layout{display:grid;grid-template-columns:1fr 340px;gap:20px;margin-top:10px;align-items:start;}
+  @media(max-width:880px){.layout{grid-template-columns:1fr;}}
+  .viz-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;min-height:520px;}
+  .viz-card h2{margin:0 0 4px;font-size:15px;}
+  .viz-card .sub{margin:0 0 12px;font-size:12px;color:var(--muted);}
+  svg{display:block;width:100%;height:auto;}
+  .seg-region{cursor:pointer;transition:opacity .12s;}
+  .seg-region:hover{opacity:.86;}
+  .dim{opacity:.28 !important;}
+  .cell-grid line{stroke:#d7d7e2;stroke-width:.7;}
+  .axis-txt{font-size:11px;fill:var(--muted);font-family:inherit;}
+  .axis-title{font-size:12px;fill:var(--ink);font-weight:700;font-family:inherit;}
+  .reg-label{font-family:inherit;font-weight:700;pointer-events:none;}
+  .reg-sub{font-family:inherit;pointer-events:none;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;position:sticky;top:14px;}
+  .panel .swatch{width:100%;height:8px;border-radius:5px;margin-bottom:12px;}
+  .panel h3{margin:0 0 2px;font-size:16px;}
+  .panel .en{font-size:12.5px;color:var(--muted);margin:0 0 12px;}
+  .panel .stats{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .panel .stat{flex:1;min-width:84px;background:var(--bg);border-radius:10px;padding:9px 11px;}
+  .panel .stat b{display:block;font-size:18px;}
+  .panel .stat span{font-size:11px;color:var(--muted);}
+  .panel .bands{display:flex;gap:8px;margin-bottom:14px;}
+  .panel .band{background:#f0f0f7;border-radius:8px;padding:6px 10px;font-size:12px;flex:1;}
+  .panel .band b{font-size:13px;}
+  .panel .info-h{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:0 0 6px;}
+  .panel ul{margin:0;padding-left:17px;}
+  .panel li{font-size:12.7px;line-height:1.5;margin-bottom:3px;}
+  .panel .hint{font-size:12px;color:var(--muted);font-style:italic;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:14px;}
+  .legend .it{display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;}
+  .legend .it .sw{width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.15);}
+  #tip{position:fixed;pointer-events:none;z-index:50;background:#1c1c28;color:#fff;padding:9px 12px;
+    border-radius:9px;font-size:12.5px;line-height:1.45;box-shadow:0 6px 20px rgba(0,0,0,.25);
+    opacity:0;transition:opacity .1s;max-width:250px;}
+  #tip b{font-size:13px;}
+  #tip .t-en{color:#bdbdce;font-size:11px;}
+  #tip .t-row{margin-top:4px;}
+  footer.made{text-align:center;margin-top:26px;font-size:11px;color:#a9a9b8;letter-spacing:.3px;}
+</style>
+</head>
+<body>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:10px 20px;background:#15181C;color:#F2F3F0;position:sticky;top:0;z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
+  <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
+</div>
+<div class="wrap">
+
+  <header class="bar">
+    <div class="brand"><span class="mark">N</span><span>Nordvia<small>online retail</small></span></div>
+    <div class="title">
+      <h1>Engagement Colours – vásárlói szegmentáció</h1>
+      <p>Havi besorolás a leadott rendelések × app megnyitások mátrixán</p>
+    </div>
+    <div class="demo-badge">Demó · fiktív adatok</div>
+  </header>
+
+  <div class="note"><b>Portfólió-demó.</b> A felület egy valós ügyfélprojekt anonimizált, újraépített változata: a márkanév, a szegmensnevek és minden szám kitalált, kizárólag a vizualizációs és interakciós megoldások bemutatására szolgál.</div>
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="lab">Hónap</span>
+      <div class="seg-toggle" id="monthToggle"></div>
+    </div>
+    <div class="ctrl-group">
+      <span class="lab">Vizualizáció</span>
+      <div class="seg-toggle" id="vizToggle">
+        <button data-viz="matrix" class="active">Mátrix</button>
+        <button data-viz="treemap">Treemap</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div>
+      <div class="big" id="kpiVal">–</div>
+      <div class="lab">Bajnokok · 12+ / 12+ vásárlók (kiemelt üzleti KPI)</div>
+    </div>
+    <div class="bar"><i id="kpiBar" style="width:0"></i></div>
+    <div class="tgt">Éves cél: 320 000 fő · <span id="kpiPct">–</span></div>
+    <div class="kpi-sep"></div>
+    <div class="total-box">
+      <div class="big" id="totalVal">–</div>
+      <div class="lab">Teljes vásárlói bázis<span class="info" tabindex="0" aria-label="Info a teljes bázisról">i<span class="info-pop">A besorolás csak azokat a vásárlókat tartalmazza, akik a feldolgozás időpontjában a hűségprogram adatbázisában megtalálhatók voltak.</span></span></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="viz-card">
+      <h2 id="vizTitle">Engagement mátrix</h2>
+      <p class="sub" id="vizSub"></p>
+      <div id="vizArea"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="swatch" id="pSwatch"></div>
+      <h3 id="pName">Válassz egy szegmenst</h3>
+      <p class="en" id="pEn">Kattints egy színes mezőre a részletekért.</p>
+      <div class="stats">
+        <div class="stat"><b id="pCount">–</b><span>fő</span></div>
+        <div class="stat"><b id="pPct">–</b><span>a bázisból</span></div>
+      </div>
+      <div class="bands">
+        <div class="band">Rendelés<br><b id="pTrx">–</b></div>
+        <div class="band">App megnyitás<br><b id="pApp">–</b></div>
+      </div>
+      <p class="info-h">Háttér</p>
+      <ul id="pInfo"><li class="hint">Fiktív szegmens-leírások a demóhoz.</li></ul>
+    </div>
+  </div>
+
+  <footer class="made">Készítette: Udvari István – Data Analyst · portfólió-demó fiktív adatokkal</footer>
+</div>
+
+<div id="tip"></div>
+
+<script>
+/* ============ DEMO ADATOK (fiktív) ============ */
+const MONTHS = [
+  {key:"2025-08", label:"2025. augusztus", total:600436},
+  {key:"2025-09", label:"2025. szeptember", total:606022},
+  {key:"2025-10", label:"2025. október", total:611090},
+  {key:"2025-11", label:"2025. november", total:616358},
+  {key:"2025-12", label:"2025. december", total:623314},
+  {key:"2026-01", label:"2026. január", total:629380},
+  {key:"2026-02", label:"2026. február", total:636583},
+  {key:"2026-03", label:"2026. március", total:644133},
+  {key:"2026-04", label:"2026. április", total:651135},
+  {key:"2026-05", label:"2026. május", total:657121},
+  {key:"2026-06", label:"2026. június", total:664614},
+  {key:"2026-07", label:"2026. július", total:671150}
+];
+
+const SEG = [
+  {key:"purple", db:"Purple", en:"Champions", hu:"Bajnokok",
+   trx:"12+", app:"12+", color:"#B39DE0", light:true,
+   counts:{"2025-08":238769,"2025-09":242963,"2025-10":246598,"2025-11":250372,"2025-12":255128,"2026-01":259267,"2026-02":264788,"2026-03":270376,"2026-04":275469,"2026-05":279796,"2026-06":285416,"2026-07":289700},
+   info:["A demó fő KPI-célcsoportja: 12+ rendelés és 12+ app megnyitás havonta.",
+         "Legmagasabb kosárérték és a legrövidebb újravásárlási ciklus.",
+         "Kiugró hűségpont-beváltás; az akciós hírlevelekre a legaktívabban reagálnak.",
+         "Jellemzően 28–45 év, nagyvárosi, több kategóriában is vásárolnak."]},
+  {key:"white", db:"White", en:"Other", hu:"Egyéb",
+   trx:"köztes", app:"köztes", color:"#FFFFFF", light:true,
+   counts:{"2025-08":129511,"2025-09":130198,"2025-10":131134,"2025-11":132277,"2025-12":133353,"2026-01":133898,"2026-02":135049,"2026-03":135788,"2026-04":136836,"2026-05":137487,"2026-06":138375,"2026-07":139500},
+   info:["Köztes cellák: az egyik vagy mindkét dimenzióban részleges aktivitás.",
+         "Nem tartozik a definiált viselkedési szegmensekbe.",
+         "A bázis szürke zónája – itt a legnagyobb az elmozdítási potenciál."]},
+  {key:"lightblue", db:"LightBlue", en:"Dormant", hu:"Alvó vásárló",
+   trx:"0", app:"0", color:"#46C6C6", light:true,
+   counts:{"2025-08":105654,"2025-09":105142,"2025-10":104389,"2025-11":103650,"2025-12":103252,"2026-01":103076,"2026-02":102338,"2026-03":102003,"2026-04":101381,"2026-05":100650,"2026-06":100261,"2026-07":99900},
+   info:["Nulla rendelés és nulla app megnyitás a tárgyhónapban.",
+         "Jellemzően egyszeri, akcióvezérelt vásárlásból érkezett a bázisba.",
+         "Alacsony hírlevél-megnyitás, magas leiratkozási hajlandóság.",
+         "Reaktiválási kampányok elsődleges célcsoportja – a bázis közel 15%-a."]},
+  {key:"darkblue", db:"DarkBlue", en:"Loyal Buyers", hu:"Hűséges vásárló",
+   trx:"12+", app:"7–11", color:"#1565D8", light:false,
+   counts:{"2025-08":67819,"2025-09":68583,"2025-10":69235,"2025-11":69882,"2025-12":70877,"2026-01":71850,"2026-02":72587,"2026-03":73584,"2026-04":74596,"2026-05":75693,"2026-06":76417,"2026-07":77500},
+   info:["Sokat rendel (12+), de az appot mérsékelten használja (7–11 megnyitás).",
+         "Erős potenciál a Bajnokok felé: elsősorban app-élmény fejlesztéssel mozdítható.",
+         "Átlag feletti kosárérték, gyakori a visszatérő kategória-vásárlás.",
+         "Push-értesítésre jól reagál, a személyre szabott ajánlót gyakran nyitja meg."]},
+  {key:"orange", db:"Orange", en:"Offline Heavy", hu:"Rendel, de nem appozik",
+   trx:"12+", app:"0–1", color:"#FFB81C", light:true,
+   counts:{"2025-08":29783,"2025-09":29984,"2025-10":30195,"2025-11":30297,"2025-12":30493,"2026-01":30742,"2026-02":30900,"2026-03":31091,"2026-04":31182,"2026-05":31460,"2026-06":31694,"2026-07":31800},
+   info:["Magas rendelésszám (12+), de gyakorlatilag nulla app-használat.",
+         "Jellemzően asztali böngészőből vagy telefonos ügyfélszolgálaton keresztül vásárol.",
+         "Idősebb korosztály, magas átlagos kosárérték, árérzékenyebb.",
+         "Az app-onboarding legnagyobb kiaknázatlan tartaléka."]},
+  {key:"yellow", db:"Yellow", en:"App Enthusiasts", hu:"Appozó böngésző",
+   trx:"7–11", app:"12+", color:"#FCE94F", light:true,
+   counts:{"2025-08":11451,"2025-09":11588,"2025-10":11779,"2025-11":11979,"2025-12":12149,"2026-01":12333,"2026-02":12550,"2026-03":12768,"2026-04":12990,"2026-05":13182,"2026-06":13423,"2026-07":13600},
+   info:["Sokat nyitja az appot (12+), de mérsékelten rendel (7–11).",
+         "Böngészésre és árfigyelésre használja a felületet; sok a kosárelhagyás.",
+         "Fiatalabb szegmens, erősen akció- és kupon-érzékeny.",
+         "Kis kedvezménnyel jól konvertálható a Bajnokok irányába."]},
+  {key:"green", db:"Green", en:"Steady Mid", hu:"Kiegyensúlyozott",
+   trx:"7–11", app:"7–11", color:"#1E9E57", light:false,
+   counts:{"2025-08":9697,"2025-09":9783,"2025-10":9926,"2025-11":10016,"2025-12":10158,"2026-01":10270,"2026-02":10383,"2026-03":10507,"2026-04":10650,"2026-05":10768,"2026-06":10890,"2026-07":11000},
+   info:["A mátrix közepe: 7–11 rendelés és 7–11 app megnyitás.",
+         "Az átlagos vásárlói profil, stabil, kiszámítható költéssel.",
+         "Kiegyensúlyozott csatornahasználat app és web között.",
+         "Kis méretű, de a legalacsonyabb lemorzsolódású szegmens."]},
+  {key:"pink", db:"Pink", en:"Light Buyers", hu:"Alkalmi vásárló",
+   trx:"7–11", app:"0–1", color:"#F48FB1", light:true,
+   counts:{"2025-08":7752,"2025-09":7781,"2025-10":7834,"2025-11":7885,"2025-12":7904,"2026-01":7944,"2026-02":7988,"2026-03":8016,"2026-04":8031,"2026-05":8085,"2026-06":8138,"2026-07":8150},
+   info:["Mérsékelt rendelésszám (7–11), app-használat nélkül.",
+         "A legkisebb szegmens; jellemzően egy-két kedvenc kategóriában mozog.",
+         "Szezonális minta: kiugrás az őszi és karácsonyi időszakban.",
+         "Elsősorban e-mailen és keresőn keresztül érhető el."]}
+];
+
+const REGIONS = {
+  lightblue: {r:[0,0],  c:[0,0]},
+  pink:      {r:[7,11], c:[0,1]},
+  orange:    {r:[12,13],c:[0,1]},
+  green:     {r:[7,11], c:[7,11]},
+  yellow:    {r:[7,11], c:[12,13]},
+  darkblue:  {r:[12,13],c:[7,11]},
+  purple:    {r:[12,13],c:[12,13]}
+};
+const AX = ["0","1","2","3","4","5","6","7","8","9","10","11","12","12+"];
+
+const TARGET = 320000;
+const SEGMAP = Object.fromEntries(SEG.map(s=>[s.key,s]));
+
+/* ============ STATE ============ */
+let state = {month:MONTHS[MONTHS.length-1].key, viz:"matrix", selected:null};
+
+/* ============ HELPERS ============ */
+const fmt = n => n.toLocaleString("hu-HU").replace(/ /g," ").replace(/,/g," ");
+const pct = (n,t) => (n/t*100);
+function txtColor(seg){return seg.light ? "#1c1c28" : "#ffffff";}
+
+/* ============ TOGGLES ============ */
+const mt = document.getElementById("monthToggle");
+MONTHS.forEach(m=>{
+  const b=document.createElement("button");
+  b.textContent=m.label.replace("2025. ","").replace("2026. ",""); b.title=m.label; b.dataset.month=m.key;
+  if(m.key===state.month) b.classList.add("active");
+  b.onclick=()=>{state.month=m.key; mt.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b)); render();};
+  mt.appendChild(b);
+});
+const vt=document.getElementById("vizToggle");
+vt.querySelectorAll("button").forEach(b=>{
+  b.onclick=()=>{state.viz=b.dataset.viz; vt.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b)); render();};
+});
+
+/* ============ TOOLTIP ============ */
+const tip=document.getElementById("tip");
+function showTip(e,seg){
+  const m=state.month, c=seg.counts[m], t=MONTHS.find(x=>x.key===m).total;
+  tip.innerHTML=`<b>${seg.hu}</b><div class="t-en">${seg.en}</div>`+
+    `<div class="t-row">${fmt(c)} fő · <b>${pct(c,t).toFixed(1)}%</b></div>`+
+    `<div class="t-row" style="color:#bdbdce">rendelés ${seg.trx} · app ${seg.app}</div>`;
+  tip.style.opacity=1; moveTip(e);
+}
+function moveTip(e){
+  const pad=14; let x=e.clientX+pad, y=e.clientY+pad;
+  const r=tip.getBoundingClientRect();
+  if(x+r.width>window.innerWidth) x=e.clientX-r.width-pad;
+  if(y+r.height>window.innerHeight) y=e.clientY-r.height-pad;
+  tip.style.left=x+"px"; tip.style.top=y+"px";
+}
+function hideTip(){tip.style.opacity=0;}
+
+/* ============ SELECT / PANEL ============ */
+function selectSeg(key){
+  state.selected = (state.selected===key) ? null : key;
+  updatePanel(); applyDim();
+}
+function applyDim(){
+  document.querySelectorAll(".seg-region").forEach(el=>{
+    if(!state.selected){el.classList.remove("dim");return;}
+    el.classList.toggle("dim", el.dataset.key!==state.selected);
+  });
+}
+function updatePanel(){
+  const k=state.selected; const p=id=>document.getElementById(id);
+  if(!k){
+    p("pName").textContent="Válassz egy szegmenst";
+    p("pEn").textContent="Kattints egy színes mezőre a részletekért.";
+    p("pSwatch").style.background="#e6e6ee"; p("pSwatch").style.boxShadow="none";
+    p("pCount").textContent="–";p("pPct").textContent="–";
+    p("pTrx").textContent="–";p("pApp").textContent="–";
+    p("pInfo").innerHTML='<li class="hint">Fiktív szegmens-leírások a demóhoz.</li>';
+    return;
+  }
+  const s=SEGMAP[k], m=state.month, c=s.counts[m], t=MONTHS.find(x=>x.key===m).total;
+  p("pSwatch").style.background=s.color;
+  p("pSwatch").style.boxShadow = s.key==="white" ? "inset 0 0 0 1px #d7d7e2" : "none";
+  p("pName").textContent=s.hu;
+  p("pEn").textContent=s.en;
+  p("pCount").textContent=fmt(c);
+  p("pPct").textContent=pct(c,t).toFixed(1)+"%";
+  p("pTrx").textContent=s.trx;
+  p("pApp").textContent=s.app;
+  p("pInfo").innerHTML=s.info.map(x=>`<li>${x}</li>`).join("");
+}
+
+/* ============ MATRIX ============ */
+function renderMatrix(){
+  const n=AX.length, cell=34, mL=58, mT=46, mR=14, mB=20;
+  const W=mL+n*cell+mR, H=mT+n*cell+mB;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  s+=`<text class="axis-title" x="${mL+n*cell/2}" y="16" text-anchor="middle"># app megnyitás</text>`;
+  s+=`<text class="axis-title" transform="translate(14,${mT+n*cell/2}) rotate(-90)" text-anchor="middle"># rendelés</text>`;
+  for(let i=0;i<n;i++){
+    s+=`<text class="axis-txt" x="${mL+i*cell+cell/2}" y="${mT-6}" text-anchor="middle">${AX[i]}</text>`;
+    s+=`<text class="axis-txt" x="${mL-8}" y="${mT+i*cell+cell/2+4}" text-anchor="end">${AX[i]}</text>`;
+  }
+  s+=`<g class="cell-grid">`;
+  s+=`<rect x="${mL}" y="${mT}" width="${n*cell}" height="${n*cell}" fill="#fafafe"/>`;
+  for(let i=0;i<=n;i++){
+    s+=`<line x1="${mL+i*cell}" y1="${mT}" x2="${mL+i*cell}" y2="${mT+n*cell}"/>`;
+    s+=`<line x1="${mL}" y1="${mT+i*cell}" x2="${mL+n*cell}" y2="${mT+i*cell}"/>`;
+  }
+  s+=`</g>`;
+  s+=`<rect class="seg-region" data-key="white" x="${mL}" y="${mT}" width="${n*cell}" height="${n*cell}" fill="transparent"/>`;
+  const ox=mL+3.5*cell, oy=mT+3.5*cell;
+  const wm=state.month, wt=MONTHS.find(x=>x.key===wm).total, wc=SEGMAP.white.counts[wm];
+  s+=`<g pointer-events="none">`;
+  s+=`<text class="reg-label" x="${ox}" y="${oy-4}" text-anchor="middle" fill="#9a9aa8" font-size="12">Egyéb</text>`;
+  s+=`<text class="reg-sub" x="${ox}" y="${oy+12}" text-anchor="middle" fill="#9a9aa8" font-size="11">${fmt(wc)} · ${pct(wc,wt).toFixed(0)}%</text>`;
+  s+=`</g>`;
+  const m=state.month, t=MONTHS.find(x=>x.key===m).total;
+  for(const key in REGIONS){
+    const reg=REGIONS[key], seg=SEGMAP[key];
+    const x=mL+reg.c[0]*cell, y=mT+reg.r[0]*cell;
+    const w=(reg.c[1]-reg.c[0]+1)*cell, h=(reg.r[1]-reg.r[0]+1)*cell;
+    const c=seg.counts[m];
+    s+=`<g class="seg-region" data-key="${key}">`;
+    s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${seg.color}" stroke="#fff" stroke-width="1.5" rx="2"/>`;
+    const cx=x+w/2, cy=y+h/2, tc=txtColor(seg);
+    const small=(w<70||h<46);
+    s+=`<text class="reg-label" x="${cx}" y="${cy+(small?3:-2)}" text-anchor="middle" fill="${tc}" font-size="${small?11:13}">${fmt(c)}</text>`;
+    if(!small) s+=`<text class="reg-sub" x="${cx}" y="${cy+13}" text-anchor="middle" fill="${tc}" font-size="11" opacity=".85">${pct(c,t).toFixed(1)}%</text>`;
+    s+=`</g>`;
+  }
+  s+=`</svg>`;
+  document.getElementById("vizArea").innerHTML=s;
+  wireRegions();
+}
+
+/* ============ TREEMAP ============ */
+function squarify(items, x, y, w, h){
+  items=items.slice().sort((a,b)=>b.value-a.value);
+  const total=items.reduce((s,i)=>s+i.value,0);
+  const scale=(w*h)/total;
+  let rects=[], X=x,Y=y,Wd=w,Hd=h, i=0;
+  function worst(rowList,sumVal,sideLen){
+    const lengths=rowList.map(r=>r.value*scale);
+    const max=Math.max(...lengths), min=Math.min(...lengths);
+    const s2=sumVal*sumVal;
+    return Math.max((sideLen*sideLen*max)/s2,(s2)/(sideLen*sideLen*min));
+  }
+  while(i<items.length){
+    let row=[items[i]], rowVal=items[i].value*scale;
+    const horizontal = Wd>=Hd, side = horizontal?Hd:Wd;
+    let j=i+1;
+    while(j<items.length){
+      const cur=worst(row,rowVal,side);
+      const nxt=worst(row.concat(items[j]),rowVal+items[j].value*scale,side);
+      if(nxt>cur) break;
+      row.push(items[j]); rowVal+=items[j].value*scale; j++;
+    }
+    const thick=rowVal/side;
+    let off=horizontal?Y:X;
+    row.forEach(r=>{
+      const len=(r.value*scale)/thick;
+      if(horizontal){ rects.push({key:r.key,x:X,y:off,w:thick,h:len}); off+=len; }
+      else{ rects.push({key:r.key,x:off,y:Y,w:len,h:thick}); off+=len; }
+    });
+    if(horizontal){X+=thick;Wd-=thick;}else{Y+=thick;Hd-=thick;}
+    i=j;
+  }
+  return rects;
+}
+function renderTreemap(){
+  const W=760,H=440;
+  const m=state.month, t=MONTHS.find(x=>x.key===m).total;
+  const items=SEG.map(s=>({key:s.key,value:s.counts[m]}));
+  const rects=squarify(items,0,0,W,H);
+  let defs=`<defs>`;
+  rects.forEach((r,i)=>{ defs+=`<clipPath id="tmclip${i}"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"/></clipPath>`; });
+  defs+=`</defs>`;
+  let s=`<svg viewBox="-1 -1 ${W+2} ${H+2}" role="img">`+defs;
+  rects.forEach((r,i)=>{
+    const seg=SEGMAP[r.key], c=seg.counts[m], tc=txtColor(seg);
+    const stroke=seg.key==="white"?"#d7d7e2":"#ffffff";
+    s+=`<g class="seg-region" data-key="${r.key}">`;
+    s+=`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${seg.color}" stroke="${stroke}" stroke-width="2"/>`;
+    if(r.w>56 && r.h>30){
+      const cx=r.x+8, cy=r.y+20;
+      s+=`<g clip-path="url(#tmclip${i})">`;
+      s+=`<text class="reg-label" x="${cx}" y="${cy}" fill="${tc}" font-size="${r.w>140?14:12}">${seg.hu}</text>`;
+      if(r.h>50) s+=`<text class="reg-sub" x="${cx}" y="${cy+18}" fill="${tc}" font-size="12" opacity=".9">${fmt(c)} · ${pct(c,t).toFixed(1)}%</text>`;
+      else s+=`<text class="reg-sub" x="${cx}" y="${cy+16}" fill="${tc}" font-size="11" opacity=".9">${pct(c,t).toFixed(1)}%</text>`;
+      s+=`</g>`;
+    }
+    s+=`</g>`;
+  });
+  s+=`</svg>`;
+  document.getElementById("vizArea").innerHTML=s;
+  wireRegions();
+}
+
+/* ============ WIRE ============ */
+function wireRegions(){
+  document.querySelectorAll(".seg-region").forEach(el=>{
+    const seg=SEGMAP[el.dataset.key];
+    el.addEventListener("mousemove",e=>{showTip(e,seg);moveTip(e);});
+    el.addEventListener("mouseleave",hideTip);
+    el.addEventListener("click",()=>selectSeg(el.dataset.key));
+  });
+  applyDim();
+}
+function renderLegend(){
+  const m=state.month, L=document.getElementById("legend");
+  L.innerHTML=SEG.map(s=>{
+    const c=s.counts[m];
+    const bd=s.key==="white"?"border-color:#bbb":"";
+    return `<div class="it" data-key="${s.key}"><span class="sw" style="background:${s.color};${bd}"></span>`+
+      `${s.hu} <b style="margin-left:2px">${fmt(c)}</b></div>`;
+  }).join("");
+  L.querySelectorAll(".it").forEach(el=>{
+    el.onclick=()=>selectSeg(el.dataset.key);
+    el.onmouseenter=e=>showTip(e,SEGMAP[el.dataset.key]);
+    el.onmousemove=moveTip;
+    el.onmouseleave=hideTip;
+  });
+}
+function renderKPI(){
+  const m=state.month, c=SEGMAP.purple.counts[m];
+  document.getElementById("kpiVal").textContent=fmt(c)+" fő";
+  const p=Math.min(100,c/TARGET*100);
+  document.getElementById("kpiBar").style.width=p+"%";
+  document.getElementById("kpiPct").textContent=p.toFixed(0)+"% a célból";
+  document.getElementById("totalVal").textContent=fmt(MONTHS.find(x=>x.key===m).total)+" fő";
+}
+function render(){
+  const mlab=MONTHS.find(x=>x.key===state.month).label;
+  if(state.viz==="matrix"){
+    document.getElementById("vizTitle").textContent="Engagement mátrix";
+    document.getElementById("vizSub").textContent=mlab+" · cellánként a havi rendelésszám és app megnyitás szerinti besorolás. A számok a szegmens létszáma.";
+    renderMatrix();
+  }else{
+    document.getElementById("vizTitle").textContent="Treemap – arányok";
+    document.getElementById("vizSub").textContent=mlab+" · a téglalapok területe a szegmens létszámával arányos (mind a 8 szegmens, az Egyéb = fehér).";
+    renderTreemap();
+  }
+  renderLegend(); renderKPI(); updatePanel();
+}
+render();
+</script>
+</body>
+</html>
