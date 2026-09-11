@@ -96,7 +96,34 @@ body{
 .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
 
 /* ---------- fejléc ---------- */
-header{padding:76px 0 0}
+header{padding:76px 0 0;position:relative}
+
+/* nyelvváltó — a 3. fázisban a sticky fejlécbe költözik */
+.nyelv{
+  position:absolute;
+  top:30px;
+  right:0;
+  display:flex;
+  gap:2px;
+  padding:2px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--card);
+}
+.nyelv button{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.08em;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:4px 9px;
+  border-radius:3px;
+  cursor:pointer;
+}
+.nyelv button:hover{color:var(--accent)}
+.nyelv button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.nyelv button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 .eyebrow{
   font-family:"IBM Plex Mono",monospace;
@@ -459,32 +486,37 @@ footer a:hover{color:var(--accent)}
 <div class="wrap">
 
   <header>
+    <div class="nyelv" role="group" aria-label="Nyelv / Language">
+      <button type="button" data-lang="hu" aria-pressed="true">HU</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+
     <div class="eyebrow">Data Analyst · Budaörs</div>
 
     <h1>Udvari István</h1>
 
     <div class="lead">
-      <p>15+ év marketing-, CRM- és kampányanalitika.</p>
+      <p data-en="15+ years of marketing, CRM and campaign analytics.">15+ év marketing-, CRM- és kampányanalitika.</p>
 
-      <p>Üzleti kérdéseket fordítok le az adatok nyelvére és az adatokból hozok
+      <p data-en="I translate business questions into the language of data and use the data to answer them: target group segmentation, campaign analytics, funnel and benchmark analysis, A/B tests, user behaviour. I build dashboards and interactive reports that turn into KPIs and concrete next steps.">Üzleti kérdéseket fordítok le az adatok nyelvére és az adatokból hozok
       rájuk választ: célcsoport-szegmentálás, kampányanalitika, funnel- és
       benchmark-elemzés, A/B tesztek, felhasználói viselkedés. Dashboardokat és
       interaktív riportokat építek, amikből KPI és konkrét teendő lesz.</p>
 
-      <p>Mögötte adattisztítás, adattranszformáció, rendszerek között
+      <p data-en="Behind it: data cleaning, data transformation, data integration between systems and data quality checks.">Mögötte adattisztítás, adattranszformáció, rendszerek között
       adatintegráció és adatminőség-ellenőrzés.</p>
 
-      <p>A főbb eszközeim: <strong>SQL</strong>, <strong>Python</strong>,
+      <p data-en="My main tools: <strong>SQL</strong>, <strong>Python</strong>, <strong>Power BI</strong>, and increasingly <strong>AI-based solutions</strong> — plus, of course, <strong>Excel</strong>, eternal and indispensable. I use Python and AI not only for automation, but also for speech recognition and text processing.">A főbb eszközeim: <strong>SQL</strong>, <strong>Python</strong>,
       <strong>Power BI</strong>, és egyre több <strong>AI-alapú megoldás</strong>,
       és persze az <strong>Excel</strong> örök és megkerülhetetlen. A Pythont és
       az AI-t nem csak automatizálásra használom, hanem beszédfelismerésre és
       szövegfeldolgozásra is.</p>
 
-      <p>Amit csak lehet, automatizálok — többek között Excelben, Pythonban,
+      <p data-en="Whatever can be automated, I automate — in Excel, Python, n8n and Claude, among others. Lately I have been expanding into machine learning and predictive analytics.">Amit csak lehet, automatizálok — többek között Excelben, Pythonban,
       n8n-en és Claude-ban. Újabban a gépi tanulás és a prediktív analitika
       felé bővítem az ismereteimet.</p>
 
-      <p>Az alábbi oldalak működő demók és anonimizált esettanulmányok a
+      <p data-en="The pages below are working demos and anonymised case studies from my work, as well as hobby projects.">Az alábbi oldalak működő demók és anonimizált esettanulmányok a
       munkáimból, illetve hobbiprojektek.</p>
     </div>
 
@@ -504,7 +536,7 @@ footer a:hover{color:var(--accent)}
 
   <section class="filterbar" aria-labelledby="filter-label">
     <div class="filter-head">
-      <span class="filter-label" id="filter-label">Szűrés</span>
+      <span class="filter-label" id="filter-label" data-en="Filter">Szűrés</span>
       <span class="query" id="query" aria-live="polite"></span>
     </div>
     <div id="csoportok"></div>
@@ -530,26 +562,72 @@ footer a:hover{color:var(--accent)}
   var resetDoboz= document.getElementById("reset-doboz");
   var query     = document.getElementById("query");
 
+  /* ---------- nyelvek ----------
+     Alapértelmezett a magyar. A statikus szövegeknél a magyar a HTML-ben
+     áll (ezt látja a Google és a JS nélküli böngésző), az angol a data-en
+     attribútumban; a data-hu-t betöltéskor ez a szkript tölti ki. A csempék
+     szövege a projects.js cim_en / leiras_en mezőiből, a címkék és típusok
+     felirata a CIMKE_EN / TIPUS_EN térképből jön. Ha valamihez nincs angol,
+     a magyar marad — sosem törik el.
+     Kezdő nyelv: ?lang=en az URL-ben > a látogató korábbi választása > magyar. */
+  var SZOVEG = {
+    hu: {
+      tech:"Technológia", tipus:"Típus", kat:"Kategória",
+      torles:"×  Szűrők törlése",
+      ures:"Nincs ilyen címkéjű projekt. Válassz másik szűrőt.",
+      megnyitas:"Megnyitás &rarr;",
+      soon:"További demók készülnek",
+      mailMutat:"E-mail cím mutatása",
+      mailTitle:"Kattints a cím vágólapra másolásához",
+      masolva:"  ✓ vágólapra másolva",
+      honapok:["jan.","febr.","márc.","ápr.","máj.","jún.","júl.","aug.","szept.","okt.","nov.","dec."],
+      datum:function(ev, h){ return ev + ". " + h; },
+      projekt:function(n){ return n + " projekt"; }
+    },
+    en: {
+      tech:"Technology", tipus:"Type", kat:"Category",
+      torles:"×  Clear filters",
+      ures:"No project with these tags. Try another filter.",
+      megnyitas:"Open &rarr;",
+      soon:"More demos in the works",
+      mailMutat:"Show e-mail address",
+      mailTitle:"Click to copy the address",
+      masolva:"  ✓ copied to clipboard",
+      honapok:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+      datum:function(ev, h){ return h + " " + ev; },
+      projekt:function(n){ return n + (n === 1 ? " project" : " projects"); }
+    }
+  };
+  var nyelv = "hu";
+  function t(k){ return SZOVEG[nyelv][k]; }
+
+  function terkep(tabla, ertek){
+    return (nyelv === "en" && tabla && tabla[ertek]) ? tabla[ertek] : ertek;
+  }
+  function cimkeFelirat(c){ return terkep(typeof CIMKE_EN !== "undefined" ? CIMKE_EN : null, c); }
+  function tipusFelirat(x){ return terkep(typeof TIPUS_EN !== "undefined" ? TIPUS_EN : null, x); }
+  function mezo(p, nev){ return (nyelv === "en" && p[nev + "_en"]) ? p[nev + "_en"] : p[nev]; }
+
   /* ---------- a szűrő három tengelye ----------
-     A címkék eddig egy kupacban voltak, és három különböző dolog
-     keveredett bennük. Innentől külön sorban:
-       technológia — a cimkek tömbből, a Munka/Magán és a Tool nélkül
-       típus       — a tipus mezőből
-       kategória   — Munka / Magán
-     Soron belül VAGY, sorok között ÉS. */
+     technológia — a cimkek tömbből, a Munka/Magán és a Tool nélkül
+     típus       — a tipus mezőből
+     kategória   — Munka / Magán
+     Soron belül VAGY, sorok között ÉS.
+     A belső érték MINDIG a magyar kulcs — a nyelvváltás csak a feliratot
+     cseréli, ezért az aktív szűrés átváltáskor megmarad. */
   var KATEGORIAK = ["Munka", "Magán"];
   var NEM_TECH   = ["Tool"];   // ezt már a típus-tengely hordozza
 
   var CSOPORTOK = [
-    { kulcs:"tech", cim:"Technológia", ertekek:function(p){
+    { kulcs:"tech", felirat:cimkeFelirat, ertekek:function(p){
         return (p.cimkek||[]).filter(function(c){
           return KATEGORIAK.indexOf(c) === -1 && NEM_TECH.indexOf(c) === -1;
         });
       }},
-    { kulcs:"tipus", cim:"Típus", ertekek:function(p){
+    { kulcs:"tipus", felirat:tipusFelirat, ertekek:function(p){
         return p.tipus ? [p.tipus] : [];
       }},
-    { kulcs:"kat", cim:"Kategória", ertekek:function(p){
+    { kulcs:"kat", felirat:cimkeFelirat, ertekek:function(p){
         return (p.cimkek||[]).filter(function(c){ return KATEGORIAK.indexOf(c) > -1; });
       }}
   ];
@@ -566,10 +644,10 @@ footer a:hover{color:var(--accent)}
      forrásban se legyen kereshető. Nincs mailto: link.
      Ha módosítanád: btoa("uj@cim.hu") a böngésző konzoljában,
      és rajzold újra a két PNG-t. */
-  (function(){
+  var mail = (function(){
     var gomb    = document.getElementById("mailgomb");
     var felirat = document.getElementById("mailfelirat");
-    if(!gomb || !felirat) return;
+    if(!gomb || !felirat) return { nyelvvaltas:function(){} };
 
     var cim = null, jelzes = null, ido = null;
 
@@ -596,13 +674,13 @@ footer a:hover{color:var(--accent)}
       jelzes.className = "mail-jelzes";
       felirat.appendChild(jelzes);
 
-      gomb.setAttribute("title", "Kattints a cím vágólapra másolásához");
+      gomb.setAttribute("title", t("mailTitle"));
     }
 
     function masol(){
       if(!navigator.clipboard) return;
       navigator.clipboard.writeText(cim).then(function(){
-        jelzes.textContent = "  ✓ vágólapra másolva";
+        jelzes.textContent = t("masolva");
         clearTimeout(ido);
         ido = setTimeout(function(){ jelzes.textContent = ""; }, 1800);
       }, function(){});
@@ -611,6 +689,15 @@ footer a:hover{color:var(--accent)}
     gomb.addEventListener("click", function(){
       if(cim === null){ felfed(); } else { masol(); }
     });
+
+    return {
+      // felfedés előtt a feliratot, utána csak a tooltipet cseréli —
+      // a már megjelenített képdarabokhoz nem nyúl
+      nyelvvaltas:function(){
+        if(cim === null){ felirat.textContent = t("mailMutat"); }
+        else { gomb.setAttribute("title", t("mailTitle")); }
+      }
+    };
   })();
 
   var lista = (typeof PROJEKTEK !== "undefined" ? PROJEKTEK.slice() : []);
@@ -628,15 +715,14 @@ footer a:hover{color:var(--accent)}
   function honap(d){
     if(!d) return "";
     var r = d.split("-");
-    var nevek = ["jan.","febr.","márc.","ápr.","máj.","jún.","júl.","aug.","szept.","okt.","nov.","dec."];
-    var i = parseInt(r[1],10) - 1;
-    return r[0] + ". " + (nevek[i] || "");
+    var h = t("honapok")[parseInt(r[1],10) - 1] || "";
+    return t("datum")(r[0], h);
   }
 
+  var ESC = {"&":"&amp;","<":"&lt;",">":"&gt;"};
+  ESC[String.fromCharCode(34)] = "&quot;";
   function esc(s){
-    return String(s).replace(/[&<>"]/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
-    });
+    return String(s).replace(/[&<>"]/g, function(c){ return ESC[c]; });
   }
 
   function vanAktiv(){
@@ -647,7 +733,7 @@ footer a:hover{color:var(--accent)}
     csoportok.innerHTML = "";
 
     CSOPORTOK.forEach(function(cs){
-      // az adott tengelyen előforduló összes érték, ábécésorrendben
+      // az adott tengelyen előforduló összes érték, a felirat ábécéjében
       var ertekek = [];
       lista.forEach(function(p){
         cs.ertekek(p).forEach(function(v){
@@ -655,7 +741,7 @@ footer a:hover{color:var(--accent)}
         });
       });
       if(ertekek.length === 0) return;
-      ertekek.sort(function(a,b){ return a.localeCompare(b,"hu"); });
+      ertekek.sort(function(a,b){ return cs.felirat(a).localeCompare(cs.felirat(b), nyelv); });
 
       var sor = document.createElement("div");
       sor.className = "chip-sor";
@@ -663,7 +749,7 @@ footer a:hover{color:var(--accent)}
       var cim = document.createElement("span");
       cim.className = "sor-cim";
       cim.id = "sor-" + cs.kulcs;
-      cim.textContent = cs.cim;
+      cim.textContent = t(cs.kulcs);
       sor.appendChild(cim);
 
       var doboz = document.createElement("div");
@@ -675,11 +761,11 @@ footer a:hover{color:var(--accent)}
         var b = document.createElement("button");
         b.className = "chip";
         b.type = "button";
-        b.textContent = v;
+        b.textContent = cs.felirat(v);
         b.setAttribute("aria-pressed", aktiv[cs.kulcs].indexOf(v) > -1 ? "true" : "false");
         b.addEventListener("click", function(){
-          var t = aktiv[cs.kulcs], i = t.indexOf(v);
-          if(i > -1){ t.splice(i, 1); } else { t.push(v); }
+          var valasztott = aktiv[cs.kulcs], i = valasztott.indexOf(v);
+          if(i > -1){ valasztott.splice(i, 1); } else { valasztott.push(v); }
           frissit();
         });
         doboz.appendChild(b);
@@ -692,15 +778,15 @@ footer a:hover{color:var(--accent)}
     // a törlőgomb csak akkor látszik, ha van mit törölni
     resetDoboz.innerHTML = "";
     if(vanAktiv()){
-      var t = document.createElement("button");
-      t.className = "chip reset";
-      t.type = "button";
-      t.textContent = "×  Szűrők törlése";
-      t.addEventListener("click", function(){
+      var torlo = document.createElement("button");
+      torlo.className = "chip reset";
+      torlo.type = "button";
+      torlo.textContent = t("torles");
+      torlo.addEventListener("click", function(){
         CSOPORTOK.forEach(function(cs){ aktiv[cs.kulcs] = []; });
         frissit();
       });
-      resetDoboz.appendChild(t);
+      resetDoboz.appendChild(torlo);
     }
   }
 
@@ -722,15 +808,16 @@ footer a:hover{color:var(--accent)}
     var reszek = [];
     CSOPORTOK.forEach(function(cs){
       if(aktiv[cs.kulcs].length){
-        reszek.push(esc(cs.cim.toLowerCase()) +
+        reszek.push(esc(t(cs.kulcs).toLowerCase()) +
           ' <span class="kw">IN</span> (<span class="val">' +
-          aktiv[cs.kulcs].map(esc).join(", ") + '</span>)');
+          aktiv[cs.kulcs].map(function(v){ return esc(cs.felirat(v)); }).join(", ") +
+          '</span>)');
       }
     });
     var felt = reszek.length
       ? '<span class="kw">WHERE</span> ' + reszek.join(' <span class="kw">AND</span> ')
       : '<span class="kw">SELECT</span> <span class="val">*</span>';
-    query.innerHTML = felt + ' &rarr; <span class="val">' + db + ' projekt</span>';
+    query.innerHTML = felt + ' &rarr; <span class="val">' + esc(t("projekt")(db)) + '</span>';
   }
 
   function gridFrissit(){
@@ -740,7 +827,7 @@ footer a:hover{color:var(--accent)}
     if(sz.length === 0){
       var e = document.createElement("div");
       e.className = "empty";
-      e.textContent = "Nincs ilyen címkéjű projekt. Válassz másik szűrőt.";
+      e.textContent = t("ures");
       grid.appendChild(e);
       return;
     }
@@ -752,7 +839,7 @@ footer a:hover{color:var(--accent)}
       a.style.animationDelay = Math.min(idx * 40, 240) + "ms";
 
       var tagek = (p.cimkek||[]).map(function(c){
-        return '<span class="tag">' + esc(c) + '</span>';
+        return '<span class="tag">' + esc(cimkeFelirat(c)) + '</span>';
       }).join("");
 
       // bélyegkép a fájlnévből: assets/thumbs/<fájlnév>.jpg
@@ -763,10 +850,10 @@ footer a:hover{color:var(--accent)}
         '<img class="thumb" src="' + esc(kepUt) + '" alt="" loading="lazy" decoding="async">' +
         '<div class="card-body">' +
           '<div class="card-date">' + esc(honap(p.datum)) + '</div>' +
-          '<h2>' + esc(p.cim) + '</h2>' +
-          '<p>' + esc(p.leiras) + '</p>' +
+          '<h2>' + esc(mezo(p, "cim")) + '</h2>' +
+          '<p>' + esc(mezo(p, "leiras")) + '</p>' +
           '<div class="card-tags">' + tagek + '</div>' +
-          '<div class="card-open">Megnyitás &rarr;</div>' +
+          '<div class="card-open">' + t("megnyitas") + '</div>' +
         '</div>';
 
       var kep = a.querySelector(".thumb");
@@ -780,7 +867,7 @@ footer a:hover{color:var(--accent)}
     soon.className = "soon";
     soon.style.animationDelay = "0ms";
     soon.innerHTML =
-      '<b>További demók készülnek</b>' +
+      '<b>' + esc(t("soon")) + '</b>' +
       '<span><span class="kw">--</span> more to come</span>';
     grid.appendChild(soon);
   }
@@ -791,7 +878,46 @@ footer a:hover{color:var(--accent)}
     queryFrissit(szurtLista().length);
   }
 
-  frissit();
+  /* ---------- nyelvváltás ---------- */
+  var statikus = [].slice.call(document.querySelectorAll("[data-en]"));
+  statikus.forEach(function(el){ el.setAttribute("data-hu", el.innerHTML); });
+
+  var nyelvGombok = [].slice.call(document.querySelectorAll(".nyelv button"));
+
+  function nyelvBeallit(l, mentes){
+    if(!SZOVEG[l]) l = "hu";
+    nyelv = l;
+    document.documentElement.lang = l;
+    statikus.forEach(function(el){ el.innerHTML = el.getAttribute("data-" + l); });
+    nyelvGombok.forEach(function(b){
+      b.setAttribute("aria-pressed", b.getAttribute("data-lang") === l ? "true" : "false");
+    });
+    mail.nyelvvaltas();
+
+    if(mentes){
+      try{ localStorage.setItem("portfolio-nyelv", l); }catch(e){}
+      // az URL is kövesse, hogy a bemásolt link ugyanazon a nyelven nyíljon meg
+      try{
+        var u = new URL(location.href);
+        if(l === "hu"){ u.searchParams.delete("lang"); } else { u.searchParams.set("lang", l); }
+        history.replaceState(null, "", u.toString());
+      }catch(e){}
+    }
+    frissit();
+  }
+
+  nyelvGombok.forEach(function(b){
+    b.addEventListener("click", function(){ nyelvBeallit(b.getAttribute("data-lang"), true); });
+  });
+
+  var kezdo = "hu";
+  try{
+    var urlNyelv = new URLSearchParams(location.search).get("lang");
+    var mentett  = localStorage.getItem("portfolio-nyelv");
+    if(urlNyelv && SZOVEG[urlNyelv]) kezdo = urlNyelv;
+    else if(mentett && SZOVEG[mentett]) kezdo = mentett;
+  }catch(e){}
+  nyelvBeallit(kezdo, false);
 })();
 </script>
 

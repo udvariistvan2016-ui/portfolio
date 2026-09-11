@@ -86,6 +86,10 @@ külön szűrőgombot csinál, és szétesik a szűrő.
 
 Egy projekthez 2-4 címke az ideális.
 
+Ha új címke kerül a szótárba, a `projects.js` elején lévő `CIMKE_EN`
+térképbe is vedd fel az angol feliratát (új típusnál a `TIPUS_EN`-be).
+A nyelvsemleges címkéknek (SQL, Python, CRM, n8n…) nem kell bejegyzés.
+
 ### 4. Az index.html-hez ne nyúlj új demó miatt
 A csempék és a szűrő a `projects.js`-ből generálódnak. Ha új demó felrakásához
 az `index.html`-t akarod módosítani, valamit félreértettél.
@@ -103,12 +107,19 @@ az `index.html`-t akarod módosítani, valamit félreértettél.
 {
   cim: "…",
   leiras: "1-2 mondat: mi ez és mit old meg",
+  cim_en: "… (angolul)",
+  leiras_en: "… (angolul)",
   fajl: "fajlnev.html",
   cimkek: ["…", "…"],
+  tipus: "interaktív demó",
+  rang: 50,
   datum: "2026-08",
   kiemelt: false
 },
 ```
+
+A `cim_en` / `leiras_en` a főoldal angol nézetéhez kell. Ha hiányzik, a
+csempén a magyar jelenik meg — nem törik el, de az angol oldal félkarú lesz.
 
 6. Ellenőrizd, hogy a `projects.js` szintaktikailag ép (vessző minden blokk
    után, az utolsó után nincs).
