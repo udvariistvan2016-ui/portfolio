@@ -201,6 +201,47 @@ body{
 }
 .gorgetes:hover{color:var(--accent)}
 
+/* ---------- számok sáv ---------- */
+.szamok{
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px 48px;
+  border-top:1px solid var(--line);
+  padding-top:26px;
+  margin-bottom:34px;
+}
+
+.szam{display:flex;flex-direction:column;gap:5px}
+
+.szam-ertek{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:clamp(24px,3.2vw,32px);
+  font-weight:500;
+  line-height:1;
+  letter-spacing:-.02em;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+
+.szam-cimke{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* csak képernyőolvasónak */
+.sr-only{
+  position:absolute;
+  width:1px;height:1px;
+  padding:0;margin:-1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+  border:0;
+}
+
 /* ---------- Rólam ---------- */
 .rolam{
   border-top:1px solid var(--line);
@@ -621,6 +662,25 @@ footer a:hover{color:var(--accent)}
     <a class="gorgetes" href="#projektek" data-en="Projects &darr;">Projektek &darr;</a>
   </section>
 
+  <section class="szamok" aria-label="Számok">
+    <div class="szam">
+      <b class="szam-ertek" id="szam-demo">–</b>
+      <span class="szam-cimke" data-en="projects shown">bemutatott projekt</span>
+    </div>
+
+    <div class="szam">
+      <b class="szam-ertek porgo" data-jegy="3" aria-hidden="true">–</b>
+      <span class="sr-only" data-en="Projects delivered: too many to count">Végrehajtott projekt: számolatlanul sok</span>
+      <span class="szam-cimke" data-en="projects delivered">végrehajtott projekt</span>
+    </div>
+
+    <div class="szam">
+      <b class="szam-ertek porgo" data-jegy="8" aria-hidden="true">–</b>
+      <span class="sr-only" data-en="Data rows processed: too many to count">Feldolgozott adatsor: számolatlanul sok</span>
+      <span class="szam-cimke" data-en="data rows processed">feldolgozott adatsor</span>
+    </div>
+  </section>
+
   <section class="filterbar" id="projektek" aria-labelledby="filter-label">
     <div class="filter-head">
       <span class="filter-label" id="filter-label" data-en="Filter">Szűrés</span>
@@ -1000,7 +1060,92 @@ footer a:hover{color:var(--accent)}
     // ez a jelzés arról, hogy lejjebb van tartalom
     var dbElem = document.getElementById("fejlec-db");
     if(dbElem) dbElem.textContent = t("projekt")(lista.length);
+    var demoDb = document.getElementById("szam-demo");
+    if(demoDb) demoDb.textContent = String(lista.length);
   }
+
+  /* ---------- pörgő számlálók ----------
+     Szándékosan NEM állnak meg: a pontos szám nem ismert, kitalálni pedig
+     nem akarunk. Ha egyszer mégis legyen végérték, tedd rá a data-cel
+     attribútumot (pl. data-cel="∞" vagy data-cel="200+"), és megáll rajta.
+     A jobb szélső jegy pörög a leggyorsabban, balra haladva egyre ritkábban —
+     így óramű-hatása van, nem véletlenszám-zaj.
+     Leáll: ha a látogató csökkentett mozgást kért, ha a fül háttérbe kerül,
+     és ha a sáv kigörgött a képből. */
+  (function(){
+    var elemek = [].slice.call(document.querySelectorAll(".porgo"));
+    if(!elemek.length) return;
+
+    var lehetMozog = !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+    function formaz(jegyek){
+      var elv = (nyelv === "en") ? "," : " ";
+      var s = "";
+      for(var i = 0; i < jegyek.length; i++){
+        if(i > 0 && (jegyek.length - i) % 3 === 0) s += elv;
+        s += jegyek[i];
+      }
+      return s;
+    }
+
+    var allapot = elemek.map(function(el){
+      var n = parseInt(el.getAttribute("data-jegy"), 10) || 3;
+      var j = [];
+      for(var i = 0; i < n; i++) j.push(Math.floor(Math.random() * 10));
+      if(j[0] === 0) j[0] = 1;
+      return { el:el, j:j, cel:el.getAttribute("data-cel") };
+    });
+
+    if(!lehetMozog){
+      allapot.forEach(function(a){ a.el.textContent = a.cel || "∞"; });
+      return;
+    }
+
+    allapot.forEach(function(a){ a.el.textContent = formaz(a.j); });
+
+    function lepes(){
+      allapot.forEach(function(a){
+        var j = a.j, utolso = j.length - 1;
+        for(var i = utolso; i >= 0; i--){
+          if(i === utolso || Math.random() < 1 / Math.pow(3, utolso - i)){
+            j[i] = (j[i] + 1) % 10;
+          }
+        }
+        if(j[0] === 0) j[0] = 1;
+        a.el.textContent = formaz(j);
+      });
+    }
+
+    var ido = null;
+    function indul(){ if(!ido) ido = setInterval(lepes, 80); }
+    function allj(){ if(ido){ clearInterval(ido); ido = null; } }
+
+    // ha van végérték, rövid pörgés után megáll rajta
+    var vanCel = allapot.some(function(a){ return a.cel; });
+    if(vanCel){
+      indul();
+      setTimeout(function(){
+        allj();
+        allapot.forEach(function(a){ if(a.cel) a.el.textContent = a.cel; });
+      }, 1200);
+      return;
+    }
+
+    document.addEventListener("visibilitychange", function(){
+      if(document.hidden){ allj(); } else if(lathato){ indul(); }
+    });
+
+    var lathato = true;
+    if(window.IntersectionObserver){
+      var fig = new IntersectionObserver(function(bejegyzesek){
+        lathato = bejegyzesek[0].isIntersecting;
+        if(lathato && !document.hidden){ indul(); } else { allj(); }
+      }, { threshold:0 });
+      fig.observe(elemek[0].closest(".szamok") || elemek[0]);
+    } else {
+      indul();
+    }
+  })();
 
   /* ---------- nyelvváltás ---------- */
   var statikus = [].slice.call(document.querySelectorAll("[data-en]"));
