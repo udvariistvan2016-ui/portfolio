@@ -82,7 +82,7 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
 
 body{
   background:var(--paper);
@@ -95,14 +95,61 @@ body{
 
 .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
 
-/* ---------- fejléc ---------- */
-header{padding:76px 0 0;position:relative}
+/* ---------- sticky fejléc ---------- */
+.fejlec{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(242,243,240,.9);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
 
-/* nyelvváltó — a 3. fázisban a sticky fejlécbe költözik */
+.fejlec-belso{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  height:54px;
+}
+
+.marka{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  text-decoration:none;
+  color:var(--ink);
+  font-weight:600;
+  font-size:var(--fs-base);
+  letter-spacing:-.01em;
+}
+.marka-ikon{width:19px;height:19px;flex:none}
+
+.fejlec-nav{display:flex;align-items:center;gap:18px}
+
+.fejlec-nav a{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  text-decoration:none;
+}
+.fejlec-nav a:hover{color:var(--accent)}
+
+/* a „12 projekt" számláló: ez jelzi, hogy lejjebb még van tartalom */
+.db{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  color:var(--accent);
+  background:var(--accent-soft);
+  padding:3px 8px;
+  border-radius:3px;
+  white-space:nowrap;
+}
+
 .nyelv{
-  position:absolute;
-  top:30px;
-  right:0;
   display:flex;
   gap:2px;
   padding:2px;
@@ -124,6 +171,49 @@ header{padding:76px 0 0;position:relative}
 .nyelv button:hover{color:var(--accent)}
 .nyelv button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .nyelv button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+@media (max-width:639px){
+  .fejlec-nav a{display:none}   /* szűk kijelzőn nem fér ki a név mellé */
+}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 0}
+
+.hero-mondat{
+  font-size:var(--fs-h2);
+  line-height:1.32;
+  font-weight:400;
+  color:var(--ink);
+  max-width:30ch;
+  margin-bottom:30px;
+}
+
+.hero .links{margin-bottom:22px}
+
+.gorgetes{
+  display:inline-block;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  letter-spacing:.06em;
+  color:var(--muted);
+  text-decoration:none;
+  padding-bottom:56px;
+}
+.gorgetes:hover{color:var(--accent)}
+
+/* ---------- Rólam ---------- */
+.rolam{
+  border-top:1px solid var(--line);
+  padding-top:34px;
+  margin-top:40px;
+}
+
+.rolam h2{
+  font-size:var(--fs-h2);
+  font-weight:600;
+  letter-spacing:-.015em;
+  margin-bottom:20px;
+}
 
 .eyebrow{
   font-family:"IBM Plex Mono",monospace;
@@ -483,20 +573,74 @@ footer a:hover{color:var(--accent)}
 </head>
 <body>
 
+<header class="fejlec">
+  <div class="wrap fejlec-belso">
+    <a class="marka" href="#top">
+      <svg class="marka-ikon" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="11"   y="34" width="11" height="19" rx="2" fill="currentColor"/>
+        <rect x="26.5" y="23" width="11" height="30" rx="2" fill="currentColor"/>
+        <rect x="42"   y="11" width="11" height="42" rx="2" fill="#1F6F5C"/>
+      </svg>
+      <span>Udvari István</span>
+    </a>
+
+    <nav class="fejlec-nav">
+      <a href="#projektek" data-en="Projects">Projektek</a>
+      <a href="#rolam" data-en="About">Rólam</a>
+      <span class="db" id="fejlec-db" aria-live="polite"></span>
+      <div class="nyelv" role="group" aria-label="Nyelv / Language">
+        <button type="button" data-lang="hu" aria-pressed="true">HU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
 <div class="wrap">
 
-  <header>
-    <div class="nyelv" role="group" aria-label="Nyelv / Language">
-      <button type="button" data-lang="hu" aria-pressed="true">HU</button>
-      <button type="button" data-lang="en" aria-pressed="false">EN</button>
-    </div>
-
+  <section class="hero" id="top">
     <div class="eyebrow">Data Analyst · Budaörs</div>
 
     <h1>Udvari István</h1>
 
+    <p class="hero-mondat" data-en="15+ years of data analysis for business decisions, shown in working demos.">15+ év adatelemzés üzleti döntésekhez, működő demókban megmutatva.</p>
+
+    <nav class="links">
+      <a href="https://www.linkedin.com/in/istvanudvari" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3A2 2 0 0 1 21 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+        LinkedIn
+      </a>
+      <!-- Az e-mail cím szándékosan NINCS benne nyersen a forrásban (spamrobotok
+           ellen). A gomb kattintásra állítja össze — lásd a lenti szkriptet. -->
+      <button type="button" id="mailgomb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+        <span id="mailfelirat">E-mail cím mutatása</span>
+      </button>
+    </nav>
+
+    <a class="gorgetes" href="#projektek" data-en="Projects &darr;">Projektek &darr;</a>
+  </section>
+
+  <section class="filterbar" id="projektek" aria-labelledby="filter-label">
+    <div class="filter-head">
+      <span class="filter-label" id="filter-label" data-en="Filter">Szűrés</span>
+      <span class="query" id="query" aria-live="polite"></span>
+    </div>
+    <div id="csoportok"></div>
+    <div class="szuro-labl"><div class="chips" id="reset-doboz"></div></div>
+  </section>
+
+  <main class="grid" id="grid"></main>
+
+  <section class="rolam" id="rolam">
+    <h2 data-en="About me">Rólam</h2>
+
     <div class="lead">
       <p data-en="15+ years of data analysis across marketing, sales and CRM.">15+ év adatelemzés a marketing, a sales és a CRM oldalán.</p>
+
+      <p data-en="Marketing, sales, CRM, loyalty programmes, banking customer data, energy — the domain changes, the technique needed to answer the question rarely does.">Marketing, sales, CRM, hűségprogramok, banki ügyféladatok,
+      energetika — a terület változik, a kérdés megválaszolásához szükséges
+      technika ritkán.</p>
 
       <p data-en="I translate business questions into the language of data and use the data to answer them: target group segmentation, campaign analytics, funnel and benchmark analysis, A/B tests, user behaviour. I build dashboards and interactive reports that turn into KPIs and concrete next steps.">Üzleti kérdéseket fordítok le az adatok nyelvére és az adatokból hozok
       rájuk választ: célcsoport-szegmentálás, kampányanalitika, funnel- és
@@ -519,31 +663,7 @@ footer a:hover{color:var(--accent)}
       <p data-en="The pages below are working demos and anonymised case studies from my work, as well as hobby projects.">Az alábbi oldalak működő demók és anonimizált esettanulmányok a
       munkáimból, illetve hobbiprojektek.</p>
     </div>
-
-    <nav class="links">
-      <a href="https://www.linkedin.com/in/istvanudvari" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3A2 2 0 0 1 21 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
-        LinkedIn
-      </a>
-      <!-- Az e-mail cím szándékosan NINCS benne nyersen a forrásban (spamrobotok
-           ellen). A gomb kattintásra állítja össze — lásd a lenti szkriptet. -->
-      <button type="button" id="mailgomb">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
-        <span id="mailfelirat">E-mail cím mutatása</span>
-      </button>
-    </nav>
-  </header>
-
-  <section class="filterbar" aria-labelledby="filter-label">
-    <div class="filter-head">
-      <span class="filter-label" id="filter-label" data-en="Filter">Szűrés</span>
-      <span class="query" id="query" aria-live="polite"></span>
-    </div>
-    <div id="csoportok"></div>
-    <div class="szuro-labl"><div class="chips" id="reset-doboz"></div></div>
   </section>
-
-  <main class="grid" id="grid"></main>
 
   <footer>
     <span>© <span id="ev"></span> Udvari István</span>
@@ -876,6 +996,10 @@ footer a:hover{color:var(--accent)}
     chipeketRajzol();
     gridFrissit();
     queryFrissit(szurtLista().length);
+    // a fejléc számlálója MINDIG az összes projektet mutatja, nem a szűrtet —
+    // ez a jelzés arról, hogy lejjebb van tartalom
+    var dbElem = document.getElementById("fejlec-db");
+    if(dbElem) dbElem.textContent = t("projekt")(lista.length);
   }
 
   /* ---------- nyelvváltás ---------- */
