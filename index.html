@@ -126,6 +126,19 @@ body{
 }
 .marka-ikon{width:19px;height:19px;flex:none}
 
+.marka-beosztas{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  font-weight:400;
+  letter-spacing:.03em;
+  color:var(--muted);
+}
+.marka-beosztas::before{content:"·";margin-right:7px}
+
+@media (max-width:860px){
+  .marka-beosztas{display:none}   /* hosszú, szűk fejlécben nem fér ki */
+}
+
 .fejlec-nav{display:flex;align-items:center;gap:18px}
 
 .fejlec-nav a{
@@ -137,17 +150,6 @@ body{
   text-decoration:none;
 }
 .fejlec-nav a:hover{color:var(--accent)}
-
-/* a „12 projekt" számláló: ez jelzi, hogy lejjebb még van tartalom */
-.db{
-  font-family:"IBM Plex Mono",monospace;
-  font-size:var(--fs-2xs);
-  color:var(--accent);
-  background:var(--accent-soft);
-  padding:3px 8px;
-  border-radius:3px;
-  white-space:nowrap;
-}
 
 .nyelv{
   display:flex;
@@ -201,48 +203,7 @@ body{
 }
 .gorgetes:hover{color:var(--accent)}
 
-/* ---------- számok sáv ---------- */
-.szamok{
-  display:flex;
-  flex-wrap:wrap;
-  gap:20px 48px;
-  border-top:1px solid var(--line);
-  padding-top:26px;
-  margin-bottom:34px;
-}
-
-.szam{display:flex;flex-direction:column;gap:5px}
-
-.szam-ertek{
-  font-family:"IBM Plex Mono",monospace;
-  font-size:clamp(24px,3.2vw,32px);
-  font-weight:500;
-  line-height:1;
-  letter-spacing:-.02em;
-  color:var(--ink);
-  font-variant-numeric:tabular-nums;
-}
-
-.szam-cimke{
-  font-family:"IBM Plex Mono",monospace;
-  font-size:var(--fs-2xs);
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--muted);
-}
-
-/* csak képernyőolvasónak */
-.sr-only{
-  position:absolute;
-  width:1px;height:1px;
-  padding:0;margin:-1px;
-  overflow:hidden;
-  clip:rect(0 0 0 0);
-  white-space:nowrap;
-  border:0;
-}
-
-/* ---------- amit csinálok ---------- */
+/* ---------- főbb feladatkörök ---------- */
 .szekcio-cimke{
   font-family:"IBM Plex Mono",monospace;
   font-size:var(--fs-xs);
@@ -295,15 +256,6 @@ body{
   font-size:var(--fs-h2);
   font-weight:600;
   letter-spacing:-.015em;
-  margin-bottom:20px;
-}
-
-.eyebrow{
-  font-family:"IBM Plex Mono",monospace;
-  font-size:var(--fs-xs);
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:var(--accent);
   margin-bottom:20px;
 }
 
@@ -664,13 +616,13 @@ footer a:hover{color:var(--accent)}
         <rect x="26.5" y="23" width="11" height="30" rx="2" fill="currentColor"/>
         <rect x="42"   y="11" width="11" height="42" rx="2" fill="#1F6F5C"/>
       </svg>
-      <span>Udvari István</span>
+      <span class="marka-nev">Udvari István</span>
+      <span class="marka-beosztas" data-en="data analyst and AI solutions specialist">adatelemző és AI-megoldások szakértője</span>
     </a>
 
     <nav class="fejlec-nav">
       <a href="#projektek" data-en="Projects">Projektek</a>
       <a href="#rolam" data-en="About">Rólam</a>
-      <span class="db" id="fejlec-db" aria-live="polite"></span>
       <div class="nyelv" role="group" aria-label="Nyelv / Language">
         <button type="button" data-lang="hu" aria-pressed="true">HU</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
@@ -682,8 +634,6 @@ footer a:hover{color:var(--accent)}
 <div class="wrap">
 
   <section class="hero" id="top">
-    <div class="eyebrow">Data Analyst · Budaörs</div>
-
     <h1>Udvari István</h1>
 
     <p class="hero-mondat" data-en="15+ years of data analysis for business decisions, shown in working demos.">15+ év adatelemzés üzleti döntésekhez, működő demókban megmutatva.</p>
@@ -704,27 +654,8 @@ footer a:hover{color:var(--accent)}
     <a class="gorgetes" href="#projektek" data-en="Projects &darr;">Projektek &darr;</a>
   </section>
 
-  <section class="szamok" aria-label="Számok">
-    <div class="szam">
-      <b class="szam-ertek" id="szam-demo">–</b>
-      <span class="szam-cimke" data-en="projects shown">bemutatott projekt</span>
-    </div>
-
-    <div class="szam">
-      <b class="szam-ertek porgo" data-jegy="3" aria-hidden="true">–</b>
-      <span class="sr-only" data-en="Projects delivered: too many to count">Végrehajtott projekt: számolatlanul sok</span>
-      <span class="szam-cimke" data-en="projects delivered">végrehajtott projekt</span>
-    </div>
-
-    <div class="szam">
-      <b class="szam-ertek porgo" data-jegy="8" aria-hidden="true">–</b>
-      <span class="sr-only" data-en="Data rows processed: too many to count">Feldolgozott adatsor: számolatlanul sok</span>
-      <span class="szam-cimke" data-en="data rows processed">feldolgozott adatsor</span>
-    </div>
-  </section>
-
   <section class="teruletek-blokk">
-    <h2 class="szekcio-cimke" data-en="What I do">Amit csinálok</h2>
+    <h2 class="szekcio-cimke" data-en="Main areas of my work">Főbb feladatköreim</h2>
 
     <div class="teruletek">
       <div class="terulet">
@@ -785,7 +716,7 @@ footer a:hover{color:var(--accent)}
     <h2 data-en="About me">Rólam</h2>
 
     <div class="lead">
-      <p data-en="15+ years of data analysis across marketing, sales and CRM.">15+ év adatelemzés a marketing, a sales és a CRM oldalán.</p>
+      <p data-en="15+ years in data.">15+ év az adatos szakmában.</p>
 
       <p data-en="Marketing, sales, CRM, loyalty programmes, banking customer data, energy — the domain changes, the technique needed to answer the question rarely does.">Marketing, sales, CRM, hűségprogramok, banki ügyféladatok,
       energetika — a terület változik, a kérdés megválaszolásához szükséges
@@ -1145,96 +1076,7 @@ footer a:hover{color:var(--accent)}
     chipeketRajzol();
     gridFrissit();
     queryFrissit(szurtLista().length);
-    // a fejléc számlálója MINDIG az összes projektet mutatja, nem a szűrtet —
-    // ez a jelzés arról, hogy lejjebb van tartalom
-    var dbElem = document.getElementById("fejlec-db");
-    if(dbElem) dbElem.textContent = t("projekt")(lista.length);
-    var demoDb = document.getElementById("szam-demo");
-    if(demoDb) demoDb.textContent = String(lista.length);
   }
-
-  /* ---------- pörgő számlálók ----------
-     Szándékosan NEM állnak meg: a pontos szám nem ismert, kitalálni pedig
-     nem akarunk. Ha egyszer mégis legyen végérték, tedd rá a data-cel
-     attribútumot (pl. data-cel="∞" vagy data-cel="200+"), és megáll rajta.
-     A jobb szélső jegy pörög a leggyorsabban, balra haladva egyre ritkábban —
-     így óramű-hatása van, nem véletlenszám-zaj.
-     Leáll: ha a látogató csökkentett mozgást kért, ha a fül háttérbe kerül,
-     és ha a sáv kigörgött a képből. */
-  (function(){
-    var elemek = [].slice.call(document.querySelectorAll(".porgo"));
-    if(!elemek.length) return;
-
-    var lehetMozog = !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-
-    function formaz(jegyek){
-      var elv = (nyelv === "en") ? "," : " ";
-      var s = "";
-      for(var i = 0; i < jegyek.length; i++){
-        if(i > 0 && (jegyek.length - i) % 3 === 0) s += elv;
-        s += jegyek[i];
-      }
-      return s;
-    }
-
-    var allapot = elemek.map(function(el){
-      var n = parseInt(el.getAttribute("data-jegy"), 10) || 3;
-      var j = [];
-      for(var i = 0; i < n; i++) j.push(Math.floor(Math.random() * 10));
-      if(j[0] === 0) j[0] = 1;
-      return { el:el, j:j, cel:el.getAttribute("data-cel") };
-    });
-
-    if(!lehetMozog){
-      allapot.forEach(function(a){ a.el.textContent = a.cel || "∞"; });
-      return;
-    }
-
-    allapot.forEach(function(a){ a.el.textContent = formaz(a.j); });
-
-    function lepes(){
-      allapot.forEach(function(a){
-        var j = a.j, utolso = j.length - 1;
-        for(var i = utolso; i >= 0; i--){
-          if(i === utolso || Math.random() < 1 / Math.pow(3, utolso - i)){
-            j[i] = (j[i] + 1) % 10;
-          }
-        }
-        if(j[0] === 0) j[0] = 1;
-        a.el.textContent = formaz(j);
-      });
-    }
-
-    var ido = null;
-    function indul(){ if(!ido) ido = setInterval(lepes, 80); }
-    function allj(){ if(ido){ clearInterval(ido); ido = null; } }
-
-    // ha van végérték, rövid pörgés után megáll rajta
-    var vanCel = allapot.some(function(a){ return a.cel; });
-    if(vanCel){
-      indul();
-      setTimeout(function(){
-        allj();
-        allapot.forEach(function(a){ if(a.cel) a.el.textContent = a.cel; });
-      }, 1200);
-      return;
-    }
-
-    document.addEventListener("visibilitychange", function(){
-      if(document.hidden){ allj(); } else if(lathato){ indul(); }
-    });
-
-    var lathato = true;
-    if(window.IntersectionObserver){
-      var fig = new IntersectionObserver(function(bejegyzesek){
-        lathato = bejegyzesek[0].isIntersecting;
-        if(lathato && !document.hidden){ indul(); } else { allj(); }
-      }, { threshold:0 });
-      fig.observe(elemek[0].closest(".szamok") || elemek[0]);
-    } else {
-      indul();
-    }
-  })();
 
   /* ---------- nyelvváltás ---------- */
   var statikus = [].slice.call(document.querySelectorAll("[data-en]"));
