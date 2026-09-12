@@ -65,7 +65,7 @@ const PROJEKTEK = [
 
   {
     cim: "E-mail kampány benchmark riport",
-    leiras: "73 kampány teljesítménye egy közös viszonyítási alaphoz mérve: tölcsér a kiküldéstől a beváltásig, szűrhető szegmensbontás, súlyozott és átlagolt számítás.",
+    leiras: "73 kampány teljesítménye egy közös viszonyítási alaphoz mérve: funnel a kiküldéstől a beváltásig, szűrhető szegmensbontás, súlyozott és átlagolt számítás.",
     cim_en: "E-mail campaign benchmark report",
     leiras_en: "The performance of 73 campaigns measured against a common baseline: a funnel from send to redemption, a filterable segment breakdown, weighted and averaged calculation.",
     fajl: "email-kampany-benchmark.html",

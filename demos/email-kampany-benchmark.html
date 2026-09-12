@@ -32,7 +32,7 @@
   --neg:#c73a39; --neg-rgb:199,58,57;
   --mid:#f0efec;  /* semleges középpont */
 
-  /* ordinális blue ramp (tölcsér lépcsői) — validált --ordinal módban */
+  /* ordinális blue ramp (funnel lépcsői) — validált --ordinal módban */
   --seq1:#86b6ef; --seq2:#5598e7; --seq3:#2a78d6; --seq4:#1c5cab;
   /* egyetlen kategorikus slot (trend pontok) */
   --series1:#2a78d6;
@@ -393,7 +393,7 @@ table.dt td.num{font-variant-numeric:tabular-nums}
   <section class="grid2">
     <div class="card">
       <div class="card-h">
-        <h2>Tölcsér — a szűrt halmaz egésze</h2>
+        <h2>Funnel — a szűrt halmaz egésze</h2>
         <p>Megkapta → Megnyitotta → Kattintott → Tokent kapott. A % az előző lépcsőhöz mért átmenet.</p>
       </div>
       <div class="chartbox" id="funnelBox"></div>
@@ -795,7 +795,7 @@ function renderFunnel(m){
   const plotW = W - padL - padR;
   const base = m.tot.megkapta || 0;
   let s = '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" '+
-    'aria-label="Tölcsér: megkapta, megnyitotta, kattintott, tokent kapott">';
+    'aria-label="Funnel: megkapta, megnyitotta, kattintott, tokent kapott">';
   // talp-vonal (egyetlen alapvonal, ahonnan minden sáv indul)
   s += '<line x1="'+padL+'" y1="'+(top-6)+'" x2="'+padL+'" y2="'+(top+FUNNEL_STAGES.length*rowH-24)+
        '" stroke="var(--axis)" stroke-width="1"/>';
