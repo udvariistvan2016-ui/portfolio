@@ -242,6 +242,48 @@ body{
   border:0;
 }
 
+/* ---------- amit csinálok ---------- */
+.szekcio-cimke{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  font-weight:400;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:20px;
+}
+
+.teruletek{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  gap:28px 34px;
+  border-top:1px solid var(--line);
+  padding-top:26px;
+  margin-bottom:36px;
+}
+
+.terulet{display:flex;flex-direction:column;gap:9px}
+
+.terulet svg{
+  width:22px;
+  height:22px;
+  color:var(--accent);
+  flex:none;
+}
+
+.terulet h3{
+  font-size:var(--fs-title);
+  font-weight:600;
+  letter-spacing:-.012em;
+  line-height:1.3;
+}
+
+.terulet p{
+  font-size:var(--fs-body);
+  line-height:1.5;
+  color:#4A505A;
+}
+
 /* ---------- Rólam ---------- */
 .rolam{
   border-top:1px solid var(--line);
@@ -678,6 +720,53 @@ footer a:hover{color:var(--accent)}
       <b class="szam-ertek porgo" data-jegy="8" aria-hidden="true">–</b>
       <span class="sr-only" data-en="Data rows processed: too many to count">Feldolgozott adatsor: számolatlanul sok</span>
       <span class="szam-cimke" data-en="data rows processed">feldolgozott adatsor</span>
+    </div>
+  </section>
+
+  <section class="teruletek-blokk">
+    <h2 class="szekcio-cimke" data-en="What I do">Amit csinálok</h2>
+
+    <div class="teruletek">
+      <div class="terulet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 12 V3 A9 9 0 0 1 21 12 Z" fill="currentColor" stroke="none"/>
+        </svg>
+        <h3 data-en="Analysis and segmentation">Elemzés és szegmentáció</h3>
+        <p data-en="Target group segmentation, campaign analytics, funnel and benchmark analysis, A/B tests.">Célcsoport-szegmentálás, kampányanalitika, funnel- és benchmark-elemzés, A/B tesztek.</p>
+      </div>
+
+      <div class="terulet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 4 v16 h16"/>
+          <path d="M8.5 20 v-5"/>
+          <path d="M13 20 v-9"/>
+          <path d="M17.5 20 v-13"/>
+        </svg>
+        <h3 data-en="Dashboards and reports">Dashboardok és riportok</h3>
+        <p data-en="Interactive reports that turn into KPIs and concrete next steps.">Interaktív riportok, amikből KPI és konkrét teendő lesz.</p>
+      </div>
+
+      <div class="terulet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="5" cy="6" r="2.4"/>
+          <circle cx="5" cy="18" r="2.4"/>
+          <circle cx="19" cy="12" r="2.4"/>
+          <path d="M7.3 7.1 L16.7 10.9"/>
+          <path d="M7.3 16.9 L16.7 13.1"/>
+        </svg>
+        <h3 data-en="Data pipeline and data quality">Adatpipeline és adatminőség</h3>
+        <p data-en="Data cleaning, transformation, integration between systems, quality checks.">Adattisztítás, adattranszformáció, rendszerek közti integráció, minőség-ellenőrzés.</p>
+      </div>
+
+      <div class="terulet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 3 l1.7 4.3 4.3 1.7 -4.3 1.7 -1.7 4.3 -1.7 -4.3 -4.3 -1.7 4.3 -1.7 Z"/>
+          <path d="M18.5 15 l.8 2 2 .8 -2 .8 -.8 2 -.8 -2 -2 -.8 2 -.8 Z"/>
+        </svg>
+        <h3 data-en="Automation and AI">Automatizálás és AI</h3>
+        <p data-en="Excel, Python, n8n, Claude — including speech recognition and text processing.">Excel, Python, n8n, Claude — beszédfelismerés és szövegfeldolgozás is.</p>
+      </div>
     </div>
   </section>
 
