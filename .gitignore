@@ -12,3 +12,6 @@ scripts/sheet-config.json
 # Windows
 Thumbs.db
 desktop.ini
+
+# generált szövegtérkép — a scripts/szovegterkep.py készíti, bármikor újragenerálható
+SZOVEGEK.md
