@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ügyfélérték-index — interaktív demó</title>
+<meta name="description" content="Súlyozott ügyfélérték-index egy hűségprogramra: hét viselkedési blokk, állítható súlyok, és egy beépített mérce, ami megmondja, melyik beállítás jobb. Szintetikus adaton.">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#fcfcfb; --surface:#ffffff; --surface-2:#f2f1ee; --border:#e3e1dc; --border-2:#cfcdc6;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#7c7a74;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --grid:#e8e6e1; --accent:#2a78d6; --good:#1baf7a; --warn:#eb6834;
+  --shadow:0 1px 2px rgba(11,11,11,.05),0 8px 24px -12px rgba(11,11,11,.12);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#141413; --surface:#1a1a19; --surface-2:#242422; --border:#32322f; --border-2:#45443f;
+    --ink:#ffffff; --ink-2:#c3c2b7; --ink-3:#93918a;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --grid:#2c2c29; --accent:#3987e5; --good:#199e70; --warn:#d95926;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141413; --surface:#1a1a19; --surface-2:#242422; --border:#32322f; --border-2:#45443f;
+  --ink:#ffffff; --ink-2:#c3c2b7; --ink-3:#93918a;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --grid:#2c2c29; --accent:#3987e5; --good:#199e70; --warn:#d95926;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+a{color:var(--accent)}
+
+/* ---------- hero ---------- */
+header.hero{padding:64px 0 34px;border-bottom:1px solid var(--border)}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+h1{font-size:clamp(30px,4.6vw,46px);line-height:1.1;letter-spacing:-.02em;margin:12px 0 14px;font-weight:700}
+.hero p{max-width:66ch;color:var(--ink-2);font-size:17px;margin:0 0 10px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
+  padding:5px 11px;border-radius:999px;border:1px solid var(--border-2);color:var(--ink-2);background:var(--surface)}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--s2)}
+.badge.b2 .dot{background:var(--s1)} .badge.b3 .dot{background:var(--s3)}
+
+h2{font-size:21px;letter-spacing:-.01em;margin:0 0 6px;font-weight:700}
+h3{font-size:15px;margin:0 0 4px;font-weight:700}
+section{padding:38px 0}
+.sec-lead{color:var(--ink-2);max-width:72ch;margin:0 0 18px}
+
+/* ---------- tool ---------- */
+.tool{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;
+  padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl>span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--border-2);background:var(--surface);color:var(--ink-2);transition:.12s}
+.chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+select{font:inherit;font-size:13.5px;padding:6px 10px;border-radius:8px;border:1px solid var(--border-2);
+  background:var(--surface);color:var(--ink)}
+.spacer{flex:1 1 auto}
+.pop{font-size:12.5px;color:var(--ink-3);text-align:right;line-height:1.4;margin-left:auto}
+@media(max-width:760px){.pop{text-align:left;margin-left:0}.spacer{display:none}}
+
+.grid{display:grid;grid-template-columns:290px minmax(0,1fr) 232px;gap:0}
+.pane{padding:20px}
+.pane+.pane{border-left:1px solid var(--border)}
+@media(max-width:1060px){.grid{grid-template-columns:1fr}.pane+.pane{border-left:none;border-top:1px solid var(--border)}
+  .pane:nth-child(1){order:1}.pane:nth-child(3){order:2}.pane:nth-child(2){order:3}}
+
+/* sliders */
+.sl{margin-bottom:13px}
+.sl-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}
+.sl-name{font-size:13.5px;font-weight:600}
+.sl-name b{display:inline-block;width:15px;color:var(--ink-3);font-weight:700}
+.sl-val{font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;color:var(--accent);min-width:38px;text-align:right}
+input[type=range]{width:100%;margin:0;height:18px;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--border-2)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--border-2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--surface);margin-top:-5.5px;box-shadow:0 0 0 1px var(--border-2)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--accent);
+  border:2px solid var(--surface);box-shadow:0 0 0 1px var(--border-2)}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.sl-note{font-size:11.5px;color:var(--ink-3);margin-top:9px;line-height:1.45}
+
+/* charts */
+.chart-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 14px;margin-bottom:4px}
+.chart-t{flex:0 0 auto}
+.chart-t{font-size:13.5px;font-weight:700}
+.chart-s{font-size:11.5px;color:var(--ink-3)}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.axl{font-size:10.5px;fill:var(--ink-3)}
+.gridline{stroke:var(--grid);stroke-width:1}
+.zero{stroke:var(--border-2);stroke-width:1}
+.bar{fill:var(--s1)}
+.chart-block{margin-bottom:22px}
+.chart-block:last-child{margin-bottom:0}
+
+/* metrics */
+.hero-num{font-variant-numeric:tabular-nums;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.hero-cap{font-size:12px;color:var(--ink-3);margin-top:2px}
+.mrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border)}
+.mrow:last-child{border-bottom:none}
+.mk{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.mv{font-variant-numeric:tabular-nums;font-weight:700;font-size:14.5px;white-space:nowrap}
+.mv.ok{color:var(--good)} .mv.bad{color:var(--warn)}
+.mhead{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:16px 0 4px}
+.mnote{font-size:11.5px;color:var(--ink-3);line-height:1.45;margin-top:12px}
+
+/* legend + table */
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 0}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2)}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pane{min-width:0}
+.tbl-btn{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--border-2);background:var(--surface);
+  color:var(--ink-2);border-radius:7px;padding:4px 9px;cursor:pointer}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:10px}
+th,td{border:1px solid var(--border);padding:5px 8px;text-align:right;font-variant-numeric:tabular-nums}
+th{background:var(--surface-2);font-weight:700;text-align:right}
+th:first-child,td:first-child{text-align:left;white-space:nowrap;position:sticky;left:0;background:var(--surface)}
+th:first-child{background:var(--surface-2)}
+
+/* tooltip */
+#tip{position:fixed;pointer-events:none;z-index:50;background:var(--ink);color:var(--bg);
+  font-size:12px;line-height:1.45;padding:7px 10px;border-radius:7px;opacity:0;transition:opacity .1s;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);max-width:240px}
+#tip b{color:var(--bg)}
+
+/* lessons */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 18px 16px}
+.card .n{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--s2);margin-bottom:7px}
+.card p{margin:0;color:var(--ink-2);font-size:14px}
+.card p+p{margin-top:8px}
+.card .try{margin-top:11px;font-size:12.5px;color:var(--ink-3);border-top:1px dashed var(--border);padding-top:9px}
+
+.note{border-left:3px solid var(--s2);background:var(--surface);padding:12px 16px;border-radius:0 8px 8px 0;
+  margin:18px 0;color:var(--ink-2);font-size:14px}
+.note b{color:var(--ink)}
+footer{border-top:1px solid var(--border);padding:26px 0 86px;color:var(--ink-3);font-size:13px}
+footer p{max-width:74ch;margin:0 0 8px}
+.theme-btn{position:fixed;bottom:16px;right:16px;box-shadow:var(--shadow);z-index:40;font:inherit;font-size:12px;font-weight:600;
+  border:1px solid var(--border-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:6px 10px;cursor:pointer}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- design sections (added) ---------- */
+.dsec{padding:34px 0;border-top:1px solid var(--border)}
+.dsec:first-of-type{border-top:none}
+.dnum{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--s2);margin-bottom:7px}
+.dsec h2{font-size:24px;margin-bottom:8px}
+.dsec h3{font-size:15.5px;margin:22px 0 5px}
+.dsec p{max-width:74ch;color:var(--ink-2);margin:0 0 10px}
+.dsec p.tight{margin-bottom:6px}
+.dsec ul{max-width:74ch;color:var(--ink-2);margin:0 0 12px;padding-left:19px}
+.dsec li{margin-bottom:6px}
+.dsec li::marker{color:var(--ink-3)}
+.lead-big{font-size:17px;color:var(--ink-2);max-width:72ch}
+.ptable{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface);margin:14px 0 18px}
+.ptable table{margin:0;font-size:13.5px;width:100%;border-collapse:collapse}
+.ptable th,.ptable td{border:none;border-bottom:1px solid var(--border);padding:10px 14px;
+  text-align:left;white-space:normal;font-variant-numeric:normal;vertical-align:top;color:var(--ink-2)}
+.ptable thead th{background:var(--surface-2);color:var(--ink-3);font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;font-weight:700;white-space:nowrap}
+.ptable tbody tr:last-child td{border-bottom:none}
+.ptable td:first-child,.ptable th:first-child{position:static;background:transparent;white-space:normal;color:var(--ink);font-weight:600}
+.ptable thead th:first-child{background:var(--surface-2)}
+.ptable td.r,.ptable th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ptable .bk{display:inline-block;width:17px;color:var(--s2);font-weight:700}
+.pull{border-left:3px solid var(--accent);background:var(--surface);padding:14px 18px;border-radius:0 9px 9px 0;
+  margin:16px 0;font-size:16px;line-height:1.5;color:var(--ink);max-width:70ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0 4px}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.box{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:16px 17px}
+.box h3{margin:0 0 6px}
+.box p{font-size:14px;margin:0}
+.box p+p{margin-top:8px}
+.box.warnbox{border-left:3px solid var(--warn)}
+.box.goodbox{border-left:3px solid var(--good)}
+.dlist{display:grid;gap:10px;margin:12px 0 4px;max-width:82ch}
+.dl{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:start;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+.dl .q{font-size:12px;font-weight:700;color:var(--s2);line-height:1.5}
+.dl b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:3px}
+.dl span{color:var(--ink-2);font-size:13.5px;line-height:1.5}
+.dl em{font-style:normal;color:var(--ink);font-weight:600}
+.mini{font-size:12.5px;color:var(--ink-3);max-width:74ch;margin-top:-2px}
+
+/* hover-affordance */
+.hx{border-bottom:1px dotted var(--ink-3);cursor:help}
+.sl-name.hx,.chart-t.hx,.mk.hx{border-bottom:1px dotted var(--ink-3)}
+.chip.hx,select.hx,button.hx{border-bottom:none}
+.tiphint{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-3);
+  padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface)}
+.tiphint .kbd{display:inline-block;border:1px solid var(--border-2);border-radius:5px;padding:0 6px;
+  font-size:11px;font-weight:700;color:var(--ink-2)}
+.mfocus{cursor:help}
+#tip{max-width:310px}
+</style>
+</head>
+<body>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:10px 20px;background:#15181C;color:#F2F3F0;position:sticky;top:0;z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
+  <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
+</div>
+<button class="theme-btn" id="themeBtn" type="button">Sötét / világos</button>
+<div id="tip" role="status" aria-live="off"></div>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">Adatelemzési munkadarab · szerkezeti terv és interaktív demó</div>
+  <h1>Ügyfélérték-index</h1>
+  <p>Egy hűségprogram tagjait hét viselkedési blokkból pontozom: mennyire friss, mennyire intenzív, mennyit vált be, mennyire reagál az emailre, mennyire széles az érdeklődése, mennyire tartós, és mennyire elérhető. A súlyok állíthatók — <b>és a lényeg nem a csúszka, hanem a mellette futó mérce</b>, ami megmondja, hogy az új beállítás jobb-e, vagy csak más.</p>
+  <p>Ez a lap először végigveszi, <b>hogyan épül fel a mutató és miért pont így</b> — mit mér és mit nem, mi a hét blokk, melyik három döntés nyom többet a súlyoknál, és mi a döntőbíró. A működő felület a lap alján van.</p>
+  <div class="badges">
+    <span class="badge"><span class="dot"></span>Szintetikus adat — valódi ügyféladat nincs benne</span>
+    <span class="badge b2"><span class="dot"></span>40 000 generált programtag</span>
+    <span class="badge b3"><span class="dot"></span>Minden számítás a böngésződben fut</span>
+  </div>
+</div></header>
+
+<section style="padding-bottom:0"><div class="wrap">
+
+<div class="dsec">
+  <div class="dnum">01 · A kiindulás</div>
+  <h2>Mit mér, és mit nem</h2>
+  <p class="lead-big">Az „ügyfélérték" kifejezés két nagyon különböző dolgot jelenthet, és ezt a legelején el kell dönteni — mert aki olvassa, az egyiket fogja beleérteni a másikba.</p>
+  <div class="ptable"><table>
+    <thead><tr><th>Olvasat</th><th>Mit jelentene</th><th>Meg tudjuk?</th></tr></thead>
+    <tbody>
+      <tr><td>Banki ügyfélérték (CLV)</td><td>Mennyit hoz az ügyfél a banknak — termékbirtoklás, árbevétel, marginális jövedelmezőség.</td><td><b>Nem.</b> Ez az adat nincs nálunk, és a szegmens csak durva proxy rá.</td></tr>
+      <tr><td>Program-elkötelezettségi érték</td><td>Mennyire él és mennyire elérhető az ügyfél a hűségprogramban: mit tesz, milyen gyakran, mennyire reagál a kommunikációra, mennyire tartósan.</td><td><b>Igen, jól.</b> Ez a saját adatkörünk, és ez tehető pontszámmá.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Belül hívjuk ügyfélérték-indexnek — de a definíciója legyen egy mondatban leszögezve, mert egy mondat megvéd attól, hogy fél év múlva CLV-ként hivatkozzanak rá egy prezentációban:</p>
+  <p class="pull">„A programtag <b>elkötelezettségének és elérhetőségének</b> összevont mutatója — <b>nem</b> a banki jövedelmezőség mérőszáma."</p>
+
+  <h3>Mi marad ki a pontszámból</h3>
+  <p>A szegmens, a státusz, az életkor, a megye és a consent-birtoklás <b>nem kerül a pontszámba</b>, hanem kereszttábla-dimenzió lesz mellette. Két okból:</p>
+  <div class="two">
+    <div class="box"><h3>Körkörösség</h3><p>Ha a szegmens benne van a pontszámban, és utána a pontszámmal akarunk szegmentálni vagy klaszterezni, akkor a saját bemenetünket találjuk meg eredményként.</p></div>
+    <div class="box"><h3>Használhatóság</h3><p>Az érdekes kérdés éppen az, hogy „a PREMIUM szegmensben miért alacsony az index" — ez csak akkor kérdezhető meg, ha a kettő független egymástól.</p></div>
+  </div>
+  <p class="mini" style="margin-top:12px">Kivétel a consent: <b>birtoklásként</b> nem kerül be, <b>elérhetőségként</b> igen — erről a G blokk szól.</p>
+</div>
+
+<div class="dsec">
+  <div class="dnum">02 · A szerkezet</div>
+  <h2>A hét blokk</h2>
+  <p class="lead-big">Blokkonként <b>egy</b> csúszka. Ez tudatos: húsz csúszka használhatatlan, hét használható. A blokkon belüli összetétel fix — így a csúszka azt jelenti, amit a neve mond.</p>
+  <div class="ptable"><table>
+    <thead><tr><th>Blokk</th><th>Komponensek</th><th>Forrás</th><th class="r">Alap-súly</th></tr></thead>
+    <tbody>
+      <tr><td><span class="bk">A</span>Frissesség</td><td>Napok az utolsó belépés / megtekintés / letöltés óta — a három közül a legutóbbi, plusz külön a legutóbbi letöltés.</td><td>esemény-napló</td><td class="r">25</td></tr>
+      <tr><td><span class="bk">B</span>Intenzitás</td><td>Belépés, megtekintés, letöltés darabszáma az ablakban, <b>fix belső értéklétrával</b> (belépés 1 · megtekintés 2 · letöltés 4).</td><td>esemény-napló</td><td class="r">20</td></tr>
+      <tr><td><span class="bk">C</span>Beváltott pontérték</td><td>A letöltött ajánlatok pontértékének összege — ez a „monetary" láb, a program belső valutájában mérve.</td><td>ajánlat + esemény</td><td class="r">15</td></tr>
+      <tr><td><span class="bk">D</span>Email-reagálékonyság</td><td>Megnyitási és <b>kattintási</b> arány a kézbesítettekhez mérten, plusz az email-azonosítóval igazolt letöltések.</td><td>email-napló</td><td class="r">15</td></tr>
+      <tr><td><span class="bk">E</span>Érdeklődés szélessége</td><td>Hány külön ajánlat-kategóriát és hány külön kibocsájtót érintett. A széles érdeklődés tartósabb ügyfél.</td><td>ajánlat + esemény</td><td class="r">10</td></tr>
+      <tr><td><span class="bk">F</span>Tartósság</td><td>Aktív hónapok aránya a tagság hosszához, és a leghosszabb egybefüggő aktív sorozat.</td><td>programtag-panel</td><td class="r">10</td></tr>
+      <tr><td><span class="bk">G</span>Elérhetőség</td><td>Email- és push-consent, érvényes eszköz-token léte, kézbesítési hibák hiánya. <b>Ez képesség, nem reakció</b> — ezért kap kis súlyt.</td><td>consent + naplók</td><td class="r">5</td></tr>
+    </tbody>
+  </table></div>
+  <p>Ez az alap-súlyozás <b>nem javaslat, hanem kiindulópont a vitához</b> — pont azért van benne szám, hogy legyen mit elmozdítani. A frissesség kapja a legtöbbet, mert hűségprogramban ez az egyetlen legerősebb jel; a G a legkevesebbet, mert az elérhetőség csak lehetőség.</p>
+
+  <h3>A „nincs adat" nem azonos a „rossz"-szal</h3>
+  <p>Aki nem kapott egyetlen emailt sem, annak nincs 0 pontja a D blokkban — annak <b>nincs D pontszáma</b>. Ha nullát adunk neki, akkor azt mérjük, kinek küldtünk sok levelet, nem azt, ki reagál. Ugyanez áll minden arány-alapú komponensre.</p>
+  <p>A helyes kezelés: az érintett blokk <b>kimarad az ő súlyozott átlagából</b>, a maradék súlyok újranormálódnak, és a felületen látszik, hány ügyfélnél hiányos a profil. Ezt a számot érdemes szem előtt tartani: ha a tagság fele „nem mérhető" a D blokkban, akkor a D súlyának emelése nem is arról szól, amiről hisszük.</p>
+</div>
+
+<div class="dsec">
+  <div class="dnum">03 · A gerinc</div>
+  <h2>Három döntés, ami többet nyom, mint a súlyok</h2>
+  <p class="lead-big">Egy kompozit pontszámnál a súlyok végül kevesebbet mozdítanak a sorrenden, mint az alábbi három beállítás — és pont ezeket szokás magától értetődőnek venni. Mind a három ki is próbálható a lap alján.</p>
+
+  <h3>3.1 &nbsp;Normalizálás — itt dől el a legtöbb</h3>
+  <p>A komponensek eloszlása erősen ferde: az ügyfelek nagy része 0–2 esemény, néhány száz ügyfél viszont több százat produkál. Három lehetőség:</p>
+  <div class="ptable"><table>
+    <thead><tr><th>Mód</th><th>Mit tesz</th><th>Következmény</th></tr></thead>
+    <tbody>
+      <tr><td>Percentilis-rang <span style="color:var(--good)">· alapértelmezés</span></td><td>Minden komponens 0–100 rangskálára kerül a populáción belül.</td><td>A súlyok azt jelentik, amit a nevük mond, és a szélső értékek nem nyomják agyon a többit. Cserébe <b>eltűnik a nagyságrend</b>: az 500 letöltéses és az 50 letöltéses ügyfél is a skála tetején lesz.</td></tr>
+      <tr><td>Logaritmizált min-max</td><td>log(1+x), majd 0–100-ra nyújtás.</td><td>Megtartja a nagyságrendet, tompítva. Akkor jó, ha a „bálnák" külön kezelése üzletileg fontos.</td></tr>
+      <tr><td>Nyers min-max</td><td>Egyszerű 0–100 nyújtás.</td><td><b style="color:var(--warn)">Csapda.</b> Egyetlen kiugró ügyfél a többit a nulla közelébe tömöríti, és onnan a csúszkák alig mozdítják a sorrendet — a felület élettelennek fog tűnni, holott a hiba a normalizálásban van.</td></tr>
+    </tbody>
+  </table></div>
+  <p>A nyers min-max azért maradt benne harmadik opcióként, hogy <b>meg lehessen mutatni, miért nem azt használjuk</b>.</p>
+
+  <h3>3.2 &nbsp;Tenure-korrekció: „össz" vagy „ütem"</h3>
+  <p>Nyers darabszámokkal a hosszú tagságú ügyfél mindig előnyben van, és az index a végén azt fogja mérni, ki mióta tag. Ezért két üzemmód kell, átváltóval:</p>
+  <div class="two">
+    <div class="box"><h3>Össz — halmozott teljesítmény</h3><p>Arra jó, ha azt kérdezzük: „ki adta eddig a legtöbbet a programnak?"</p></div>
+    <div class="box"><h3>Ütem — hónapra vetítve</h3><p>Arra jó, ha azt kérdezzük: „ki a legértékesebb <em>most</em>?" Az új tagok csak ebben az üzemmódban tudnak felkerülni.</p></div>
+  </div>
+  <div class="note" style="margin-top:16px"><b>A hozzá tartozó diagnosztika:</b> a felület élőben mutatja az <b>index és a tagsági idő rangkorrelációját</b>. Ha ez 0,8 fölött van, az index gyakorlatilag azt mondja, hogy „régi tag" — akkor vagy ütem-módra kell váltani, vagy a súlyokat átrendezni. Ez egy szám, és azonnal leleplezi a leggyakoribb hibát.</div>
+
+  <h3>3.3 &nbsp;Korrelált komponensek — a rejtett dupla számolás</h3>
+  <p>A belépés, a megtekintés és a letöltés erősen összefügg: aki letölt, az belépett és megnézett. Ha mindhárom külön súlyt kap, az aktivitás <b>háromszor</b> számol bele, és a „letöltés" csúszka nem azt teszi, amit a neve ígér. Ezért van a B blokkban fix belső értéklétra egyetlen csúszka alatt. Ugyanez a logika a D blokkban: a megnyitás és a kattintás nem két független érdem, hanem egy tölcsér két lépcsője.</p>
+  <p>Amit a felületnek mutatnia kell: a <b>blokkok közti korrelációs mátrix</b>. Ahol két blokk 0,7 fölött korrelál, ott a súlyok szétosztása illúzió — érdemes összevonni őket, vagy tudatosan vállalni az átfedést.</p>
+</div>
+
+<div class="dsec">
+  <div class="dnum">04 · A döntőbíró</div>
+  <h2>A mérce — enélkül a csúszka véleménygép</h2>
+  <p class="lead-big">Ha több setupot tesztelünk, kell egy döntőbíró, különben csak azt tudjuk megállapítani, hogy <em>másik</em> sorrend jött ki — nem azt, hogy <em>jobb</em>. Három szint, növekvő erősséggel.</p>
+  <div class="dlist">
+    <div class="dl"><span class="q">01</span><span><b>Szeparáció</b>Ad-e a setup értelmes szóródást, vagy mindenki a közepén ül? Egy Gini- vagy szórás-szerű szám, plusz a hisztogram alakja. Ez csak azt zárja ki, ami biztosan használhatatlan.</span></div>
+    <div class="dl"><span class="q">02</span><span><b>Stabilitás</b>Rangkorreláció (a) az alap-setuphoz — mennyit mozdított egyáltalán a változtatás; és (b) <em>két különböző adatfrissítés között</em> — ha ugyanaz az ügyfél két hét alatt két decilist ugrál, a mutató nem használható célzásra.</span></div>
+    <div class="dl"><span class="q">03</span><span><b>Előrejelző érvényesség — ez a döntő</b>Az indexet egy <em>korábbi</em> ablakra számolom, és azt nézem, mennyire rendezi helyesen a <em>rákövetkező</em> ablak viselkedését: a felső decilis hányszor aktívabb az átlagnál, és mennyire jelzi előre az elhallgatást. Két setup közül az nyer, amelyik a jövőt jobban rendezi.</span></div>
+  </div>
+  <p class="pull" style="margin-top:18px">Ezzel a réteggel a felület nem vélemény-beállító, hanem <b>mérőeszköz</b>: a „több setupot letesztelünk" mondat számokkal záródik le, nem ízléssel.</p>
+</div>
+
+<div class="dsec">
+  <div class="dnum">05 · A megvalósítás</div>
+  <h2>Hogyan épül meg technikailag</h2>
+  <div class="two">
+    <div class="box"><h3>Előszámítás Pythonban</h3><p>A nyers naplókból ügyfélszintű <b>al-pontszámok</b> készülnek — hét szám ügyfelenként, már normalizálva. A felület nem számol újra semmit a nyers adatból.</p></div>
+    <div class="box goodbox"><h3>A lényegi trükk</h3><p>A súlyozás <b>lineáris</b>, tehát a csúszka mozgatása hét szám átlagolása ügyfelenként. Több százezer ügyfélre is milliszekundumos művelet a böngészőben — nem kell szerver, és a fájl önállóan is működik.</p></div>
+    <div class="box"><h3>Méret</h3><p>Az al-pontszámokat 0–255-re kvantálva, bináris blobként beágyazva ~200 ezer ügyfél × 7 érték ≈ 1,4 MB. A kvantálásból eredő hiba a decilis-határokon elhanyagolható; ha mégis sok, réteges minta megy a felületre, a pontos populációs számok pedig előre kiszámolva.</p></div>
+    <div class="box warnbox"><h3>Pszeudonimizálás</h3><p>A beágyazott adatban <b>nem lehet nyers ügyfélazonosító</b> — hasított kulcs vagy sorszám. Egyedi ügyfél kikeresése nem is feladata ennek a felületnek; ha kell névsor, az az előszámító script külön kimenete, külön fájlban.</p></div>
+  </div>
+  <p style="margin-top:14px"><b>Setup-export.</b> A mentett súly-készlet kimenthető apró JSON-ként — ez lesz az, ami átmegy az SQL-be és a riportmodellbe. A felületen kitalált setupot nem kell majd kézzel újra beállítani, hanem betölteni.</p>
+</div>
+
+<div class="dsec">
+  <div class="dnum">06 · Az igazi hozam</div>
+  <h2>Mire használható azon túl, hogy rangsorol</h2>
+
+  <h3>Tölcsér-értelmezés</h3>
+  <p>A hűségvállalási tölcsér lépcsői mellé rakva az index-eloszlást, a tölcsér értelmezése megváltozik. Ha a „megnézte, de nem töltötte le" csoport index-eloszlása <b>magas</b>, akkor jó ügyfeleket veszítünk el az ajánlat vagy a pontérték miatt — ez sourcing- és kondíció-kérdés. Ha <b>alacsony</b>, akkor eleve alig aktív embereket próbálunk mozdítani, és a kommunikáció nem fog segíteni.</p>
+  <p class="pull">Ugyanaz a tölcsér-szám két teljesen különböző teendőt jelent a két esetben — és a mutató nélkül nem tudjuk megmondani, melyikről van szó.</p>
+
+  <h3>Klaszterezés — egy fontos megkötéssel</h3>
+  <p><b>Ne a kompozit indexszel klaszterezz, hanem a hét al-pontszám vektorával.</b> A kompozit egyetlen szám — abból csak sávok lesznek, nem típusok. A hét dimenzió viszont pont az a jól viselkedő, egységes skálájú feature-tér, amit a klaszterezés szeret.</p>
+  <div class="two">
+    <div class="box"><h3>Index</h3><p>Rangsor, prioritás, kapacitás-allokáció. A kérdés, amire válaszol: <em>„kit szólítsunk meg először?"</em></p></div>
+    <div class="box"><h3>Al-pontszám vektor</h3><p>Tipológia, klaszterezés. A kérdés, amire válaszol: <em>„mit küldjünk neki?"</em></p></div>
+  </div>
+  <p class="mini" style="margin-top:12px">„Aktív, de nem reagál emailre" és „passzív, de minden levelet megnyit" ugyanazt az összpontszámot adhatja — miközben kommunikációs szempontból két különböző ember. A kettő ugyanabból az előszámításból jön, tehát a klaszterezés bemenete gyakorlatilag ingyen adódik.</p>
+
+  <h3>Ahol még azonnal használható</h3>
+  <ul>
+    <li>Bármely kampány célcsoportjának „minősége" egy számban — kiküldés előtt és után.</li>
+    <li>Havi programegészség-mutató: az index populációs átlagának és a felső decilis súlyának alakulása.</li>
+    <li>Az elhallgatás-előrejelzés legerősebb feature-készlete — nem a végső index, hanem az al-pontszámok trendje.</li>
+  </ul>
+</div>
+
+<div class="dsec">
+  <div class="dnum">07 · Ami nyitva maradt</div>
+  <h2>Öt döntés, amit tudatosan nem én hozok meg</h2>
+  <p class="lead-big">Mindegyikre van javaslatom, de mindegyik üzleti döntés — és az a tapasztalatom, hogy egy ilyen mutató akkor romlik el, ha ezek a kérdések csendben, alapértelmezésként dőlnek el.</p>
+  <div class="dlist">
+    <div class="dl"><span class="q">01</span><span><b>Melyik ablakra szóljon az index?</b>Javaslat: <em>utolsó 12 hónap</em> az alapértelmezés — ez fedi a szezonalitást —, mellé egy „teljes életút" változat választhatóan. Két ablak elég; három már csak zaj.</span></div>
+    <div class="dl"><span class="q">02</span><span><b>Az „össz" vagy az „ütem" legyen az alapértelmezett üzemmód?</b>Javaslat: <em>ütem</em>, mert a legtöbb kérdésünk arról szól, ki értékes <em>most</em> — és mert az össz-mód hajlamos csak a tagsági időt visszamérni.</span></div>
+    <div class="dl"><span class="q">03</span><span><b>Mi legyen az előrejelző érvényesség célváltozója?</b>Három jelölt: rákövetkező aktivitás, rákövetkező letöltés, vagy elhallgatás elleni jelzés. Javaslat: mindhárom kimutatva, de a <em>letöltés</em> legyen a fő mérce — az áll a legközelebb a program üzleti céljához.</span></div>
+    <div class="dl"><span class="q">04</span><span><b>Kell egyedi ügyfél-kikeresés a felületen?</b>Javaslat: <em>nem.</em> A felület a populációról szól; a névsor az előszámító script külön kimenete. Így a beágyazott adat pszeudonim maradhat, és a fájl bátran megosztható.</span></div>
+    <div class="dl"><span class="q">05</span><span><b>Építsünk-e előbb interakció-prototípust szintetikus adattal?</b>Ez a sorrend-kérdés — és a válasz itt, a lap alján látható. Egy szemléltető változaton a dimenziókról és a mércéről kézzelfogható felületen lehet beszélni, nem papíron. Az éles adat utána cserélhető alá, a felület változatlanul.</span></div>
+  </div>
+</div>
+
+</div></section>
+
+<section><div class="wrap">
+  <h2>Amit a demó megmutat</h2>
+  <p class="sec-lead">Három dolog, ami egy ilyen mutatónál rendszeresen elromlik — mindhárom kipróbálható a lenti felületen.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="n">01 · A normalizálás</div>
+      <p>A blokkok eloszlása erősen ferde: a tagok nagy része alig aktív, néhányan nagyon. Nyers min-max mellett egyetlen kiugró ügyfél a nulla közelébe tömöríti a többit, és onnan a csúszkák alig mozdítanak a sorrenden.</p>
+      <p>A percentilis-rang ezt megoldja, cserébe eltünteti a nagyságrendet — a 10× aktívabb ügyfél is „csak" a skála tetején lesz.</p>
+      <div class="try">Próbáld: váltsd a normalizálást <b>nyers min-max</b>ra, és nézd a szeparációt.</div>
+    </div>
+    <div class="card">
+      <div class="n">02 · A tagsági idő csapdája</div>
+      <p>Halmozott darabszámokkal a régi tag mindig előnyben van, és a mutató a végén azt méri, ki mióta tag — nem azt, ki értékes most.</p>
+      <p>Ezért van két üzemmód, és ezért van a metrikák közt a tagsági idővel vett korreláció: ha ez magasra megy, a mutató elveszítette a saját mondanivalóját.</p>
+      <div class="try">Próbáld: <b>Össz</b> üzemmód, majd húzd fel az intenzitást és a pontértéket.</div>
+    </div>
+    <div class="card">
+      <div class="n">03 · A mérce</div>
+      <p>Csúszkából nem derül ki, melyik beállítás jobb — csak az, hogy másik sorrend jött ki. Ezért fut mellette egy kihagyott időszak: a pontszámot a korábbi adatokból számolom, és azon mérem, hogy a <b>következő</b> időszak viselkedését mennyire rendezi helyesen.</p>
+      <p>Enélkül a felület vélemény-beállító. Ezzel mérőeszköz.</p>
+      <div class="try">Próbáld: húzd a <b>pontértéket</b> és az <b>elérhetőséget</b> maxra, a többit nullára.</div>
+    </div>
+  </div>
+</div></section>
+
+<section style="padding-top:8px"><div class="wrap">
+  <div class="dnum" style="color:var(--s1)">08 · A felület</div>
+  <h2>Próbáld ki</h2>
+  <p class="sec-lead">Hét csúszka, két átváltó, és jobb oldalt a mérce. Húzd a súlyokat, és nézd, mi történik a számokkal — <b>a felső decilis liftje</b> a fő szám: azt mondja meg, hányszor aktívabb a legjobb tizedünk az átlagnál egy olyan időszakban, amit a pontszám nem látott.</p>
+<div class="tool">
+  <div class="toolbar">
+    <label class="ctl"><span data-tip="<b>Kiinduló beállítások</b><br>Öt mentett súly-készlet. Éles használatban ezek kis JSON-ként exportálhatók, és így kerülnek át az SQL-be és a riportmodellbe — a felületen kitalált setupot nem kell kézzel újra beállítani.">Kiinduló beállítások</span>
+      <span class="chips" id="presets"></span>
+    </label>
+    <label class="ctl"><span data-tip="<b>Normalizálás</b><br>A komponensek eloszlása erősen ferde, ezért számít, hogyan tesszük őket közös skálára. Lásd a 3.1 szakaszt feljebb — a nyers min-max szándékosan van benne, hogy látszódjon, miért nem azt használjuk.">Normalizálás</span>
+      <select id="method" data-tip="<b>Percentilis-rang</b> — mindenki a populáción belüli rangját kapja. Robusztus, de eltűnik a nagyságrend.<br><br><b>Logaritmizált min-max</b> — megtartja a nagyságrendet, tompítva.<br><br><b>Nyers min-max</b> — egyetlen kiugró ügyfél a nulla közelébe tömöríti a többit. Csapda; nézd meg rajta a szeparációt.">
+        <option value="pct" selected>Percentilis-rang</option>
+        <option value="log">Logaritmizált min-max</option>
+        <option value="minmax">Nyers min-max</option>
+      </select>
+    </label>
+    <label class="ctl"><span data-tip="<b>Üzemmód</b><br>Nyers darabszámokkal a régi tag mindig előnyben van. Az ütem-mód hónapra vetít, így az új tagok is fel tudnak kerülni.">Üzemmód</span>
+      <select id="mode" data-tip="<b>Ütem</b> — hónapra vetített teljesítmény. „Ki a legértékesebb most?"<br><br><b>Össz</b> — halmozott teljesítmény. „Ki adta eddig a legtöbbet?" Ez a mód hajlamos a tagsági időt visszamérni — figyeld közben a tagsági idővel vett korrelációt.">
+        <option value="utem" selected>Ütem (hónapra vetítve)</option>
+        <option value="ossz">Össz (halmozott)</option>
+      </select>
+    </label>
+    <span class="spacer"></span>
+    <span class="pop" id="popnote" data-tip="<b>A populáció</b><br>40 000 determinisztikusan generált programtag, a böngésződben előállítva. Valódi ügyféladat nincs benne, és semmi nem hagyja el a gépedet. A generált populációnak van egy rejtett, „igazi” belső szerkezete, ami a jövőbeli eseményt meghatározza — a mérce ezt keresi.">40 000 programtag<br>as of: szintetikus pillanatkép</span>
+  </div>
+
+  <div class="tiphint"><span class="kbd">?</span> Minden feliratnál van magyarázat — vidd fölé az egeret, vagy koppints rá.</div>
+
+  <div class="grid">
+    <div class="pane">
+      <div class="chart-h" style="margin-bottom:12px"><span class="chart-t" data-tip="<b>Súlyok</b><br>Blokkonként egy csúszka. A blokkon belüli összetétel fix, hogy az erősen korreláló komponensek (belépés / megtekintés / letöltés) ne számoljanak duplán.">Súlyok</span><span class="chart-s" id="wsum" data-tip="<b>Nyers összeg</b><br>A csúszkák nyers értékeinek összege. A pontszám ezeket automatikusan 100%-ra normálja, tehát csak az <b>arányuk</b> számít — az abszolút érték nem.">összeg: 100%</span></div>
+      <div id="sliders"></div>
+      <p class="sl-note">A súlyok automatikusan 100%-ra normálódnak, tehát az egyik felhúzása a többit arányosan leviszi — nem lehet mindent fontosnak jelölni.</p>
+    </div>
+
+    <div class="pane">
+      <div class="chart-block">
+        <div class="chart-h"><span class="chart-t" data-tip="<b>Index-eloszlás</b><br>Hogyan oszlik meg a 40 000 tag a 0–100-as pontskálán. Ha minden a közepén tömörül, a mutató nem különböztet meg senkit — ezt méri a szeparáció (Gini). Vidd az egeret az oszlopok fölé a pontos számokért.">Index-eloszlás</span><span class="chart-s" id="histnote"></span></div>
+        <svg id="hist" viewBox="0 0 620 168" preserveAspectRatio="none" role="img" aria-label="Az index-pontszámok eloszlása"></svg>
+      </div>
+      <div class="chart-block">
+        <div class="chart-h"><span class="chart-t" data-tip="<b>Decilisek</b><br>A tagságot tíz egyenlő részre osztom az index szerint, és megnézem, hogy a <b>kihagyott következő időszakban</b> melyik tizedből hányan töltöttek le. Jó mutatónál a D10 magasan az átlag fölött van, és a lépcső monoton emelkedik. A szaggatott vonal a populációs átlag.">Decilisek — a jövőbeli letöltés aránya</span><span class="chart-s">D1 = legalacsonyabb index · D10 = legmagasabb</span></div>
+        <svg id="dec" viewBox="0 0 620 140" role="img" aria-label="A jövőbeli letöltés aránya index-decilisenként"></svg>
+      </div>
+      <div class="chart-block">
+        <div class="chart-h">
+          <span class="chart-t" data-tip="<b>Kereszttábla</b><br>Ez az újrahasznosítás motorja. Mivel a szegmens, a korcsoport és a tölcsér-lépcső szándékosan <b>nincs</b> a pontszámban, itt értelmes kérdés, hogy melyik decilisben hogyan oszlanak meg — például hogy a „megnézte, de nem töltötte le” csoport a felső vagy az alsó decilisekben ül-e.">Kereszttábla — a decilisek összetétele</span>
+          <span style="display:flex;gap:8px;align-items:center">
+            <select id="dim" data-tip="<b>Dimenzió</b><br>Mind a három kimaradt a pontszámból — pont ezért lehet velük keresztezni. A tölcsér a legérdekesebb: megmutatja, hogy a lemorzsolódók jó vagy rossz ügyfelek-e.">
+              <option value="funnel">Hűségvállalási tölcsér</option>
+              <option value="segment">Szegmens</option>
+              <option value="age">Korcsoport</option>
+            </select>
+            <button class="tbl-btn" id="tblBtn" type="button" aria-expanded="false" data-tip="Ugyanez számokban, decilisenkénti megoszlással.">Táblázat</button>
+          </span>
+        </div>
+        <svg id="xtab" viewBox="0 0 620 150" role="img" aria-label="A decilisek összetétele a választott dimenzió szerint"></svg>
+        <div class="legend" id="xlegend"></div>
+        <div id="xtable" class="tblwrap" hidden></div>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="mhead" style="margin-top:0">Fő mérce</div>
+      <div class="mfocus" data-tip="<b>Felső decilis lift</b><br>A legmagasabb indexű tized hányszor gyakrabban tölt le a <b>kihagyott</b> következő időszakban, mint a populáció átlaga. Ez a döntőbíró: két setup közül az nyer, amelyik a jövőt jobban rendezi.<br><br>Zöld: 3,5× fölött · narancs: 2,6× alatt.">
+        <div class="hero-num" id="lift">–</div>
+        <div class="hero-cap">a felső decilis ennyiszer aktívabb az átlagnál a <b>kihagyott</b> következő időszakban</div>
+      </div>
+
+      <div class="mhead">Kihagyott ablakon</div>
+      <div class="mrow"><span class="mk" data-tip="<b>AUC</b><br>Mennyire rendezi helyesen a mutató a jövőbeli eseményt, a teljes skálán — nem csak a felső decilisben. 0,5 = érme, 1,0 = tökéletes. A liftnél árnyaltabb: azt is bünteti, ha az alsó decilisek rosszul sorrendezettek.">AUC</span><span class="mv" id="auc">–</span></div>
+      <div class="mrow"><span class="mk" data-tip="<b>Alap-esemény arány</b><br>A populáció hány százaléka tölt le a következő időszakban, mindenféle rangsorolás nélkül. Ehhez képest mér a lift — ez a viszonyítási alap, és nem függ a súlyoktól.">Alap-esemény arány</span><span class="mv" id="brate">–</span></div>
+
+      <div class="mhead">A pontszám maga</div>
+      <div class="mrow"><span class="mk" data-tip="<b>Szeparáció (Gini)</b><br>Ad-e a beállítás értelmes szóródást, vagy mindenki a közepén ül. Ez csak azt zárja ki, ami biztosan használhatatlan — a magas szeparáció önmagában még nem jó mutató.<br><br>0,15 alatt narancs: összetömörödött eloszlás.">Szeparáció (Gini)</span><span class="mv" id="gini">–</span></div>
+      <div class="mrow"><span class="mk" data-tip="<b>Stabilitás</b><br>Rangkorreláció az elsőként betöltött („Alap”) beállításhoz. Azt mondja meg, <b>mennyit mozdított egyáltalán</b> a változtatás. 0,95 fölött a látványos csúszkázás valójában alig rendezte át a sorrendet.">Stabilitás az alaphoz</span><span class="mv" id="stab">–</span></div>
+      <div class="mrow"><span class="mk" data-tip="<b>Korreláció a tagsági idővel</b><br>A leggyakoribb hiba lelepleződése. Ha ez 0,8 fölé megy, az index gyakorlatilag annyit mond, hogy „régi tag” — akkor ütem-módra kell váltani, vagy a súlyokat átrendezni.<br><br>0,5 fölött narancs.">Korreláció a tagsági idővel</span><span class="mv" id="ten">–</span></div>
+      <div class="mrow"><span class="mk" data-tip="<b>Hiányos profil</b><br>Hány tagnál hiányzik legalább egy blokk — itt jellemzően az email-reagálékonyság, mert nem kapott levelet. Náluk az a blokk kimarad a súlyozott átlagból, a maradék súlyok újranormálódnak.<br><br>Ha ez az arány nagy, a D súlyának emelése nem arról szól, amiről hisszük.">Hiányos profil</span><span class="mv" id="inc">–</span></div>
+
+      <div class="mhead">A felső decilis profilja</div>
+      <svg id="prof" viewBox="0 0 192 126" role="img" aria-label="A felső decilis átlagos al-pontszámai blokkonként"></svg>
+      <p class="mnote">Két ügyfél ugyanazt az összpontszámot kaphatja nagyon eltérő profillal. Az index rangsorol; <b>tipológiához az al-pontszámok vektora kell</b>, nem az összeg.</p>
+    </div>
+  </div>
+</div>
+  <div class="note"><b>A „nincs adat" nem azonos a „rossz"-szal.</b> Aki nem kapott egyetlen levelet sem, annak nem nulla az email-pontszáma — annak <i>nincs</i> email-pontszáma. Ha nullát adnánk neki, azt mérnénk vissza, kinek küldtünk sok levelet. Ezért a hiányzó blokk kimarad az adott ügyfél súlyozott átlagából, a maradék súlyok pedig újranormálódnak — és a felület kiírja, hány ügyfélnél hiányos a profil.</div>
+</div></section>
+
+<footer><div class="wrap">
+  <p><b>Az adatról:</b> a demó minden száma egy determinisztikusan generált, szintetikus populációból származik, amit a böngésződ állít elő betöltéskor. Valódi ügyféladat nincs benne, és nem is hagyja el a gépedet. A generált populációnak van egy rejtett „igazi" szerkezete, ami a jövőbeli eseményt meghatározza — a mérce ezt keresi.</p>
+  <p><b>A módszerről:</b> blokkonként egy csúszka (a blokkon belüli összetétel fix, hogy az erősen korreláló komponensek ne számoljanak duplán), percentilis-rangra normalizált al-pontszámok, súlyozott átlag hiányzó-blokk-újranormálással, majd binelt O(n) metrikák — szeparáció, rang-stabilitás, tagsági idővel vett korreláció, decilis-lift és AUC egy kihagyott időszakon.</p>
+  <p style="margin-top:16px">Udvari István · adatelemzés</p>
+</div></footer>
+
+<script>
+/* Ügyfélérték-index — szintetikus demó motor. Nincs DOM-függés. */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+var BLOCKS=[
+ {key:'recency',  label:'Frissesség',          short:'A'},
+ {key:'intensity',label:'Intenzitás',          short:'B'},
+ {key:'points',   label:'Beváltott pontérték', short:'C'},
+ {key:'email',    label:'Email-reagálékonyság',short:'D'},
+ {key:'breadth',  label:'Érdeklődés szélessége',short:'E'},
+ {key:'durability',label:'Tartósság',          short:'F'},
+ {key:'reach',    label:'Elérhetőség',         short:'G'}
+];
+var NB=BLOCKS.length;
+
+// A szintetikus populáció "igazi" szerkezete — ezt keresi meg a csúszkázó.
+var TRUTH=[0.29,0.09,0.01,0.44,0.09,0.07,0.01];
+
+function buildPopulation(N,seed){
+  var r=mulberry32(seed);
+  function nrm(){var u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+  function clamp01(x){return x<0?0:x>1?1:x}
+
+  var raw={ossz:new Float64Array(N*NB),utem:new Float64Array(N*NB)};
+  var tenure=new Float64Array(N), segment=new Uint8Array(N), age=new Uint8Array(N),
+      funnel=new Uint8Array(N), future=new Uint8Array(N), hasEmail=new Uint8Array(N);
+
+  for(var i=0;i<N;i++){
+    // latens hajlandóságok
+    var core=clamp01(0.5+0.30*nrm());               // általános elkötelezettség
+    var emailAff=clamp01(0.22*core+0.78*clamp01(0.5+0.30*nrm()));
+    var breadthAff=clamp01(0.6*core+0.4*clamp01(0.5+0.3*nrm()));
+
+    var ten=1+Math.floor(Math.pow(r(),0.7)*47);     // 1..48 hónap
+    tenure[i]=ten;
+    var seg=r()<0.78?0:(r()<0.82?1:2);              // MASS / PREMIUM / PRIVATE
+    segment[i]=seg;
+    age[i]=Math.min(3,Math.floor(Math.pow(r(),0.85)*4));
+
+    // --- nyers mérőszámok ---
+    var recDays=Math.max(0,-Math.log(1-r()*0.999)*(14+150*(1-core)));
+    var perMonth=Math.exp(2.4*core-1.1)*(0.55+0.9*r());
+    var events=Math.max(0,perMonth*ten*(0.6+0.8*r()));
+    var downloads=events*(0.10+0.22*core)*(0.6+0.8*r());
+    var points=downloads*(120+900*Math.pow(r(),1.6));
+    var activeM=Math.min(ten,Math.max(0,Math.round(ten*clamp01(0.15+0.8*core+0.12*nrm()))));
+    var streak=Math.max(0,Math.min(activeM,Math.round(activeM*(0.35+0.6*r()))));
+    var catTot=Math.min(14,Math.max(0,Math.round(1+13*Math.pow(breadthAff,1.5)*(0.5+0.7*r()))));
+    var catRec=Math.min(catTot,Math.max(0,Math.round(catTot*(0.2+0.6*r())*(0.4+0.9*core))));
+
+    var delivered=Math.round(Math.max(0,(r()<0.22?0:2+34*Math.pow(r(),0.8))));
+    hasEmail[i]=delivered>0?1:0;
+    var openR=clamp01(0.05+0.76*emailAff+0.035*nrm());
+    var clickR=clamp01(openR*(0.12+0.50*emailAff)+0.025*nrm());
+    if(delivered<5){ // kevés levélnél zajosabb az arány
+      openR=clamp01(openR+0.10*nrm()); clickR=clamp01(clickR+0.06*nrm());
+    }
+    var reach=(r()<0.62?1:0)*0.45+(r()<0.38?1:0)*0.30+(r()<0.86?1:0)*0.15+(r()<0.93?1:0)*0.10;
+
+    // --- blokk-értékek, két üzemmódban ---
+    var o=i*NB;
+    raw.ossz[o+0]=-recDays;                 raw.utem[o+0]=-recDays;
+    raw.ossz[o+1]=events;                   raw.utem[o+1]=events/ten;
+    raw.ossz[o+2]=points;                   raw.utem[o+2]=points/ten;
+    var em=delivered>0?(0.4*openR+0.6*clickR):NaN;
+    raw.ossz[o+3]=em;                       raw.utem[o+3]=em;
+    raw.ossz[o+4]=catTot;                   raw.utem[o+4]=catRec;
+    var dur=(activeM/ten)*0.7+(streak/Math.max(1,ten))*0.3;
+    raw.ossz[o+5]=dur;                      raw.utem[o+5]=dur;
+    raw.ossz[o+6]=reach;                    raw.utem[o+6]=reach;
+
+    // --- tölcsér-lépcső (kereszttáblához) ---
+    var f=r();
+    if(core<0.30) funnel[i]=f<0.72?0:1;
+    else if(core<0.55) funnel[i]=f<0.30?0:(f<0.70?1:2);
+    else funnel[i]=f<0.10?0:(f<0.32?1:(f<0.62?2:3));
+
+    // --- jövőbeli kimenet: az IGAZI súlyozásból ---
+    var lat=TRUTH[0]*(0.35*core+0.65*(1-Math.min(1,recDays/200)))
+           +TRUTH[1]*core+TRUTH[2]*clamp01(points/40000)
+           +TRUTH[3]*(delivered>0?emailAff:0.40)
+           +TRUTH[4]*breadthAff+TRUTH[5]*dur+TRUTH[6]*reach;
+    var p=1/(1+Math.exp(-(11.0*lat-8.8)));
+    future[i]=r()<p?1:0;
+  }
+  return {N:N,raw:raw,tenure:tenure,segment:segment,age:age,funnel:funnel,future:future,hasEmail:hasEmail};
+}
+
+/* --- normalizálás: blokkonként 0..100, NaN marad NaN --- */
+function normalize(pop,mode,method){
+  var N=pop.N,src=pop.raw[mode],out=new Float64Array(N*NB);
+  var idx=new Uint32Array(N),vals=new Float64Array(N);
+  for(var b=0;b<NB;b++){
+    var m=0;
+    for(var i=0;i<N;i++){var v=src[i*NB+b];if(v===v){idx[m]=i;vals[m]=v;m++}}
+    var sub=Array.from({length:m},function(_,k){return k});
+    if(method==='pct'){
+      sub.sort(function(x,y){return vals[x]-vals[y]});
+      for(var k=0;k<m;k++) out[idx[sub[k]]*NB+b]=m>1?(k/(m-1))*100:50;
+    }else{
+      var lo=Infinity,hi=-Infinity,t=new Float64Array(m);
+      for(var k=0;k<m;k++){
+        var v=vals[k];
+        if(method==='log'){var s=v<0?-1:1;t[k]=s*Math.log1p(Math.abs(v))}
+        else t[k]=v;
+        if(t[k]<lo)lo=t[k];if(t[k]>hi)hi=t[k];
+      }
+      var rng=hi-lo||1;
+      for(var k=0;k<m;k++) out[idx[k]*NB+b]=((t[k]-lo)/rng)*100;
+    }
+    for(var i=0;i<N;i++){var v=src[i*NB+b];if(v!==v)out[i*NB+b]=NaN}
+  }
+  return out;
+}
+
+/* --- pontozás: súlyozott átlag, a hiányzó blokk súlya újranormálódik --- */
+function score(norm,N,w,out){
+  for(var i=0;i<N;i++){
+    var s=0,ws=0,o=i*NB;
+    for(var b=0;b<NB;b++){var v=norm[o+b];if(v===v){s+=w[b]*v;ws+=w[b]}}
+    out[i]=ws>0?s/ws:0;
+  }
+  return out;
+}
+
+/* --- metrikák, mind O(n) binneléssel --- */
+var NBIN=1024;
+function metrics(sc,pop,baseRank){
+  var N=pop.N,cnt=new Float64Array(NBIN),pos=new Float64Array(NBIN),bin=new Uint16Array(N);
+  var i,b;
+  for(i=0;i<N;i++){b=sc[i]*(NBIN-1)/100;b=b<0?0:b>NBIN-1?NBIN-1:b|0;bin[i]=b;cnt[b]++;if(pop.future[i])pos[b]++}
+  // kumulatív rangok
+  var cum=new Float64Array(NBIN),run=0;
+  for(b=0;b<NBIN;b++){cum[b]=run+cnt[b]/2;run+=cnt[b]}
+  var rank=new Float64Array(N);
+  for(i=0;i<N;i++) rank[i]=cum[bin[i]]/N;
+
+  // Gini a pontszám-eloszlásra
+  var sorted=[],tot=0,acc=0,gsum=0,seen=0;
+  for(b=0;b<NBIN;b++) tot+=cnt[b]*(b/(NBIN-1)*100);
+  for(b=0;b<NBIN;b++){var c=cnt[b];if(!c)continue;var val=b/(NBIN-1)*100;acc+=c*val;gsum+=c*(2*(seen+c/2)-N)*val;seen+=c}
+  var gini=tot>0?gsum/(N*tot):0;
+
+  // decilis-határok és lift
+  var target=N/10,edges=[],k=1,running=0;
+  for(b=0;b<NBIN&&k<10;b++){running+=cnt[b];while(k<10&&running>=target*k){edges.push(b);k++}}
+  while(edges.length<9)edges.push(NBIN-1);
+  var b2d=new Uint8Array(NBIN),d=0;
+  for(b=0;b<NBIN;b++){while(d<9&&b>edges[d])d++;b2d[b]=d}
+  var dc=new Float64Array(10),dp=new Float64Array(10),baseRate=0;
+  for(i=0;i<N;i++){var dd=b2d[bin[i]];dc[dd]++;if(pop.future[i]){dp[dd]++;baseRate++}}
+  baseRate/=N;
+  var topLift=dc[9]>0?(dp[9]/dc[9])/baseRate:0;
+
+  // AUC (Mann-Whitney binekből)
+  var P=0,Ng=0;for(b=0;b<NBIN;b++){P+=pos[b];Ng+=cnt[b]-pos[b]}
+  var auc=0,negBelow=0;
+  for(b=0;b<NBIN;b++){var p=pos[b],n=cnt[b]-p;auc+=p*(negBelow+n/2);negBelow+=n}
+  auc=(P>0&&Ng>0)?auc/(P*Ng):0.5;
+
+  // korrelációk rangokon
+  function pear(a,c){var sa=0,sc2=0,saa=0,scc=0,sac=0;for(var j=0;j<N;j++){sa+=a[j];sc2+=c[j];saa+=a[j]*a[j];scc+=c[j]*c[j];sac+=a[j]*c[j]}
+    var num=N*sac-sa*sc2,den=Math.sqrt((N*saa-sa*sa)*(N*scc-sc2*sc2));return den?num/den:0}
+  var stab=baseRank?pear(rank,baseRank):1;
+  var tenRank=pop._tenRank||(function(){
+    var o=Array.from({length:N},function(_,j){return j});o.sort(function(x,y){return pop.tenure[x]-pop.tenure[y]});
+    var rr=new Float64Array(N);for(var j=0;j<N;j++)rr[o[j]]=j/(N-1);pop._tenRank=rr;return rr})();
+  var tenCorr=pear(rank,tenRank);
+
+  var incomplete=pop._inc!==undefined?pop._inc:(function(){var c=0;for(var j=0;j<N;j++)if(!pop.hasEmail[j])c++;pop._inc=c;return c})();
+  return {rank:rank,bin:bin,b2d:b2d,edges:edges,decCount:dc,decPos:dp,baseRate:baseRate,
+          gini:gini,topLift:topLift,auc:auc,stability:stab,tenCorr:tenCorr,
+          incomplete:incomplete/N,hist:cnt};
+}
+
+/* ================= UI ================= */
+(function(){
+var N=40000, SEED=20260912;
+var pop=buildPopulation(N,SEED);
+var normCache={}, scores=new Float64Array(N), M=null, baseRank=null;
+var W=[25,20,15,15,10,10,5];
+var PRESETS=[
+ {n:'Alap',            w:[25,20,15,15,10,10,5]},
+ {n:'Frissesség-nehéz',w:[45,15,8,15,7,7,3]},
+ {n:'Email-nehéz',     w:[28,10,4,40,8,7,3]},
+ {n:'Volumen-nehéz',   w:[5,25,35,5,10,15,5]},
+ {n:'Egyenlő',         w:[14,14,15,14,14,14,15]}
+];
+var DIMS={
+  funnel:{label:'Tölcsér',cats:['Be sem lépett','Nem nézte meg','Megnézte, nem töltötte le','Letöltötte'],arr:pop.funnel},
+  segment:{label:'Szegmens',cats:['MASS','PREMIUM','PRIVATE'],arr:pop.segment},
+  age:{label:'Korcsoport',cats:['18–29','30–44','45–59','60+'],arr:pop.age}
+};
+var SER=['--s1','--s2','--s3','--s4'];
+var $=function(id){return document.getElementById(id)};
+var NS='http://www.w3.org/2000/svg';
+function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e}
+function fmt(x,d){return x.toFixed(d===undefined?2:d).replace('.',',')}
+function pc(x,d){return fmt(x*100,d===undefined?1:d)+'%'}
+
+/* ---- tooltip ---- */
+var tip=$('tip');
+function showTip(ev,html){tip.innerHTML=html;tip.style.opacity=1;moveTip(ev)}
+function moveTip(ev){var r=tip.getBoundingClientRect();var x=ev.clientX+14,y=ev.clientY-10;
+  if(x+r.width>innerWidth-8)x=ev.clientX-r.width-14; if(y<8)y=8;
+  tip.style.left=x+'px';tip.style.top=y+'px'}
+function hideTip(){tip.style.opacity=0}
+function hoverable(node,html){node.addEventListener('mouseenter',function(e){showTip(e,html)});
+  node.addEventListener('mousemove',moveTip);node.addEventListener('mouseleave',hideTip)}
+
+var SLTIP=[
+ '<b>A · Frissesség</b><br>Napok az utolsó belépés, megtekintés vagy letöltés óta. Hűségprogramban ez az egyetlen legerősebb jel — ezért kapja alapból a legnagyobb súlyt.',
+ '<b>B · Intenzitás</b><br>Belépés, megtekintés és letöltés darabszáma, fix belső értéklétrával (1 / 2 / 4). Azért egyetlen csúszka a három, mert erősen korrelálnak: külön súlyozva az aktivitás háromszor számolna bele.',
+ '<b>C · Beváltott pontérték</b><br>A letöltött ajánlatok pontértékének összege — a program belső valutájában mérve. Erősen ferde eloszlás: ezen a blokkon látszik legjobban, mit csinál a normalizálás.',
+ '<b>D · Email-reagálékonyság</b><br>Megnyitási és kattintási arány a kézbesítettekhez mérten. Akinek nem küldtünk levelet, annak <b>nincs</b> D pontszáma — nem nulla. Ebben a populációban ez a legerősebb előrejelző: húzd fel, és nézd a liftet.',
+ '<b>E · Érdeklődés szélessége</b><br>Hány külön ajánlat-kategóriát és kibocsájtót érintett. A széles érdeklődésű tag tartósabb.',
+ '<b>F · Tartósság</b><br>Az aktív hónapok aránya a tagság hosszához, és a leghosszabb egybefüggő aktív sorozat.',
+ '<b>G · Elérhetőség</b><br>Consent, érvényes eszköz-token, kézbesítési hibák hiánya. Ez <b>képesség, nem reakció</b> — ezért kap kis súlyt. Attól, hogy valaki elérhető, még nem csinál semmit.'
+];
+var PRTIP=[
+ '<b>Alap</b><br>A szerkezeti terv kiinduló súlyozása (25/20/15/15/10/10/5). Nem javaslat, hanem vitaalap — pont azért van benne szám, hogy legyen mit elmozdítani.',
+ '<b>Frissesség-nehéz</b><br>A recency dominál. Klasszikus loyalty-beállítás: nézd meg, mennyit javít a liften, és mennyit veszít cserébe máshol.',
+ '<b>Email-nehéz</b><br>A kommunikációs reakcióra súlyoz. Ebben a populációban ez a legjobb setup — és a mérce meg is találja, anélkül hogy tudná előre.',
+ '<b>Volumen-nehéz</b><br>Darabszám és pontérték dominál. Látványosan rosszabb lift — és Össz-módban a tagsági idővel vett korreláció is felugrik.',
+ '<b>Egyenlő</b><br>Minden blokk azonos súllyal. Kényelmes alapértelmezésnek tűnik, és pont ezért érdemes megmérni, mennyivel marad el a jótól.'
+];
+/* ---- sliders ---- */
+var slWrap=$('sliders');
+BLOCKS.forEach(function(b,i){
+  var d=document.createElement('div');d.className='sl';
+  d.innerHTML='<div class="sl-top"><span class="sl-name" data-tip="'+SLTIP[i]+'"><b>'+b.short+'</b>'+b.label+
+    '</span><span class="sl-val" id="wv'+i+'"></span></div>'+
+    '<input type="range" min="0" max="60" step="1" value="'+W[i]+'" id="w'+i+
+    '" aria-label="'+b.label+' súlya">';
+  slWrap.appendChild(d);
+});
+for(var i=0;i<NB;i++)(function(i){
+  $('w'+i).addEventListener('input',function(){W[i]=+this.value;setPresetActive(-1);schedule()});
+})(i);
+
+/* ---- presets ---- */
+var pc_=$('presets');
+PRESETS.forEach(function(p,i){
+  var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=p.n;
+  b.setAttribute('aria-pressed',i===0?'true':'false');
+  b.setAttribute('data-tip',PRTIP[i]||'');
+  b.addEventListener('click',function(){W=p.w.slice();
+    for(var k=0;k<NB;k++)$('w'+k).value=W[k];
+    setPresetActive(i);schedule()});
+  pc_.appendChild(b);
+});
+function setPresetActive(idx){
+  Array.prototype.forEach.call(pc_.children,function(c,i){c.setAttribute('aria-pressed',i===idx?'true':'false')});
+}
+
+$('method').addEventListener('change',schedule);
+$('mode').addEventListener('change',schedule);
+$('dim').addEventListener('change',function(){drawXtab();});
+$('tblBtn').addEventListener('click',function(){
+  var t=$('xtable'),open=t.hidden;t.hidden=!open;this.setAttribute('aria-expanded',open?'true':'false');
+  this.textContent=open?'Diagram':'Táblázat';
+});
+$('themeBtn').addEventListener('click',function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  requestAnimationFrame(render);
+});
+
+function getNorm(){
+  var key=$('mode').value+'|'+$('method').value;
+  if(!normCache[key])normCache[key]=normalize(pop,$('mode').value,$('method').value);
+  return normCache[key];
+}
+
+var pending=false;
+function schedule(){if(pending)return;pending=true;requestAnimationFrame(function(){pending=false;compute();render()})}
+
+function compute(){
+  var n=getNorm();
+  var sum=0;for(var i=0;i<NB;i++)sum+=W[i];
+  var w=W.map(function(x){return sum>0?x/sum:1/NB});
+  score(n,N,w,scores);
+  M=metrics(scores,pop,baseRank);
+  if(!baseRank)baseRank=M.rank.slice();
+}
+
+/* ---- render ---- */
+function cssv(v){return getComputedStyle(document.body).getPropertyValue(v).trim()}
+function render(){
+  var sum=0;for(var i=0;i<NB;i++)sum+=W[i];
+  for(var i=0;i<NB;i++)$('wv'+i).textContent=sum>0?Math.round(W[i]/sum*100)+'%':'0%';
+  $('wsum').textContent='nyers összeg: '+sum;
+  $('lift').textContent=fmt(M.topLift,2)+'×';
+  $('lift').style.color=M.topLift>=3.5?cssv('--good'):(M.topLift<2.6?cssv('--warn'):cssv('--ink'));
+  $('auc').textContent=fmt(M.auc,3);
+  $('auc').className='mv'+(M.auc>=0.82?' ok':(M.auc<0.72?' bad':''));
+  $('brate').textContent=pc(M.baseRate);
+  $('gini').textContent=fmt(M.gini,3);
+  $('gini').className='mv'+(M.gini<0.15?' bad':'');
+  $('stab').textContent=fmt(M.stability,3);
+  $('ten').textContent=fmt(M.tenCorr,2);
+  $('ten').className='mv'+(Math.abs(M.tenCorr)>0.5?' bad':'');
+  $('inc').textContent=pc(M.incomplete,1);
+  drawHist();drawDec();drawXtab();drawProf();
+}
+
+function drawHist(){
+  var s=$('hist');s.innerHTML='';
+  var W0=620,H=168,pad={l:6,r:6,t:10,b:20},bins=62,agg=new Float64Array(bins),step=1024/bins;
+  for(var b=0;b<1024;b++)agg[Math.min(bins-1,(b/step)|0)]+=M.hist[b];
+  var mx=0;for(var i=0;i<bins;i++)if(agg[i]>mx)mx=agg[i];
+  var iw=W0-pad.l-pad.r,bw=iw/bins,ih=H-pad.t-pad.b;
+  var g=el('g');
+  for(var i=0;i<bins;i++){
+    var h=mx>0?agg[i]/mx*ih:0;
+    var r=el('rect',{x:pad.l+i*bw+1,y:pad.t+ih-h,width:Math.max(0.5,bw-2),height:Math.max(h,agg[i]>0?1.2:0),
+      rx:Math.min(2,bw/3),class:'bar'});
+    if(h>0)hoverable(r,'<b>'+Math.round(i*100/bins)+'–'+Math.round((i+1)*100/bins)+' pont</b><br>'+
+      Math.round(agg[i]).toLocaleString('hu-HU')+' fő ('+pc(agg[i]/N,1)+')');
+    g.appendChild(r);
+  }
+  s.appendChild(g);
+  s.appendChild(el('line',{x1:pad.l,y1:pad.t+ih+.5,x2:W0-pad.r,y2:pad.t+ih+.5,class:'zero'}));
+  [0,25,50,75,100].forEach(function(v){
+    var t=el('text',{x:pad.l+iw*v/100,y:H-6,class:'axl','text-anchor':v===0?'start':(v===100?'end':'middle')});
+    t.textContent=v;s.appendChild(t);
+  });
+  var spread=M.gini;
+  $('histnote').textContent=spread<0.15?'összetömörödött eloszlás — nézd a szeparációt':'0 = legalacsonyabb, 100 = legmagasabb index';
+}
+
+function drawDec(){
+  var s=$('dec');s.innerHTML='';
+  var W0=620,H=140,pad={l:34,r:8,t:10,b:20};
+  var iw=W0-pad.l-pad.r,ih=H-pad.t-pad.b,bw=iw/10;
+  var rates=[],mx=0;
+  for(var d=0;d<10;d++){var r=M.decCount[d]>0?M.decPos[d]/M.decCount[d]:0;rates.push(r);if(r>mx)mx=r}
+  mx=Math.max(mx,0.01);
+  mx=Math.min(1,Math.ceil(mx*10)/10);
+  var ticks=Math.round(mx*10);if(ticks<2)ticks=2;if(ticks>5)ticks=5;
+  for(var t=0;t<=ticks;t++){
+    var y=pad.t+ih-ih*t/ticks;
+    s.appendChild(el('line',{x1:pad.l,y1:y,x2:W0-pad.r,y2:y,class:t===0?'zero':'gridline'}));
+    var tx=el('text',{x:pad.l-6,y:y+3.5,class:'axl','text-anchor':'end'});
+    tx.textContent=Math.round(mx*t/ticks*100)+'%';s.appendChild(tx);
+  }
+  // átlagvonal
+  var ya=pad.t+ih-ih*(M.baseRate/mx);
+  s.appendChild(el('line',{x1:pad.l,y1:ya,x2:W0-pad.r,y2:ya,stroke:cssv('--s2'),'stroke-width':2,'stroke-dasharray':'4 3'}));
+  var lab=el('text',{x:pad.l+4,y:ya-6,class:'axl','text-anchor':'start',fill:cssv('--s2')});
+  lab.textContent='populációs átlag · '+pc(M.baseRate,1);s.appendChild(lab);
+  for(var d=0;d<10;d++){
+    var h=ih*(rates[d]/mx);
+    var r=el('rect',{x:pad.l+d*bw+2,y:pad.t+ih-h,width:bw-4,height:Math.max(h,1),rx:4,
+      fill:d===9?cssv('--s1'):cssv('--s1'),opacity:d===9?1:0.42});
+    hoverable(r,'<b>D'+(d+1)+'</b><br>'+Math.round(M.decCount[d]).toLocaleString('hu-HU')+' fő<br>'+
+      'jövőbeli letöltés: '+pc(rates[d],1)+'<br>lift: '+fmt(M.baseRate>0?rates[d]/M.baseRate:0,2)+'×');
+    s.appendChild(r);
+    var tx=el('text',{x:pad.l+d*bw+bw/2,y:H-6,class:'axl','text-anchor':'middle'});
+    tx.textContent='D'+(d+1);s.appendChild(tx);
+  }
+}
+
+function drawXtab(){
+  if(!M)return;
+  var key=$('dim').value,D=DIMS[key],K=D.cats.length;
+  var counts=[];for(var d=0;d<10;d++){counts.push(new Float64Array(K))}
+  for(var i=0;i<N;i++)counts[M.b2d[M.bin[i]]][D.arr[i]]++;
+  var s=$('xtab');s.innerHTML='';
+  var W0=620,H=150,pad={l:34,r:8,t:8,b:20},iw=W0-pad.l-pad.r,ih=H-pad.t-pad.b,bw=iw/10;
+  [0,25,50,75,100].forEach(function(v){
+    var y=pad.t+ih-ih*v/100;
+    s.appendChild(el('line',{x1:pad.l,y1:y,x2:W0-pad.r,y2:y,class:v===0?'zero':'gridline'}));
+    var t=el('text',{x:pad.l-6,y:y+3.5,class:'axl','text-anchor':'end'});t.textContent=v+'%';s.appendChild(t);
+  });
+  for(var d=0;d<10;d++){
+    var tot=0;for(var k=0;k<K;k++)tot+=counts[d][k];
+    var acc=0;
+    for(var k=0;k<K;k++){
+      var frac=tot>0?counts[d][k]/tot:0,h=ih*frac;
+      if(h<=0)continue;
+      var y=pad.t+ih-ih*(acc+frac);
+      var r=el('rect',{x:pad.l+d*bw+2,y:y+1,width:bw-4,height:Math.max(h-2,0.5),rx:2,fill:cssv(SER[k])});
+      hoverable(r,'<b>D'+(d+1)+' · '+D.cats[k]+'</b><br>'+pc(frac,1)+' — '+Math.round(counts[d][k]).toLocaleString('hu-HU')+' fő');
+      s.appendChild(r);acc+=frac;
+    }
+    var tx=el('text',{x:pad.l+d*bw+bw/2,y:H-6,class:'axl','text-anchor':'middle'});
+    tx.textContent='D'+(d+1);s.appendChild(tx);
+  }
+  var lg=$('xlegend');lg.innerHTML='';
+  D.cats.forEach(function(c,k){
+    var sp=document.createElement('span');sp.className='lg';
+    sp.innerHTML='<i class="sw" style="background:'+cssv(SER[k])+'"></i>'+c;lg.appendChild(sp);
+  });
+  var h='<table><caption class="vh">A decilisek összetétele '+D.label+' szerint</caption><thead><tr><th>'+D.label+'</th>';
+  for(var d=0;d<10;d++)h+='<th>D'+(d+1)+'</th>';h+='</tr></thead><tbody>';
+  for(var k=0;k<K;k++){h+='<tr><td>'+D.cats[k]+'</td>';
+    for(var d=0;d<10;d++){var tot2=0;for(var j=0;j<K;j++)tot2+=counts[d][j];
+      h+='<td>'+(tot2>0?pc(counts[d][k]/tot2,1):'–')+'</td>'}h+='</tr>'}
+  h+='</tbody></table>';$('xtable').innerHTML=h;
+}
+
+function drawProf(){
+  var n=getNorm(),s=$('prof');s.innerHTML='';
+  var sums=new Float64Array(NB),cnts=new Float64Array(NB);
+  for(var i=0;i<N;i++){ if(M.b2d[M.bin[i]]!==9)continue;
+    for(var b=0;b<NB;b++){var v=n[i*NB+b];if(v===v){sums[b]+=v;cnts[b]++}}}
+  var W0=192,H=126,rowH=H/NB,lw=18;
+  for(var b=0;b<NB;b++){
+    var avg=cnts[b]>0?sums[b]/cnts[b]:0,y=b*rowH+2.5;
+    var t=el('text',{x:0,y:y+rowH/2,class:'axl','dominant-baseline':'middle'});t.textContent=BLOCKS[b].short;s.appendChild(t);
+    s.appendChild(el('rect',{x:lw,y:y,width:W0-lw,height:rowH-5,rx:2,fill:cssv('--surface-2')}));
+    var r=el('rect',{x:lw,y:y,width:Math.max(2,(W0-lw)*avg/100),height:rowH-5,rx:2,fill:cssv('--s1')});
+    hoverable(r,'<b>'+BLOCKS[b].label+'</b><br>a felső decilis átlaga: '+fmt(avg,1)+' / 100');
+    s.appendChild(r);
+  }
+}
+
+/* ---- elem-magyarázatok (hover / fókusz / koppintás) ---- */
+function explain(node,html){
+  if(!node||!html)return;
+  node.addEventListener('mouseenter',function(e){showTip(e,html)});
+  node.addEventListener('mousemove',moveTip);
+  node.addEventListener('mouseleave',hideTip);
+  node.addEventListener('focus',function(){
+    var r=node.getBoundingClientRect();
+    showTip({clientX:r.left+10,clientY:r.bottom+20},html);
+  },true);
+  node.addEventListener('blur',hideTip,true);
+  node.addEventListener('click',function(e){
+    showTip(e,html);clearTimeout(node._tt);node._tt=setTimeout(hideTip,5000);
+  });
+}
+function wireTips(){
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tip]'),function(n){
+    if(n._wired)return; n._wired=1;
+    if(!n.classList.contains('chip')&&n.tagName!=='SELECT'&&n.tagName!=='BUTTON'&&!n.classList.contains('mfocus')&&!n.classList.contains('pop'))
+      n.classList.add('hx');
+    if(n.classList.contains('mfocus')||n.classList.contains('pop'))n.style.cursor='help';
+    explain(n,n.getAttribute('data-tip'));
+  });
+}
+addEventListener('scroll',hideTip,{passive:true});
+wireTips();
+
+compute();render();
+})();
+</script>
+</body>
+</html>

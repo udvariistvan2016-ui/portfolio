@@ -57,4 +57,34 @@
     <priority>0.8</priority>
   </url>
 
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/ugyfelertek-index.html</loc>
+    <lastmod>2026-09-13</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/conversational-analytics.html</loc>
+    <lastmod>2026-09-13</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/chat-sentiment-analysis-case-study.html</loc>
+    <lastmod>2026-09-13</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/sankey-diagram.html</loc>
+    <lastmod>2026-09-13</lastmod>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://udvariistvan2016-ui.github.io/portfolio/demos/upset-meets-js.html</loc>
+    <lastmod>2026-09-13</lastmod>
+    <priority>0.8</priority>
+  </url>
+
 </urlset>

@@ -1,19 +1,326 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html lang="hu" data-lang="hu">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<title>Conversational Analytics SQL adatbázison — Udvari István</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<title>Beszélgetésalapú adatelemzés — anonimizált use case</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  body{margin:0;background:#F2F3F0;color:#15181C;font-family:"IBM Plex Sans",sans-serif;line-height:1.6;}
-  .box{max-width:720px;margin:0 auto;padding:80px 28px;}
-  h1{font-size:34px;font-weight:600;letter-spacing:-.02em;margin:0 0 18px;}
-  p{color:#4A505A;margin:0 0 16px;}
-  .note{border:1px dashed #C9CCC4;border-radius:4px;padding:26px;background:#fff;
-        font-family:"IBM Plex Mono",monospace;font-size:13.5px;color:#6E7480;}
-  code{background:#E2EDE8;color:#1F6F5C;padding:2px 6px;border-radius:3px;font-size:12.5px;}
+:root{
+  color-scheme:light;
+  --ground:#eef1f1; --surface:#ffffff; --surface-2:#f6f8f8; --surface-3:#eceff0;
+  --ink:#101617; --ink-2:#4d5658; --ink-3:#7f8a8c;
+  --rule:#d9dfdf; --hair:#e7ecec;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --signal:#0e6e7c; --signal-tint:#dceef0; --signal-ink:#0a565f; --on-signal:#ffffff;
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+  --good-ink:#046104; --crit-ink:#a52626; --warn-ink:#8a5f00;
+  --good-tint:#e4f5e4; --crit-tint:#fbe6e6; --warn-tint:#fdf2dc;
+  --shadow:0 1px 2px rgba(16,22,23,.05),0 8px 24px -16px rgba(16,22,23,.22);
+  --display:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --shell:clamp(18px,4vw,28px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ground:#0c1011; --surface:#151a1b; --surface-2:#1b2122; --surface-3:#202728;
+  --ink:#f2f5f5; --ink-2:#b6bfc0; --ink-3:#8b9597;
+  --rule:#2a3132; --hair:#232a2b;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --signal:#39a7b5; --signal-tint:#12292d; --signal-ink:#6fc6d1; --on-signal:#08191c;
+  --good-ink:#4cc44c; --crit-ink:#e87676; --warn-ink:#e0a52a;
+  --good-tint:#122512; --crit-tint:#2a1414; --warn-tint:#2a2110;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0c1011; --surface:#151a1b; --surface-2:#1b2122; --surface-3:#202728;
+  --ink:#f2f5f5; --ink-2:#b6bfc0; --ink-3:#8b9597;
+  --rule:#2a3132; --hair:#232a2b;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --signal:#39a7b5; --signal-tint:#12292d; --signal-ink:#6fc6d1; --on-signal:#08191c;
+  --good-ink:#4cc44c; --crit-ink:#e87676; --warn-ink:#e0a52a;
+  --good-tint:#122512; --crit-tint:#2a1414; --warn-tint:#2a2110;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font:400 16px/1.62 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased}
+img{max-width:100%}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:3px}
+.wrap{max-width:1020px;margin:0 auto;padding:0 var(--shell) 96px}
+h1,h2,h3,h4{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-weight:700;font-size:clamp(32px,5.2vw,54px);line-height:1.06;letter-spacing:-.022em}
+h2{font-weight:600;font-size:clamp(23px,2.7vw,31px);line-height:1.16;letter-spacing:-.014em}
+h3{font-weight:600;font-size:19px;line-height:1.3;letter-spacing:-.006em}
+h4{font-weight:600;font-size:15px;line-height:1.35}
+p{margin:0}
+a{color:var(--signal-ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.lede{font-size:19px;line-height:1.58;color:var(--ink-2);max-width:64ch}
+.muted{color:var(--ink-2)}
+.small{font-size:14px;line-height:1.55}
+.tiny{font-size:12.5px;line-height:1.5;color:var(--ink-3)}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface-3);
+  padding:1px 5px;border-radius:3px}
+strong{font-weight:600}
+
+/* ---------- language / theme switching ---------- */
+html[data-lang="hu"] .en{display:none!important}
+html[data-lang="en"] .hu{display:none!important}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:41px;z-index:40;background:color-mix(in srgb,var(--ground) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--hair)}
+.topbar .inner{max-width:1020px;margin:0 auto;padding:9px var(--shell);
+  display:flex;align-items:center;gap:14px}
+.brand{font-family:var(--display);font-weight:700;font-size:13.5px;letter-spacing:-.01em}
+.brand span{color:var(--ink-3);font-weight:500}
+.topbar .spacer{flex:1}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden;
+  font-family:var(--display);font-size:11.5px;font-weight:600;background:var(--surface)}
+.seg button{padding:5px 11px;color:var(--ink-3);line-height:1.4}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+
+/* ---------- header ---------- */
+header.page{padding:56px 0 38px;border-bottom:1px solid var(--rule);
+  display:flex;flex-direction:column;gap:20px}
+.anon{display:flex;gap:11px;align-items:flex-start;background:var(--surface-2);
+  border:1px solid var(--hair);border-left:3px solid var(--s4);
+  padding:12px 15px;border-radius:4px;max-width:72ch}
+.anon svg{width:17px;height:17px;color:var(--s4);flex:none;margin-top:2px}
+.meta{display:flex;flex-wrap:wrap;gap:7px 24px;align-items:baseline}
+.meta .k{font-family:var(--mono);font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);margin-right:7px}
+.meta .v{font-size:14px;color:var(--ink-2)}
+
+/* ---------- sections ---------- */
+section{padding:56px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+.sechead{display:flex;flex-direction:column;gap:11px;margin-bottom:28px;max-width:70ch}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  padding:18px 20px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none;background:var(--surface-2)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.stack-s{display:flex;flex-direction:column;gap:9px}
+
+/* ---------- stat tiles ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  padding:15px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}
+.stat .big{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.04;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat .lab{font-size:13.5px;line-height:1.38;color:var(--ink-2)}
+.stat .sub{font-size:11.5px;line-height:1.4;color:var(--ink-3);font-family:var(--mono)}
+.stat.accent .big{color:var(--signal-ink)}
+
+/* ---------- lists ---------- */
+ul.plain{margin:0;padding:0;list-style:none}
+ul.plain li{position:relative;padding-left:19px;margin-bottom:9px;line-height:1.5}
+ul.plain li:last-child{margin-bottom:0}
+ul.plain li::before{content:"";position:absolute;left:0;top:.68em;width:9px;height:1.5px;
+  background:var(--signal)}
+ul.plain.bad li::before{background:var(--crit)}
+ul.plain.good li::before{background:var(--good)}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s}
+ol.steps>li{counter-increment:s;position:relative;padding-left:42px;
+  padding-bottom:22px;border-left:1.5px solid var(--rule);margin-left:13px}
+ol.steps>li:last-child{border-left-color:transparent;padding-bottom:0}
+ol.steps>li::before{content:counter(s,decimal-leading-zero);position:absolute;
+  left:-13px;top:-2px;width:26px;height:26px;border-radius:50%;
+  background:var(--surface);border:1.5px solid var(--rule);
+  font-family:var(--mono);font-size:11px;font-weight:600;color:var(--signal-ink);
+  display:grid;place-items:center}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--hair);vertical-align:top}
+thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:500;background:var(--surface-2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:500;
+  padding:1px 7px;border-radius:999px;border:1px solid var(--rule);
+  background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.tag.ok{background:var(--good-tint);border-color:transparent;color:var(--good-ink)}
+.tag.no{background:var(--crit-tint);border-color:transparent;color:var(--crit-ink)}
+.tag.wa{background:var(--warn-tint);border-color:transparent;color:var(--warn-ink)}
+.tag.sig{background:var(--signal-tint);border-color:transparent;color:var(--signal-ink)}
+
+/* ---------- callouts ---------- */
+.call{border-left:3px solid var(--signal);background:var(--signal-tint);
+  padding:14px 17px;border-radius:0 5px 5px 0;font-size:15px;line-height:1.55}
+.call.crit{border-left-color:var(--crit);background:var(--crit-tint)}
+.call.warn{border-left-color:var(--s4);background:var(--warn-tint)}
+.call h4{margin-bottom:5px}
+.pull{font-family:var(--display);font-weight:600;font-size:clamp(19px,2.4vw,25px);
+  line-height:1.28;letter-spacing:-.012em;max-width:32ch}
+
+/* ---------- chain rail ---------- */
+.chain{background:var(--surface);border:1px solid var(--rule);border-radius:8px;
+  box-shadow:var(--shadow);overflow:hidden}
+.rail{display:flex;align-items:flex-start;padding:16px 10px 8px;background:var(--surface-2);
+  border-bottom:1px solid var(--rule);overflow-x:auto}
+.node{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:4px 2px 8px;position:relative;min-width:78px}
+.node .disc{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--rule);
+  background:var(--surface);display:grid;place-items:center;color:var(--ink-3);
+  transition:background .26s ease,color .26s ease,border-color .26s ease,transform .26s ease}
+.node svg{width:19px;height:19px}
+.node .nm{font-family:var(--display);font-weight:600;font-size:11.5px;line-height:1.2;
+  text-align:center;color:var(--ink-3);transition:color .26s ease}
+.node .sb{font-size:10.5px;color:var(--ink-3);opacity:.8;text-align:center;line-height:1.2}
+.node::before{content:"";position:absolute;top:23px;left:-50%;width:100%;height:1.5px;
+  background:var(--rule);z-index:0}
+.node:first-child::before{display:none}
+.node .disc,.node .nm,.node .sb{position:relative;z-index:1}
+.node.done .disc{border-color:var(--signal);color:var(--signal-ink)}
+.node.done::before{background:var(--signal)}
+.node.on .disc{background:var(--signal);border-color:var(--signal);color:var(--on-signal);transform:scale(1.1)}
+.node.on .nm{color:var(--ink)}
+.node.loop::after{content:"";position:absolute;right:calc(50% + 22px);top:23px;width:0;height:0;
+  border-left:5px solid var(--signal);border-top:4px solid transparent;
+  border-bottom:4px solid transparent}
+.stage{padding:26px clamp(18px,3.4vw,34px) 20px;min-height:310px;display:flex}
+.slide{width:100%;animation:rise .3s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide{animation:none}.node .disc{transition:none}}
+.slide .stepno{font-family:var(--mono);font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--signal-ink);margin-bottom:7px}
+.slide h3{font-size:clamp(21px,3vw,28px);font-weight:700;letter-spacing:-.016em;margin-bottom:9px}
+.cols{display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(18px,3.6vw,36px);align-items:start}
+.payload{background:var(--surface-2);border:1px solid var(--hair);border-radius:5px;padding:14px 16px}
+.payload .cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:9px}
+.quote{font-family:var(--display);font-size:18px;line-height:1.34;font-weight:500}
+.kv{font-family:var(--mono);font-size:12.5px;line-height:1.85;margin:0}
+.kv b{font-weight:400;color:var(--ink-3)}
+.kv em{font-style:normal;color:var(--signal-ink);font-weight:500}
+pre.sql{font-family:var(--mono);font-size:12px;line-height:1.62;margin:0;white-space:pre-wrap;
+  color:var(--ink);overflow-x:auto}
+pre.sql .k{color:var(--signal-ink);font-weight:500}
+pre.sql .c{color:var(--ink-3)}
+.chainfoot{display:flex;align-items:center;gap:12px;padding:11px clamp(18px,3.4vw,34px) 14px;
+  border-top:1px solid var(--hair);background:var(--surface-2)}
+.navbtn{font-family:var(--display);font-weight:600;font-size:13px;border:1px solid var(--rule);
+  border-radius:999px;padding:6px 15px;background:var(--surface)}
+.navbtn:hover:not(:disabled){border-color:var(--ink)}
+.navbtn:disabled{opacity:.34;cursor:default}
+.dots{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--rule);padding:0}
+.dot[aria-current="true"]{background:var(--signal);transform:scale(1.25)}
+
+/* ---------- simulator ---------- */
+.sim{background:var(--surface);border:1px solid var(--rule);border-radius:8px;
+  box-shadow:var(--shadow);overflow:hidden}
+.qbar{display:flex;flex-wrap:wrap;gap:8px;padding:15px 17px;background:var(--surface-2);
+  border-bottom:1px solid var(--rule)}
+.qbtn{border:1px solid var(--rule);border-radius:999px;padding:6px 13px;font-size:13.5px;
+  background:var(--surface);line-height:1.35;text-align:left}
+.qbtn[aria-pressed="true"]{background:var(--signal);border-color:var(--signal);color:var(--on-signal)}
+.trace{padding:8px 0}
+.trow{display:grid;grid-template-columns:128px 1fr;gap:0;border-bottom:1px solid var(--hair)}
+.trow:last-child{border-bottom:none}
+.trow .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);padding:15px 0 15px 17px;line-height:1.45}
+.trow .bdy{padding:14px 17px 15px 12px;min-width:0}
+.trow.hi{background:var(--signal-tint)}
+.trow.hi .lbl{color:var(--signal-ink);font-weight:600}
+.resline{font-family:var(--display);font-weight:600;font-size:17px;line-height:1.35}
+.limit{display:flex;gap:9px;align-items:flex-start;margin-top:9px;font-size:13.5px;
+  color:var(--ink-2);line-height:1.45}
+.limit .tag{margin-top:1px}
+
+/* ---------- funnel ---------- */
+.funnel{display:flex;flex-direction:column;gap:5px}
+.fbar{display:grid;grid-template-columns:minmax(112px,auto) 1fr;gap:14px;align-items:center;
+  text-align:left;padding:5px 0;width:100%}
+.fbar .flab{font-size:13.5px;line-height:1.3;color:var(--ink-2)}
+.fbar .ftrack{height:34px;position:relative;background:var(--surface-3);border-radius:4px;overflow:hidden}
+.fbar .ffill{position:absolute;inset:0 auto 0 0;background:var(--signal);opacity:.22;
+  transition:width .45s cubic-bezier(.2,.7,.3,1)}
+.fbar .fnum{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink);
+  font-family:var(--mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.fbar[aria-pressed="true"] .ffill{opacity:.4;background:var(--signal)}
+.fbar[aria-pressed="true"] .ftrack{box-shadow:inset 0 0 0 1.5px var(--signal)}
+.fbar[aria-pressed="true"] .flab{color:var(--ink);font-weight:600}
+.fexpl{margin-top:16px;min-height:112px}
+
+/* ---------- quiz ---------- */
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(292px,1fr));gap:14px;align-items:start}
+.qcard{background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);padding:17px 18px;display:flex;flex-direction:column;gap:12px}
+.qcard .qq{font-family:var(--display);font-weight:600;font-size:16.5px;line-height:1.34}
+.qpick{display:flex;gap:8px}
+.qpick button{flex:1;border:1px solid var(--rule);border-radius:5px;padding:7px 9px;
+  font-size:13px;font-weight:500;background:var(--surface-2);line-height:1.3}
+.qpick button:hover{border-color:var(--ink-3)}
+.qcard.answered .qpick button{cursor:default;opacity:.55}
+.qcard.answered .qpick button.right{opacity:1;background:var(--good-tint);
+  border-color:transparent;color:var(--good-ink);font-weight:600}
+.qcard.answered .qpick button.wrong{opacity:1;background:var(--crit-tint);
+  border-color:transparent;color:var(--crit-ink)}
+.qrev{display:none;font-size:14px;line-height:1.5;color:var(--ink-2);
+  border-top:1px solid var(--hair);padding-top:11px}
+.qcard.answered .qrev{display:block}
+.qrev b{color:var(--ink)}
+.qscore{font-family:var(--mono);font-size:13px;color:var(--ink-2);margin-top:16px}
+
+/* ---------- compare ---------- */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cmp .card h3{display:flex;align-items:center;gap:8px;margin-bottom:13px}
+.cmp .bad h3{color:var(--crit-ink)}
+.cmp .good h3{color:var(--good-ink)}
+
+/* ---------- versions ---------- */
+.vers{display:flex;flex-direction:column;gap:12px}
+.ver{background:var(--surface);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);overflow:hidden}
+.ver .vh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:15px 18px 12px}
+.ver .vn{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--signal-ink);
+  border:1px solid var(--signal);border-radius:4px;padding:1px 7px}
+.ver .vb{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:0;
+  border-top:1px solid var(--hair)}
+.ver .vcell{padding:12px 18px;border-right:1px solid var(--hair)}
+.ver .vcell:last-child{border-right:none}
+.ver .vcell .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);display:block;margin-bottom:4px}
+.ver .vcell .v{font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+
+/* ---------- footer ---------- */
+footer.page{padding:38px 0 0;color:var(--ink-3);font-size:13.5px;line-height:1.6}
+
+/* ---------- responsive ---------- */
+@media (max-width:860px){
+  .cols{grid-template-columns:1fr;gap:20px}
+  .grid2,.grid3,.cmp{grid-template-columns:1fr}
+  .quiz{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .brand span{display:none}
+}
+@media (max-width:620px){
+  .trow{grid-template-columns:1fr}
+  .trow .lbl{padding:13px 17px 0}
+  .trow .bdy{padding:6px 17px 15px}
+  .stage{min-height:0;padding:22px 18px 18px}
+  .rail{padding:14px 6px 6px}
+  .node{min-width:66px}
+  .node .sb{display:none}
+  .fbar{grid-template-columns:1fr;gap:4px}
+  .ver .vcell{border-right:none;border-bottom:1px solid var(--hair)}
+}
 </style>
 </head>
 <body>
@@ -21,15 +328,904 @@
   <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
   <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
 </div>
-<div class="box">
-  <h1>Conversational Analytics SQL adatbázison</h1>
-  <p>Természetes nyelvű lekérdezés Claude + MCP kapcsolaton keresztül.</p>
-  <div class="note">
-    Ez egy helykitöltő oldal.<br><br>
-    Cseréld le a kész, anonimizált HTML demódra: mentsd ide
-    <code>demos/conversational-analytics.html</code> néven, és másold a tetejére a
-    <code>_sablon-visszalink.html</code> tartalmát.
+<!-- portfolio: a vissza-link sav + a lap sajat fejlece egyutt ~90 px -->
+<style>html{scroll-padding-top:100px}</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<g id="i-user" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c.9-3.7 3.9-5.6 7.4-5.6s6.5 1.9 7.4 5.6"/></g>
+<g id="i-llm" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 3.2 13.7 8l4.8 1.7L13.7 11.4 12 16.2 10.3 11.4 5.5 9.7 10.3 8z"/><path d="M18 16.4l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></g>
+<g id="i-layer" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 3.6 20.4 8 12 12.4 3.6 8z"/><path d="M3.6 12 12 16.4 20.4 12"/><path d="M3.6 16 12 20.4 20.4 16"/></g>
+<g id="i-db" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <ellipse cx="12" cy="6.4" rx="7.2" ry="2.9"/><path d="M4.8 6.4v11.2c0 1.6 3.2 2.9 7.2 2.9s7.2-1.3 7.2-2.9V6.4"/><path d="M4.8 12c0 1.6 3.2 2.9 7.2 2.9s7.2-1.3 7.2-2.9"/></g>
+<g id="i-msg" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20.4 12.8c0 3.5-3.8 6.4-8.4 6.4-1 0-2-.14-2.9-.4L4.2 20.4l1.5-3.7C4.3 15.6 3.6 14.3 3.6 12.8c0-3.5 3.8-6.4 8.4-6.4s8.4 2.9 8.4 6.4z"/><path d="M8.8 12.4h6.4M8.8 9.6h4"/></g>
+<g id="i-back" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="8" r="3.6"/><path d="M4.6 20c.9-3.7 3.9-5.6 7.4-5.6 1 0 2 .16 2.9.5"/><path d="m16.4 18.6 1.9 1.9 3.5-4"/></g>
+<g id="i-info" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.4M12 7.8h.01"/></g>
+</defs></svg>
+
+<div class="topbar"><div class="inner">
+  <span class="brand">Udvari István <span class="hu">· adatelemzés</span><span class="en">· data analytics</span></span>
+  <span class="spacer"></span>
+  <div class="seg" role="group" aria-label="Nyelv / Language">
+    <button id="lang-hu" aria-pressed="true">HU</button><button id="lang-en" aria-pressed="false">EN</button>
   </div>
+  <div class="seg" role="group" aria-label="Téma / Theme">
+    <button id="th-l" aria-pressed="false">☀</button><button id="th-d" aria-pressed="false">☾</button>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+<header class="page">
+  <p class="eyebrow"><span class="hu">Use case · hűségprogram · beszélgetésalapú adatelemzés</span><span class="en">Use case · loyalty programme · conversational analytics</span></p>
+  <h1><span class="hu">Amikor az adatbázis megszólal</span><span class="en">When the database learns to answer</span></h1>
+  <p class="lede">
+    <span class="hu">Egy hűségprogram operatív adatbázisa: közel <strong>300 tábla és nézet</strong>, mintegy <strong>2 000 adatmező</strong>, <strong>15 adatkör</strong>, negyedmilliárd sor. A feladat, hogy egy hétköznapi kérdésből — „hány aktív tagunk van?" — olyan szám legyen, amire rá lehet bízni egy kampányt. Ez a lap végigviszi a láncot, és megmutatja, hol dől el, hogy a válasz igaz&#8209;e.</span>
+    <span class="en">A loyalty programme’s operational database: close to <strong>300 tables and views</strong>, some <strong>2,000 fields</strong>, <strong>15 data domains</strong>, a quarter of a billion rows. The task: turn an everyday question — “how many active members do we have?” — into a number you can base a campaign on. This page walks the whole chain, and shows where it is decided whether the answer is true.</span>
+  </p>
+  <div class="anon">
+    <svg aria-hidden="true"><use href="#i-info"/></svg>
+    <p class="small muted">
+      <span class="hu"><strong>Anonimizált use case.</strong> A megbízó, a márka, a tábla&#8209; és mezőnevek nem szerepelnek; a volumenek kerekítve. A módszertan, az elemzési lépések, a hibák és a döntések szerkezete az eredetivel azonos.</span>
+      <span class="en"><strong>Anonymised use case.</strong> The client, the brand and all table and field names are omitted; volumes are rounded. The methodology, the steps, the failures and the decisions are identical to the original.</span>
+    </p>
+  </div>
+  <div class="meta">
+    <span><span class="k"><span class="hu">Szerep</span><span class="en">Role</span></span><span class="v"><span class="hu">adatelemzés, adatmodell, megvalósítás</span><span class="en">analysis, data model, implementation</span></span></span>
+    <span><span class="k">Stack</span><span class="v">SQL Server · Python · LLM API</span></span>
+    <span><span class="k"><span class="hu">Állapot</span><span class="en">Status</span></span><span class="v"><span class="hu">élő projekt, első éles teszt lefutott</span><span class="en">live project, first end-to-end test passed</span></span></span>
+  </div>
+</header>
+
+<section id="lanc">
+  <div class="sechead">
+    <p class="eyebrow">01 — <span class="hu">A lánc</span><span class="en">The chain</span></p>
+    <h2><span class="hu">Hat állomás, egy kérdés útja</span><span class="en">Six stops, one question’s journey</span></h2>
+    <p class="muted"><span class="hu">A felhasználó nem SQL&#8209;ben gondolkodik. A rendszernek mégis pontos, ismételhető és jogosultsághelyes választ kell adnia. Lépegess végig a láncon — a felső sávban bármelyik állomásra rá lehet ugrani.</span><span class="en">People don’t think in SQL. The system still has to give an answer that is exact, repeatable and permission&#8209;safe. Step through the chain — you can jump to any stop in the bar above.</span></p>
+  </div>
+
+  <div class="chain">
+    <div class="rail" id="rail" role="tablist" aria-label="A lánc állomásai"></div>
+    <div class="stage" id="stage"></div>
+    <div class="chainfoot">
+      <button class="navbtn" id="prev"><span class="hu">Vissza</span><span class="en">Back</span></button>
+      <div class="dots" id="dots"></div>
+      <button class="navbtn" id="next"><span class="hu">Tovább</span><span class="en">Next</span></button>
+    </div>
+  </div>
+</section>
+
+<section id="szimulator">
+  <div class="sechead">
+    <p class="eyebrow">02 — <span class="hu">Próbáld ki</span><span class="en">Try it</span></p>
+    <h2><span class="hu">Négy valódi kérdés, teljes nyomvonallal</span><span class="en">Four real questions, with the full trace</span></h2>
+    <p class="muted"><span class="hu">Ezek a kérdések a napi munkából valók. Válassz egyet: látszik, hogyan bomlik ki szándékra, milyen definíciót húz elő a réteg, milyen lekérdezés fut le, és mi az, amit a válasz mellé <em>kötelező</em> kimondani.</span><span class="en">These questions come from everyday work. Pick one: you'll see how it is broken down into intent, which definition the layer supplies, what query runs, and what the answer is <em>obliged</em> to state alongside the number.</span></p>
+  </div>
+  <div class="sim">
+    <div class="qbar" id="qbar" role="tablist" aria-label="Kérdések"></div>
+    <div class="trace" id="trace"></div>
+  </div>
+  <p class="tiny" style="margin-top:12px"><span class="hu">A számok kerekítettek. A lekérdezési idők valódi mérésből valók: 0,2–1,6 másodperc kérdésenként; a teljes válaszidőt nem az adatbázis adja, hanem a modell gondolkodása.</span><span class="en">Figures are rounded. Query times come from real measurements: 0.2–1.6 seconds per question; total response time is dominated by the model's reasoning, not the database.</span></p>
+</section>
+
+<section id="zaj">
+  <div class="sechead">
+    <p class="eyebrow">03 — <span class="hu">A kiindulás</span><span class="en">The starting point</span></p>
+    <h2><span class="hu">Amivel dolgozni kell</span><span class="en">What there is to work with</span></h2>
+    <p class="muted"><span class="hu">Egy tizenöt éve élő rendszer adatbázisa nem elemzésre épült. Az ügyfélportál működéséhez, a banki adatfolyamatokhoz és a kampánymotorhoz épült — az elemzés csak <em>lakik</em> benne.</span><span class="en">The database of a system that has been running for fifteen years was not built for analysis. It was built to run a customer portal, the bank's data flows and a campaign engine — analysis merely <em>lives</em> in it.</span></p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="big num">~300</span><span class="lab"><span class="hu">tábla és nézet az operatív adatbázisban</span><span class="en">tables and views in the operational database</span></span><span class="sub"><span class="hu">251 tábla + 43 nézet</span><span class="en">251 tables + 43 views</span></span></div>
+    <div class="stat"><span class="big num">~2 000</span><span class="lab"><span class="hu">adatmező összesen</span><span class="en">data fields in total</span></span><span class="sub"><span class="hu">egy törzstáblán 66</span><span class="en">66 on one core table alone</span></span></div>
+    <div class="stat"><span class="big num">10</span><span class="lab"><span class="hu">kapcsolódó adatbázis, nem öt</span><span class="en">connected databases, not five</span></span><span class="sub"><span class="hu">ötről egyik leírás sem tudott</span><span class="en">five of them undocumented anywhere</span></span></div>
+    <div class="stat"><span class="big num">15</span><span class="lab"><span class="hu">fő adatkör (ügyfél, ajánlat, token, kommunikáció…)</span><span class="en">main data domains (customer, offer, token, comms…)</span></span><span class="sub"><span class="hu">nyolc átnézési blokk</span><span class="en">eight review blocks</span></span></div>
+    <div class="stat"><span class="big num">250 M</span><span class="lab"><span class="hu">adatsor, ~63 GB</span><span class="en">rows, ~63 GB</span></span><span class="sub"><span class="hu">a legnagyobb tábla 80 M sor / 27 GB</span><span class="en">largest table 80 M rows / 27 GB</span></span></div>
+    <div class="stat accent"><span class="big num">78</span><span class="lab"><span class="hu">tábla, amiben egyetlen sor sincs</span><span class="en">tables with not a single row in them</span></span><span class="sub"><span class="hu">a séma harmada üres</span><span class="en">a third of the schema is empty</span></span></div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3><span class="hu">A zaj nem melléktermék — ez a fő akadály</span><span class="en">The noise is not a by-product — it is the main obstacle</span></h3>
+    <p class="muted small" style="margin-top:9px">
+      <span class="hu">Egy nyelvi modellnek odaadni a teljes sémát nem segítség, hanem csapda. A ~300 objektum nagy része az ügyfélportál működéséhez és a banki adatátadáshoz van, nem elemzéshez. Ami onnan előkerül, az nagy valószínűséggel irreleváns vagy félrevezető — és a kár nem elméleti: <strong>minden ilyen mező feleslegesen átnézendő szöveget generál</strong>, amiből utólag kell kimetszegetni a behallucinált sallangot. A név pedig nem jelentés: van a rendszerben olyan tábla, ami pontosan nem az, aminek a neve alapján elsőre látszik.</span>
+      <span class="en">Handing a language model the full schema is not help, it is a trap. Most of the ~300 objects exist to run the customer portal and the bank's data exchange, not to be analysed. Anything surfaced from there is most likely irrelevant or misleading — and the damage is not theoretical: <strong>every such field generates text that then has to be reviewed</strong>, and the hallucinated padding cut back out of it. A name is not a meaning, either: the system contains a table that is precisely <em>not</em> what its name suggests at first glance.</span>
+    </p>
+  </div>
+
+  <div class="sechead" style="margin-top:40px;margin-bottom:18px">
+    <h3><span class="hu">A szűkítés: háromszáz objektumtól négyig</span><span class="en">Narrowing down: from three hundred objects to four</span></h3>
+    <p class="muted small"><span class="hu">Kattints a sávokra — mindegyik egy döntés, és mindegyiknél van, amit tudatosan kihagyunk.</span><span class="en">Click the bars — each one is a decision, and each one deliberately leaves something out.</span></p>
+  </div>
+  <div class="grid2" style="grid-template-columns:1.15fr .85fr;align-items:start;gap:26px">
+    <div class="funnel" id="funnel"></div>
+    <div class="card flat fexpl" id="fexpl"></div>
+  </div>
+</section>
+
+<section id="reteg">
+  <div class="sechead">
+    <p class="eyebrow">04 — <span class="hu">A munka</span><span class="en">The work</span></p>
+    <h2><span class="hu">A szemantikai réteg felépítése, nyolc lépésben</span><span class="en">Building the semantic layer, in eight steps</span></h2>
+    <p class="muted"><span class="hu">A szemantikai réteg nem prompt és nem konfigurációs fájl. Dokumentáció — emberi olvasásra és gépi feldolgozásra egyszerre. Minden lépésnek megvan a maga csapdája, amit hatástalanít.</span><span class="en">The semantic layer is not a prompt and not a config file. It is documentation — written to be read by people and processed by machines at once. Every step defuses a specific trap.</span></p>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <h3><span class="hu">Forrásrend — mi számít bizonyítéknak</span><span class="en">Source discipline — what counts as evidence</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu">Az első leírt fájl nem az adatmodell volt, hanem a szabályzat arról, hogy <em>mit szabad állítani</em>. Négy elfogadott forrás: a fejlesztő írásos megerősítése, lefuttatott lekérdezés eredménye, meglévő és éles működésben lévő SQL&#8209;kód, és az elemző saját, dátumozott megerősítése. Minden ténysor a végén megkapja a forrásjelölő címkéjét.</span><span class="en">The first file written was not the data model but the rulebook for <em>what may be asserted</em>. Four accepted sources: the developer's written confirmation, the result of a query that was actually run, existing SQL code that runs in production, and the analyst's own dated confirmation. Every factual line carries its source tag at the end.</span></p>
+      <p class="small" style="margin-top:9px;color:var(--crit-ink)"><span class="hu"><strong>A csapda:</strong> a séma&#8209;katalógus <em>nem</em> engedélyezett forrás. Attól, hogy egy mező neve szerepel a katalógusban, még nem használható — a névlista nem árulja el, hogy a mezőt használják&#8209;e, mit tárol, és hogy egyáltalán él&#8209;e.</span><span class="en"><strong>The trap:</strong> the schema catalogue is <em>not</em> an allowed source. A field being listed there does not make it usable — a list of names says nothing about whether the field is used, what it holds, or whether it is alive at all.</span></p>
+    </li>
+    <li>
+      <h3><span class="hu">A tényleges használat mérése — kódból, nem sémából</span><span class="en">Measuring actual use — from code, not from schema</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu"><strong>590 SQL&#8209;fájl</strong> teljes átolvasása: a <code>FROM</code> / <code>JOIN</code> / <code>INTO</code> után álló objektumnevek kiszedése, kommentek, sztringek, CTE&#8209;k és temp táblák kiszűrésével. Eredmény: <strong>199 objektum</strong>, mindegyikhez az, hogy <em>hány különböző munkában</em> volt rá szükség. Ez jobban méri a fontosságot, mint bármilyen sorszám vagy méret.</span><span class="en">All <strong>590 SQL files</strong> read end to end: object names after <code>FROM</code> / <code>JOIN</code> / <code>INTO</code> extracted, with comments, string literals, CTEs and temp tables filtered out. Result: <strong>199 objects</strong>, each with a count of <em>how many separate pieces of work</em> needed it. That measures importance better than any row count or size.</span></p>
+      <div class="call" style="margin-top:11px"><span class="hu"><strong>Amit ez azonnal megmutatott:</strong> a napi munka 14&#8209;szer gyakrabban fut egy <em>nézeten</em>, mint a mögötte lévő nyers táblán (305 fájl vs. 22). A nézet felirata magyar szöveg, a nyers táblában numerikus kód áll — és a kettő ugyanaz. Ez a különbség később a legsúlyosabb hiba forrása lett.</span><span class="en"><strong>What this revealed immediately:</strong> everyday work runs on a <em>view</em> 14 times more often than on the raw table behind it (305 files vs. 22). The view labels events in plain Hungarian; the raw table stores a numeric code — and the two mean the same thing. That gap later became the source of the single worst bug.</span></div>
+    </li>
+    <li>
+      <h3><span class="hu">Hatókör&#8209;vágás és blokkosítás</span><span class="en">Cutting scope and slicing into blocks</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu">A 199&#8209;ből <strong>44 objektum</strong> maradt: az operatív adatbázis ténylegesen használt magja. Ez <strong>15 adatkörbe</strong>, azok pedig <strong>nyolc átnézési blokkba</strong> rendeződtek, mindegyik egy üléshez méretezve. A blokkok sorrendje szándékos: a függőségek felől haladunk — ügyfél&#8209;mag, ügyfél&#8209;kiegészítők, ajánlat&#8209;esemény, ajánlat&#8209;törzs, token, kommunikáció, belépés, tranzakció, ETL.</span><span class="en">Of the 199, <strong>44 objects</strong> remained: the genuinely used core of the operational database. These fall into <strong>15 data domains</strong>, grouped into <strong>eight review blocks</strong>, each sized for a single working session. The order is deliberate — we move along the dependencies: customer core, customer extras, offer events, offer master, tokens, communications, logins, transactions, ETL.</span></p>
+    </li>
+    <li>
+      <h3><span class="hu">Mezőszintű átnézés: él / elavult / nem kell</span><span class="en">Field-level review: live / deprecated / not needed</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu">Blokkonként minden mezőre egyetlen kérdés: hivatkozza&#8209;e bármelyik éles lekérdezés? Ha nem, az gyanú elavulásra. Az elavult mező <strong>nem törlődik</strong> a leíróból — jelölést kap, és ott marad, hogy a következő olvasó ne találja meg újra, és ne építsen rá. A legnagyobb egyedi munka egyetlen törzstábla 66 oszlopa volt, csoportosítva: azonosító, dátum, státusz, demográfia, hozzájárulás, technikai, legacy&#8209;gyanús.</span><span class="en">In each block, one question per field: does any production query reference it? If not, that is a suspicion of deprecation. A deprecated field is <strong>not deleted</strong> from the descriptor — it is marked and stays, so the next reader doesn't rediscover it and build on it. The single biggest piece of work was one core table's 66 columns, grouped into: identifier, date, status, demographics, consent, technical, suspected&#8209;legacy.</span></p>
+    </li>
+    <li>
+      <h3><span class="hu">Fogalomtár — egy dolognak három neve van</span><span class="en">Glossary — one thing has three names</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu">Ez a beszélgetős réteg legfontosabb fájlja, mert a felhasználó a <em>köznapi</em> néven kérdez. A három réteget külön kell tartani, és össze kell kötni:</span><span class="en">This is the most important file for a conversational layer, because people ask using the <em>everyday</em> name. The three layers must be kept apart — and mapped to each other:</span></p>
+      <div class="tw" style="margin-top:11px"><table>
+        <thead><tr><th><span class="hu">Réteg</span><span class="en">Layer</span></th><th><span class="hu">Ahogy megjelenik</span><span class="en">How it appears</span></th></tr></thead>
+        <tbody>
+          <tr><td><span class="hu">Adatbázis&#8209;technikai</span><span class="en">Database&#8209;technical</span></td><td class="mono small">esemény&#8209;típus kód = 6</td></tr>
+          <tr><td><span class="hu">Nézet / riport felirat</span><span class="en">View / report label</span></td><td class="mono small"><span class="hu">„Ajánlat vásárlás"</span><span class="en">“Offer purchase”</span></td></tr>
+          <tr><td><span class="hu">Köznapi becenév</span><span class="en">Everyday nickname</span></td><td class="mono small"><span class="hu">„letöltés"</span><span class="en">“download”</span></td></tr>
+        </tbody>
+      </table></div>
+      <p class="small" style="margin-top:9px;color:var(--crit-ink)"><span class="hu"><strong>A csapda:</strong> a program legfontosabb kampánytípusát a köznapi nyelv egy szóval hívja, ami az adatbázisban <em>egyáltalán nem szerepel</em>: 2 458 ajánlatnévből nulla tartalmazza. Csak két azonosító azonosítja. Ezt egy modell soha nem találná ki magától — és nem is szabad, hogy próbálja.</span><span class="en"><strong>The trap:</strong> the programme's most important campaign type is called, in everyday speech, by a word that appears <em>nowhere</em> in the database: zero of 2,458 offer names contain it. It is identified by two IDs and nothing else. No model would ever infer that — and it must not try.</span></p>
+    </li>
+    <li>
+      <h3><span class="hu">Metrika&#8209;szótár — kérdésből számolás</span><span class="en">Metric dictionary — from question to calculation</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu">Itt dől el, hogy egy kérdésből milyen számolás lesz. A szótár nem indulhatott el, amíg három definíció nyitva volt — mert a különbség nem árnyalat:</span><span class="en">This is where a question becomes a calculation. The dictionary could not ship while three definitions were open — because the differences are not nuances:</span></p>
+      <div class="tw" style="margin-top:11px"><table>
+        <thead><tr><th><span class="hu">Nyitott definíció</span><span class="en">Open definition</span></th><th class="r"><span class="hu">A. olvasat</span><span class="en">Reading A</span></th><th class="r"><span class="hu">B. olvasat</span><span class="en">Reading B</span></th><th class="r"><span class="hu">Eltérés</span><span class="en">Gap</span></th></tr></thead>
+        <tbody>
+          <tr><td><span class="hu">Mit jelent az „aktív tag"?</span><span class="en">What does “active member” mean?</span></td><td class="r num">196 000</td><td class="r num">100 000</td><td class="r num" style="color:var(--crit-ink);font-weight:600">2,0&times;</td></tr>
+          <tr><td><span class="hu">Hol a korsáv felső határa?</span><span class="en">Where is an age band's upper bound?</span></td><td class="r num">5 200</td><td class="r num">6 300</td><td class="r num" style="color:var(--crit-ink);font-weight:600">+22%</td></tr>
+          <tr><td><span class="hu">Hány életkor&#8209;sáv van?</span><span class="en">How many age bands are there?</span></td><td class="r num">3</td><td class="r num">6</td><td class="r num" style="color:var(--crit-ink);font-weight:600">—</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small muted" style="margin-top:9px"><span class="hu">Mindhárom élő SQL&#8209;kódból jött: két különböző szkript kétféleképpen sávozott, és mindkettő „helyes" volt a maga kontextusában. Réteg nélkül ez a kétértelműség a válaszba kerül — észrevétlenül.</span><span class="en">All three came out of live SQL code: two different scripts banded the data two different ways, and each was “correct” in its own context. Without a layer, that ambiguity lands in the answer — unnoticed.</span></p>
+    </li>
+    <li>
+      <h3><span class="hu">Időbeliség — mit lehet visszamenőleg megkérdezni</span><span class="en">Time — what can be asked about the past</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu">A legtöbb ügyfél&#8209;attribútum <em>jelen idejű</em>: a mai szegmens, a mai korsáv, a mai hozzájárulás. Ha ezeket múltbeli eseményhez kötjük, csendben hamis idősort kapunk. A leíró minden mezőről kimondja, hogy van&#8209;e története. Amire nincs történet, arra a helyes válasz: <em>nem válaszolható meg</em>. A kor viszont visszaszámolható — de akkor az <strong>esemény időpontjában érvényes</strong> életkorral, nem a maival.</span><span class="en">Most customer attributes are <em>present&#8209;tense</em>: today's segment, today's age band, today's consent. Tie them to a past event and you silently get a false time series. The descriptor states, for every field, whether history exists. Where it doesn't, the correct answer is: <em>this cannot be answered</em>. Age is the exception — it can be recomputed, but only <strong>as of the event date</strong>, never as of today.</span></p>
+    </li>
+    <li>
+      <h3><span class="hu">Lekérdezéstár, validációs napló, nyitott kérdések</span><span class="en">Query library, validation log, open questions</span></h3>
+      <p class="muted small" style="margin-top:6px"><span class="hu">Feladattípusonként egy <em>ellenőrzött</em> minta&#8209;lekérdezés — a napi munka nem ad&#8209;hoc SQL, hanem visszatérő feladattípus. Mellette a validációs napló: mit erősített meg ki és mikor, hol mond két forrás mást, melyik állítás dőlt meg. És a nyitott kérdések listája, kilenc csoportban — mert a leíró értékét nem az adja, hogy mindent tud, hanem hogy <strong>tudja, mit nem tud</strong>.</span><span class="en">One <em>verified</em> sample query per task type — daily work is not ad&#8209;hoc SQL, it is a handful of recurring task types. Next to it, the validation log: who confirmed what and when, where two sources disagree, which claim has been overturned. And the open&#8209;questions list, in nine groups — because a descriptor's value is not that it knows everything, but that it <strong>knows what it does not know</strong>.</span></p>
+    </li>
+  </ol>
+
+  <div class="grid3" style="margin-top:34px">
+    <div class="stat"><span class="big num">~20</span><span class="lab"><span class="hu">dokumentum a leíró&#8209;csomagban</span><span class="en">documents in the descriptor package</span></span><span class="sub"><span class="hu">verziózva, kereszthivatkozva</span><span class="en">versioned, cross-referenced</span></span></div>
+    <div class="stat"><span class="big num">~250 e</span><span class="lab"><span class="hu">leütésnyi dokumentáció</span><span class="en">characters of documentation</span></span><span class="sub"><span class="hu">nem prompt: olvasható szöveg</span><span class="en">not a prompt: readable text</span></span></div>
+    <div class="stat accent"><span class="big num">9</span><span class="lab"><span class="hu">csoportnyi nyitott kérdés, kimondva</span><span class="en">groups of open questions, stated</span></span><span class="sub"><span class="hu">ez is a leíró része</span><span class="en">these are part of the descriptor too</span></span></div>
+  </div>
+</section>
+
+<section id="antihalluci">
+  <div class="sechead">
+    <p class="eyebrow">05 — <span class="hu">A lényeg</span><span class="en">The heart of it</span></p>
+    <h2><span class="hu">Antihallucináció: nem stílus, hanem szerkezet</span><span class="en">Anti-hallucination: not a style, a structure</span></h2>
+    <p class="muted"><span class="hu">Egy beszélgetős elemzőnél a rossz válasz veszélyesebb, mint a hiányzó válasz — mert magabiztosan, jó mondatszerkezettel, a megszokott formában érkezik. A védekezés nem abból áll, hogy „légy óvatos" a promptban. Öt egymásra épülő mechanizmus.</span><span class="en">In a conversational analyst, a wrong answer is more dangerous than a missing one — because it arrives confidently, well&#8209;phrased, in the usual format. The defence is not a “be careful” line in a prompt. It is five mechanisms stacked on each other.</span></p>
+  </div>
+
+  <div class="stack">
+
+    <div class="card">
+      <h3><span class="hu">1. Minden állítás mellé forrás — kivétel nélkül</span><span class="en">1. Every claim carries its source — without exception</span></h3>
+      <p class="muted small" style="margin-top:7px"><span class="hu">A leíróban nincs forrás nélküli mondat. Ha nincs forrás, az állítás nem lesz „valószínű" vagy „feltehetően" — <strong>átkerül a nyitott kérdések közé</strong>. A címke a megbízhatóságot is rangsorolja, és a rangsor felülírási sorrend is egyben.</span><span class="en">There is no unsourced sentence in the descriptor. If there is no source, the claim does not become “likely” or “presumably” — it <strong>moves to the open questions</strong>. The tag also ranks reliability, and that ranking doubles as the override order.</span></p>
+      <div class="tw" style="margin-top:13px"><table>
+        <thead><tr><th><span class="hu">Címke</span><span class="en">Tag</span></th><th><span class="hu">Mit jelent</span><span class="en">What it means</span></th><th><span class="hu">Megbízhatóság</span><span class="en">Reliability</span></th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag sig">[ügyfél]</span></td><td class="small"><span class="hu">A fejlesztő vagy a megbízó írásos megerősítése, névvel és dátummal</span><span class="en">Written confirmation from the developer or the client, with name and date</span></td><td class="small"><span class="hu"><strong>Legerősebb</strong> — mindent felülír</span><span class="en"><strong>Strongest</strong> — overrides everything</span></td></tr>
+          <tr><td><span class="tag sig">[futás]</span></td><td class="small"><span class="hu">Éles adatbázison lefuttatott lekérdezés eredménye, a lekérdezés helyével</span><span class="en">The result of a query actually run, with a pointer to the query</span></td><td class="small"><span class="hu">Erős, de <strong>időpontfüggő</strong></span><span class="en">Strong, but <strong>time&#8209;dependent</strong></span></td></tr>
+          <tr><td><span class="tag sig">[kód]</span></td><td class="small"><span class="hu">Meglévő, éles SQL&#8209;ből vagy nézet&#8209;definícióból olvasható ki</span><span class="en">Readable from production SQL or a view definition</span></td><td class="small"><span class="hu">Erős arra, <em>mi történik</em>; gyenge arra, <em>miért</em></span><span class="en">Strong on <em>what</em> happens; weak on <em>why</em></span></td></tr>
+          <tr><td><span class="tag">[jegyzet]</span></td><td class="small"><span class="hu">Korábbi munkajegyzet, régi leírás</span><span class="en">An earlier working note or old description</span></td><td class="small"><span class="hu"><strong>Ellenőrizendő</strong> — lehet elavult</span><span class="en"><strong>To be verified</strong> — may be stale</span></td></tr>
+        </tbody>
+      </table></div>
+      <p class="small muted" style="margin-top:11px"><span class="hu">A címke mellé validációs jel is kerül: <span class="tag ok">✓ megerősítve</span> <span class="tag wa">⚠ két forrás mást mond</span> <span class="tag no">🕐 elavult, ne építs rá</span>. Ütközésnél a réteg <strong>nem választ</strong> a két verzió között — mindkettőt felajánlja.</span><span class="en">A validation mark sits next to the tag: <span class="tag ok">✓ confirmed</span> <span class="tag wa">⚠ two sources disagree</span> <span class="tag no">🕐 deprecated, do not build on it</span>. On a conflict the layer <strong>does not choose</strong> between the two versions — it offers both.</span></p>
+    </div>
+
+    <div class="card">
+      <h3><span class="hu">2. Nem hozunk be nem dokumentált objektumot</span><span class="en">2. No undocumented object may enter</span></h3>
+      <p class="pull" style="margin-top:11px"><span class="hu">Ha egy kérdés megválaszolásához olyan tábla vagy mező kellene, ami nincs a leíróban, a helyes válasz: „ehhez olyan objektum kellene, ami nincs dokumentálva" — nem egy séma&#8209;nézetből előhalászott tipp.</span><span class="en">If answering a question would require a table or field that is not in the descriptor, the correct answer is: “that would need an object that isn't documented” — not a guess fished out of a schema view.</span></p>
+      <p class="muted small" style="margin-top:13px"><span class="hu">Ez futásidőben is érvényes, nem csak a leíró írásakor. A séma&#8209;nevekből való következtetés tilos — mind a modellnek, mind az embernek. Egy név nem jelentés: attól, hogy egy tábla neve értelmesnek tűnik, még pontosan az ellenkezőjét is tárolhatja annak, amit sugall.</span><span class="en">This holds at runtime too, not only while the descriptor is being written. Inferring from schema names is forbidden — for the model and for the human alike. A name is not a meaning: a table whose name looks self&#8209;explanatory may store precisely the opposite of what it suggests.</span></p>
+    </div>
+
+    <div class="card">
+      <h3><span class="hu">3. Öt dolog, amit soha nem csinálunk</span><span class="en">3. Five things we never do</span></h3>
+      <ul class="plain bad small" style="margin-top:11px">
+        <li><span class="hu"><strong>Nem találgatunk kódértéket.</strong> Ha nem tudjuk, mit jelent egy típuskód, azt írjuk, hogy nem tudjuk.</span><span class="en"><strong>We never guess a code value.</strong> If we don't know what a type code means, we write that we don't know.</span></li>
+        <li><span class="hu"><strong>Nem vonunk össze két forrást, ha nem bizonyítottan ugyanaz.</strong> Üzletileg azonos ≠ technikailag azonos; két külön útvonal két külön szám lehet.</span><span class="en"><strong>We never merge two sources unless proven identical.</strong> Same in business terms ≠ same technically; two paths can mean two numbers.</span></li>
+        <li><span class="hu"><strong>Nem enrichelünk.</strong> Ami elhangzott, az kerül be — nem a belőle levonható következtetés.</span><span class="en"><strong>We never enrich.</strong> What was said goes in — not what could be inferred from it.</span></li>
+        <li><span class="hu"><strong>Nem írunk felül régi állítást csendben.</strong> Az elavult sor jelölést kap és megmarad, alatta az új, a naplóban pedig hogy mikor és ki alapján változott.</span><span class="en"><strong>We never silently overwrite an old claim.</strong> The stale line is marked and kept, the new one goes under it, and the log records when and on whose word it changed.</span></li>
+        <li><span class="hu"><strong>Nem keverjük a „nincs adat" nullát a „nulla aktivitás" nullával.</strong> A kettő két különböző válasz.</span><span class="en"><strong>We never conflate a “no data” zero with a “zero activity” zero.</strong> Those are two different answers.</span></li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--crit)">
+      <p class="eyebrow" style="color:var(--crit-ink)"><span class="hu">4. Esettanulmány — a csendes nulla</span><span class="en">4. Case study — the silent zero</span></p>
+      <h3 style="margin-top:8px"><span class="hu">A hiba, ami nem szállt el, nem jelzett, csak rossz választ adott</span><span class="en">The bug that didn't crash, didn't warn, just answered wrong</span></h3>
+      <p class="muted small" style="margin-top:9px"><span class="hu">Egy célcsoport&#8209;szűrés közben az egyik ellenőrző lekérdezés <strong>0 letöltést</strong> adott — miközben ugyanabban a futásban, ugyanarra az ajánlatra, ugyanabból a nézetből <strong>több mint 400 letöltési esemény</strong> jött ki. Ez az ellentmondás vezetett a hiba megtalálásához.</span><span class="en">During a target&#8209;list build, one verification query returned <strong>0 downloads</strong> — while in the same run, for the same offer, from the same view, <strong>more than 400 download events</strong> came back. That contradiction is what exposed the bug.</span></p>
+      <div class="grid2" style="margin-top:14px;gap:14px">
+        <div class="card flat">
+          <h4><span class="hu">A gyökér&#8209;ok</span><span class="en">The root cause</span></h4>
+          <p class="small muted" style="margin-top:6px"><span class="hu">A szűrés <em>ékezetes magyar szövegre</em> ment. A lekérdezést beolvasó szkript a Windows kódlapjával dekódolt, nem UTF&#8209;8&#8209;cal, a szerver kollációja pedig ékezet&#8209;érzékeny. Az ékezetes literál így <strong>elromlott útközben</strong>, és semmire nem illeszkedett. Hibaüzenet nélkül.</span><span class="en">The filter matched on <em>accented text</em>. The script reading the query decoded it with the Windows code page instead of UTF&#8209;8, and the server's collation is accent&#8209;sensitive. The accented literal was <strong>corrupted in transit</strong> and matched nothing. With no error message.</span></p>
+        </div>
+        <div class="card flat">
+          <h4><span class="hu">A kár, ha nem tűnik fel</span><span class="en">The damage, had it slipped through</span></h4>
+          <p class="small muted" style="margin-top:6px"><span class="hu">A „még nem töltötte le" szűrésen mindenki átment volna, aki letöltötte: <strong>300 fővel nagyobb célcsoport</strong>. Egy hibás kampánylista — hibajelzés nélkül, átadva az ügyfélnek.</span><span class="en">Everyone who <em>had</em> downloaded would have passed the “hasn't downloaded yet” filter: a target list <strong>300 people too large</strong>. A wrong campaign list — with no warning, handed to the client.</span></p>
+        </div>
+      </div>
+      <div class="call" style="margin-top:14px">
+        <h4><span class="hu">A módszertani tanulság</span><span class="en">The methodological lesson</span></h4>
+        <p style="margin-top:5px"><span class="hu">Ahol a kettő egyenértékű, <strong>a numerikus kódot használjuk, ne az ékezetes szöveget</strong> — mérés igazolta, hogy ugyanazt adják. A numerikus út <em>nem tud csendben elromlani</em>. A beszédes felirat marad, de csak az <strong>ember felé</strong> való megjelenítésben; a fogalomtár tartja a leképezést a kettő között.</span><span class="en">Where the two are equivalent, <strong>use the numeric code, not the accented text</strong> — measurement confirmed they return the same result. The numeric path <em>cannot fail silently</em>. The readable label stays, but only in what is <strong>shown to people</strong>; the glossary holds the mapping between them.</span></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="hu">5. Futásidejű őrök — a hiba legyen hangos</span><span class="en">5. Runtime guards — make failure loud</span></h3>
+      <p class="muted small" style="margin-top:7px"><span class="hu">A tanulságokból nem jegyzet lett, hanem kód. Mindegyik őr ugyanazt az elvet követi: <strong>a hangos hiba jobb, mint a csendes tévedés</strong> — inkább álljon meg a folyamat, mint hogy egy néma módon rossz szám menjen tovább.</span><span class="en">The lessons did not become notes, they became code. Every guard follows the same principle: <strong>a loud failure beats a quiet mistake</strong> — better to halt the process than to let a silently wrong number travel on.</span></p>
+      <div class="tw" style="margin-top:13px"><table>
+        <thead><tr><th><span class="hu">Őr</span><span class="en">Guard</span></th><th><span class="hu">Mit csinál</span><span class="en">What it does</span></th></tr></thead>
+        <tbody>
+          <tr><td class="small"><strong><span class="hu">Kódolás&#8209;őr</span><span class="en">Encoding guard</span></strong></td><td class="small"><span class="hu">Ha a lekérdezésben elromlott karakter&#8209;minta szerepel, kivételt dob, és <strong>el sem indítja</strong> a futást</span><span class="en">If the query contains a corrupted&#8209;character pattern, it raises and <strong>never runs</strong> the query</span></td></tr>
+          <tr><td class="small"><strong><span class="hu">„Van esemény, nincs találat" őr</span><span class="en">“Events exist, hits don't” guard</span></strong></td><td class="small"><span class="hu">Ha az ajánlaton bizonyítottan van esemény, de a szűrés 0 sort ad, a szkript <strong>megáll</strong></span><span class="en">If the offer provably has events but the filter returns 0 rows, the script <strong>stops</strong></span></td></tr>
+          <tr><td class="small"><strong><span class="hu">As&#8209;of őr</span><span class="en">As&#8209;of guard</span></strong></td><td class="small"><span class="hu">Az adat állapotát <strong>az adatból</strong> vezeti le, nem a rendszer&#8209;metaadatból — az félrevezet</span><span class="en">Derives the data's as&#8209;of state <strong>from the data</strong>, never from system metadata — which misleads</span></td></tr>
+          <tr><td class="small"><strong><span class="hu">Adatminőség&#8209;őr</span><span class="en">Data quality guard</span></strong></td><td class="small"><span class="hu">Minden kimenet előtt: NULL&#8209;ellenőrzés, duplikátum&#8209;ellenőrzés, formátum&#8209;ellenőrzés az azonosítókon</span><span class="en">Before any export: NULL check, duplicate check, format check on the identifiers</span></td></tr>
+          <tr><td class="small"><strong><span class="hu">Szivárgás&#8209;őr</span><span class="en">Leak guard</span></strong></td><td class="small"><span class="hu">Nyers ügyfélazonosító <strong>soha nem jelenik meg a beszélgetésben</strong> — csak a célcsoport&#8209;fájlban, hasheltként mintázva</span><span class="en">A raw customer identifier <strong>never appears in the conversation</strong> — only in the target file, sampled as a hash</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card flat">
+      <h3><span class="hu">És amit minden válasznak magával kell hoznia</span><span class="en">And what every answer must carry with it</span></h3>
+      <div class="grid2" style="margin-top:11px;gap:10px 26px">
+        <ul class="plain small">
+          <li><span class="hu"><strong>Az as&#8209;of dátum.</strong> Minden szám egy adott adatállapotra vonatkozik — kimondatlanul félrevezet.</span><span class="en"><strong>The as&#8209;of date.</strong> Every number refers to one state of the data — unstated, it misleads.</span></li>
+          <li><span class="hu"><strong>A használt definíció.</strong> Ha két olvasat van, mindkettő szerepel, a különbséggel együtt.</span><span class="en"><strong>The definition used.</strong> Where two readings exist, both are given, with the gap between them.</span></li>
+        </ul>
+        <ul class="plain small">
+          <li><span class="hu"><strong>A lefutott lekérdezés.</strong> Megmutatható a válasz mellett, ellenőrizhetően.</span><span class="en"><strong>The query that ran.</strong> Shown next to the answer, checkable.</span></li>
+          <li><span class="hu"><strong>A korlát.</strong> Amit ez a szám <em>nem</em> mond meg — és hogy mihez kellene még adat.</span><span class="en"><strong>The limit.</strong> What this number does <em>not</em> tell you — and what data would be needed for that.</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="csapdak">
+  <div class="sechead">
+    <p class="eyebrow">06 — <span class="hu">Csapda&#8209;kérdések</span><span class="en">Trap questions</span></p>
+    <h2><span class="hu">Melyikre <em>szabad</em> válaszolni?</span><span class="en">Which of these <em>may</em> be answered?</span></h2>
+    <p class="muted"><span class="hu">Mind a hat kérdés értelmes üzleti kérdés, és mindegyikre ad választ egy réteg nélküli modell. Hármukra viszont a helyes válasz az, hogy <strong>nem válaszolható meg</strong> — és ezt kimondani nehezebb, mint egy számot mondani. Tippelj, aztán nézd meg.</span><span class="en">All six are sensible business questions, and a model without a layer will answer every one of them. For three of them, though, the correct answer is that they <strong>cannot be answered</strong> — and saying so is harder than producing a number. Guess, then look.</span></p>
+  </div>
+  <div class="quiz" id="quiz"></div>
+  <p class="qscore" id="qscore"></p>
+</section>
+
+<section id="osszevetes">
+  <div class="sechead">
+    <p class="eyebrow">07 — <span class="hu">Az összevetés</span><span class="en">The comparison</span></p>
+    <h2><span class="hu">Ugyanaz a kérdés, réteggel és réteg nélkül</span><span class="en">The same question, with and without the layer</span></h2>
+  </div>
+  <div class="card flat" style="margin-bottom:18px">
+    <p class="quote"><span class="hu">„Hány aktív programtagunk van, és hányat tudunk közülük elérni?"</span><span class="en">“How many active members do we have, and how many of them can we reach?”</span></p>
+  </div>
+  <div class="cmp">
+    <div class="card bad">
+      <h3><span class="hu">Réteg nélkül</span><span class="en">Without a layer</span></h3>
+      <ul class="plain bad small">
+        <li><span class="hu">A modell <strong>megtippeli</strong> a táblát: talál egy ígéretes nevű mezőt, és arra szűr. A szám megjelenik, magabiztosan.</span><span class="en">The model <strong>guesses</strong> the table: it finds a promising&#8209;looking field and filters on it. A number appears, confidently.</span></li>
+        <li><span class="hu">Az „aktív" szót a modell dönti el — és a két lehetséges olvasat között <strong>kétszeres</strong> a különbség.</span><span class="en">The model decides what “active” means — and the two possible readings differ by a factor of <strong>two</strong>.</span></li>
+        <li><span class="hu">Az „elérhető" a jelen idejű hozzájárulásból jön, de ezt a válasz nem mondja meg; a visszavont hozzájárulások láthatatlanok.</span><span class="en">“Reachable” comes from present&#8209;tense consent, but the answer doesn't say so; withdrawn consents are invisible.</span></li>
+        <li><span class="hu">Két hasonló kérdés <strong>két különböző számot</strong> ad, és a különbség csak akkor derül ki, ha valaki utánaszámol.</span><span class="en">Two similar questions return <strong>two different numbers</strong>, and the gap only surfaces if someone recomputes by hand.</span></li>
+        <li><span class="hu">A jogosultság a promptban lakik — vagyis sehol.</span><span class="en">Access rules live in the prompt — that is, nowhere.</span></li>
+      </ul>
+    </div>
+    <div class="card good">
+      <h3><span class="hu">Réteggel</span><span class="en">With the layer</span></h3>
+      <ul class="plain good small">
+        <li><span class="hu">A definíció <strong>egy helyen</strong> él, verziózva: „aktív tag" = státusz szerinti programtag, technikai felhasználók nélkül. A modell nem dönthet másképp.</span><span class="en">The definition lives in <strong>one place</strong>, versioned: “active member” = member by status, technical users excluded. The model cannot decide otherwise.</span></li>
+        <li><span class="hu">A válasz kimondja a másik olvasatot is, és hogy az miért nem az alapértelmezett.</span><span class="en">The answer states the other reading too, and why it is not the default.</span></li>
+        <li><span class="hu">Az elérhetőség a hozzájárulás&#8209;mátrixból jön, a felső korláttal együtt — és azzal a korláttal, hogy ez a <em>jelenlegi</em> állapot.</span><span class="en">Reachability comes from the consent matrix, with its ceiling — and with the caveat that this is the <em>current</em> state.</span></li>
+        <li><span class="hu">Ugyanaz a kérdés <strong>mindig ugyanazt</strong> a számot adja, és a válasz visszavezethető a lefutott lekérdezésig.</span><span class="en">The same question <strong>always</strong> returns the same number, and the answer traces back to the query that ran.</span></li>
+        <li><span class="hu">A jogosultság az adathoz tapad, nem a szöveghez; a futás naplózva van.</span><span class="en">Access rules sit with the data, not with the text; every run is logged.</span></li>
+      </ul>
+    </div>
+  </div>
+  <p class="pull" style="margin:26px auto 0;max-width:44ch;text-align:center;color:var(--ink-2)">
+    <span class="hu">A single source of truth nem termék, hanem <strong>megállapodás</strong>. A technológia a könnyebbik fele.</span>
+    <span class="en">A single source of truth is not a product, it's an <strong>agreement</strong>. The technology is the easy half.</span>
+  </p>
+</section>
+
+<section id="teszt">
+  <div class="sechead">
+    <p class="eyebrow">08 — <span class="hu">A bizonyíték</span><span class="en">The evidence</span></p>
+    <h2><span class="hu">Hét kérdés, amiből kettőre az volt a helyes válasz, hogy nem</span><span class="en">Seven questions — for two of which the right answer was “no”</span></h2>
+    <p class="muted"><span class="hu">A leíró első négy blokkja után nem a maradék megírása következett, hanem egy teszt: <em>használható&#8209;e egyáltalán</em>. A kérdéseket szándékosan úgy válogattuk, hogy több fejezetet is igénybe vegyenek, és legyen köztük kettő, amire a helyes válasz az elutasítás.</span><span class="en">After the descriptor’s first four blocks, the next step was not writing the rest but a test: <em>is this usable at all</em>. The questions were chosen deliberately to span several chapters — and to include two where the correct answer is a refusal.</span></p>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>#</th><th><span class="hu">Kérdés</span><span class="en">Question</span></th><th><span class="hu">Válasz</span><span class="en">Answer</span></th><th><span class="hu">Mit tesztelt</span><span class="en">What it tested</span></th></tr></thead>
+      <tbody>
+        <tr><td class="mono">T1</td><td class="small"><span class="hu">Hány aktív programtag van?</span><span class="en">How many active members are there?</span></td><td class="small"><span class="tag ok"><span class="hu">megvan</span><span class="en">answered</span></span> <span class="hu">de a kérdés kétértelmű</span><span class="en">but ambiguous</span></td><td class="small muted"><span class="hu">státusz&#8209;logika, as&#8209;of dátum</span><span class="en">status logic, as&#8209;of date</span></td></tr>
+        <tr><td class="mono">T2</td><td class="small"><span class="hu">Hány letöltés volt múlt hónapban?</span><span class="en">How many downloads last month?</span></td><td class="small"><span class="tag ok"><span class="hu">megvan</span><span class="en">answered</span></span> <span class="hu">csonka hónap jelezve</span><span class="en">partial month flagged</span></td><td class="small muted"><span class="hu">két forrás egyenértékűsége</span><span class="en">equivalence of two sources</span></td></tr>
+        <tr><td class="mono">T3</td><td class="small"><span class="hu">Melyik kibocsájtó ajánlatait töltötték le a legtöbben?</span><span class="en">Whose offers were downloaded most?</span></td><td class="small"><span class="tag ok"><span class="hu">megvan</span><span class="en">answered</span></span></td><td class="small muted"><span class="hu">partner&#8209;elhatárolás</span><span class="en">partner boundary</span></td></tr>
+        <tr><td class="mono">T4</td><td class="small"><span class="hu">Mennyit töltöttek le két éve a 25–30 évesek?</span><span class="en">What did 25–30&#8209;year&#8209;olds download two years ago?</span></td><td class="small"><span class="tag ok"><span class="hu">megvan</span><span class="en">answered</span></span> <span class="hu">esemény&#8209;idejű korral</span><span class="en">age as of the event</span></td><td class="small muted"><span class="hu"><strong>időbeliség</strong></span><span class="en"><strong>temporality</strong></span></td></tr>
+        <tr><td class="mono">T5</td><td class="small"><span class="hu">Hogyan alakult a Premium szegmens aránya tavaly?</span><span class="en">How did the Premium segment’s share move last year?</span></td><td class="small"><span class="tag no"><span class="hu">elutasítva</span><span class="en">refused</span></span> <span class="hu">nincs szegmens&#8209;történet</span><span class="en">no segment history</span></td><td class="small muted"><span class="hu"><strong>így helyes</strong></span><span class="en"><strong>correct as refused</strong></span></td></tr>
+        <tr><td class="mono">T6</td><td class="small"><span class="hu">Hányan töltöttek le hűségvállalási ajánlatot?</span><span class="en">How many downloaded a loyalty&#8209;pledge offer?</span></td><td class="small"><span class="tag ok"><span class="hu">megvan</span><span class="en">answered</span></span> <span class="hu">a fix&#8209;ID korlát kimondva</span><span class="en">the fixed&#8209;ID limit stated</span></td><td class="small muted"><span class="hu">fogalom, ami nincs az adatban</span><span class="en">a concept absent from the data</span></td></tr>
+        <tr><td class="mono">T7</td><td class="small"><span class="hu">Mennyi a prémium ügyfelek aránya a prémium&#8209;jelző mező szerint?</span><span class="en">What’s the premium share per the premium flag?</span></td><td class="small"><span class="tag no"><span class="hu">elutasítva</span><span class="en">refused</span></span> <span class="hu">elavult mező</span><span class="en">deprecated field</span></td><td class="small muted"><span class="hu"><strong>így helyes</strong></span><span class="en"><strong>correct as refused</strong></span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="stats" style="margin-top:18px">
+    <div class="stat"><span class="big num">7 / 7</span><span class="lab"><span class="hu">a szándéknak megfelelően zárult</span><span class="en">ended as intended</span></span></div>
+    <div class="stat"><span class="big num">23</span><span class="lab"><span class="hu">lekérdezés, 8 másodperc, hiba nélkül</span><span class="en">queries, 8 seconds, no errors</span></span></div>
+    <div class="stat"><span class="big num"><span class="hu">0,2–1,6 s</span><span class="en">0.2–1.6 s</span></span><span class="lab"><span class="hu">lekérdezési idő kérdésenként</span><span class="en">query time per question</span></span><span class="sub"><span class="hu">a válaszidőt nem ez adja</span><span class="en">not what dominates latency</span></span></div>
+    <div class="stat accent"><span class="big num">14+4</span><span class="lab"><span class="hu">tanulság, célfájllal és döntéssel</span><span class="en">lessons, each with a target file and a decision</span></span></div>
+  </div>
+  <div class="call" style="margin-top:18px">
+    <span class="hu">A legértékesebb tétel nem a hét jó válasz volt, hanem <strong>a nyolcadik, éles feladatban talált hiba</strong> — az, amelyik 300 fővel nagyobb célcsoportot adott volna, némán. A teszt akkor ér valamit, ha van benne olyan kérdés, amire tudjuk a helyes választ, <em>és</em> olyan, amit élesben is kiadnánk.</span>
+    <span class="en">The most valuable outcome was not the seven good answers but <strong>the bug found in the eighth, real task</strong> — the one that would have produced a target list 300 people too large, silently. A test is worth something when it contains both questions whose correct answer you already know <em>and</em> work you would actually ship.</span>
+  </div>
+</section>
+
+<section id="eles">
+  <div class="sechead">
+    <p class="eyebrow">09 — <span class="hu">Éles használat</span><span class="en">In production</span></p>
+    <h2><span class="hu">Négy verzió, ugyanarra a rétegre</span><span class="en">Four deployments, one and the same layer</span></h2>
+    <p class="muted"><span class="hu">A szemantikai réteg a befektetés; a felület csak csomagolás. Ugyanaz a leíró&#8209;csomag mind a négy verziót kiszolgálja, és a sorrend egyben bevezetési út is: mindegyik lépcső akkor jön, ha az előző már bizonyított.</span><span class="en">The semantic layer is the investment; the interface is just packaging. The same descriptor package serves all four, and the order is also a rollout path: each step follows only once the previous one has proven itself.</span></p>
+  </div>
+
+  <div class="call" style="margin-bottom:20px">
+    <h4><span class="hu">Ami mind a négyben közös — az adatvédelmi keret</span><span class="en">What all four share — the privacy frame</span></h4>
+    <p style="margin-top:5px"><span class="hu"><strong>Séma&#8209;metaadat és aggregált eredmény mehet ki a modellhez; nyers, sorszintű ügyféladat nem.</strong> A modell lekérdezést ír és eredményt fogalmaz meg — az adatbázissal soha nem beszél közvetlenül, és a nyers sorokat nem látja. Ahol ez sem elég (banki környezet, szigorúbb szabályozás), a lánc ugyanez marad, csak a modell helyben fut.</span><span class="en"><strong>Schema metadata and aggregated results may go to the model; raw, row&#8209;level customer data may not.</strong> The model writes a query and phrases a result — it never talks to the database directly and never sees the raw rows. Where even that isn't enough (banking, stricter regulation), the chain is unchanged; only the model runs locally.</span></p>
+  </div>
+
+  <div class="vers">
+    <div class="ver">
+      <div class="vh"><span class="vn">V0</span><h3><span class="hu">Elemzői asztal — ez fut ma</span><span class="en">The analyst's desk — running today</span></h3><span class="tag ok"><span class="hu">él</span><span class="en">live</span></span></div>
+      <div class="vb">
+        <div class="vcell"><span class="k"><span class="hu">Ki</span><span class="en">Who</span></span><span class="v"><span class="hu">egy elemző, saját munkájára</span><span class="en">one analyst, own work</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Hol fut</span><span class="en">Where</span></span><span class="v"><span class="hu">az elemző gépén, a heti adatbázis&#8209;másolaton</span><span class="en">on the analyst's machine, against the weekly database copy</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Mit ad</span><span class="en">What it gives</span></span><span class="v"><span class="hu">célcsoport&#8209;listák, ad&#8209;hoc számok, ellenőrző futások percek helyett másodpercek alatt</span><span class="en">target lists, ad&#8209;hoc numbers, verification runs in seconds instead of minutes</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Korlát</span><span class="en">Limit</span></span><span class="v"><span class="hu">egy ember; a tudás nem osztható meg</span><span class="en">one person; the knowledge isn't shared</span></span></div>
+      </div>
+    </div>
+
+    <div class="ver">
+      <div class="vh"><span class="vn">V1</span><h3><span class="hu">Megosztott háttér — a kollégáknak</span><span class="en">Shared back end — for colleagues</span></h3><span class="tag sig"><span class="hu">következő lépés</span><span class="en">next step</span></span></div>
+      <div class="vb">
+        <div class="vcell"><span class="k"><span class="hu">Ki</span><span class="en">Who</span></span><span class="v"><span class="hu">az ügyfélcsapat — köztük olyanok is, akiknek nincs SQL&#8209;tudásuk vagy modell&#8209;hozzáférésük</span><span class="en">the account team — including people with no SQL and no model access</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Hol fut</span><span class="en">Where</span></span><span class="v"><span class="hu">belső szerveren vagy bérelt VPS&#8209;en; a leíró verziókövetésben, egy böngészős felület előtte</span><span class="en">an internal server or a rented VPS; the descriptor under version control, a browser UI in front</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Mi kell hozzá</span><span class="en">What it needs</span></span><span class="v"><span class="hu">felhasználó&#8209;kezelés, kérdés&#8209;napló, költségkeret, és <strong>egy gazda a definíciókra</strong></span><span class="en">user management, a question log, a cost cap, and <strong>an owner for the definitions</strong></span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Korlát</span><span class="en">Limit</span></span><span class="v"><span class="hu">a válasz minősége a leíró hatókörén áll vagy bukik: amire nincs fejezet, arra nincs válasz</span><span class="en">answer quality rises and falls with the descriptor's scope: no chapter, no answer</span></span></div>
+      </div>
+    </div>
+
+    <div class="ver">
+      <div class="vh"><span class="vn">V2</span><h3><span class="hu">Beépített felület — az ügyfél oldalán</span><span class="en">Embedded — on the client's side</span></h3><span class="tag"><span class="hu">terv</span><span class="en">planned</span></span></div>
+      <div class="vb">
+        <div class="vcell"><span class="k"><span class="hu">Ki</span><span class="en">Who</span></span><span class="v"><span class="hu">az ügyfél saját munkatársai, a meglévő admin felületükön belül</span><span class="en">the client's own staff, inside their existing admin interface</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Hol fut</span><span class="en">Where</span></span><span class="v"><span class="hu">az ügyfél infrastruktúráján, a saját jogosultsági rendszerével</span><span class="en">on the client's infrastructure, under their own permission system</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Mi változik</span><span class="en">What changes</span></span><span class="v"><span class="hu">a jogosultság <strong>az adathoz tapad</strong>: mindenki csak arra kap választ, amit egyébként is láthatna</span><span class="en">permissions <strong>sit with the data</strong>: everyone only gets answers they could already see</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Korlát</span><span class="en">Limit</span></span><span class="v"><span class="hu">integráció és jóváhagyás; a fogalomtárnak itt már az ügyfél szóhasználatát is bírnia kell</span><span class="en">integration and sign&#8209;off; the glossary must now carry the client's vocabulary too</span></span></div>
+      </div>
+    </div>
+
+    <div class="ver">
+      <div class="vh"><span class="vn">V3</span><h3><span class="hu">Riportintegráció — egy definíció mindenhol</span><span class="en">Reporting integration — one definition everywhere</span></h3><span class="tag"><span class="hu">távlat</span><span class="en">horizon</span></span></div>
+      <div class="vb">
+        <div class="vcell"><span class="k"><span class="hu">Mi történik</span><span class="en">What happens</span></span><span class="v"><span class="hu">a szemantikai réteg a BI&#8209;modell <em>mellé</em> kerül, nem alá: ugyanaz a definíció szolgálja ki a dashboardot és a beszélgetést</span><span class="en">the semantic layer sits <em>beside</em> the BI model, not under it: one definition serves both the dashboard and the conversation</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Miért ez a cél</span><span class="en">Why this is the goal</span></span><span class="v"><span class="hu">ma a riport és a chat két külön igazságot adhat; így nem tud</span><span class="en">today a report and a chat can hold two different truths; this way they cannot</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Mi kell hozzá</span><span class="en">What it needs</span></span><span class="v"><span class="hu">read&#8209;only replika, napi frissítés, és a metrika&#8209;szótár mint <em>hivatalos</em> dokumentum</span><span class="en">a read&#8209;only replica, a daily refresh, and the metric dictionary as an <em>official</em> document</span></span></div>
+        <div class="vcell"><span class="k"><span class="hu">Korlát</span><span class="en">Limit</span></span><span class="v"><span class="hu">szervezeti kérdés, nem technikai: valakinek vállalnia kell a definíciókat</span><span class="en">an organisational question, not a technical one: someone has to own the definitions</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mikell">
+  <div class="sechead">
+    <p class="eyebrow">10 — <span class="hu">Összegzés</span><span class="en">In closing</span></p>
+    <h2><span class="hu">Mi kell ahhoz, hogy működjön</span><span class="en">What it takes to work</span></h2>
+  </div>
+  <div class="grid2" style="align-items:start;gap:26px">
+    <ol class="steps">
+      <li><h3 style="font-size:16.5px"><span class="hu">Tiszta, dokumentált adatmodell</span><span class="en">A clean, documented data model</span></h3><p class="small muted" style="margin-top:4px"><span class="hu">Enélkül nincs mit definiálni. Ez a munka nagyobbik fele, és nem az LLM végzi el helyettünk.</span><span class="en">Without it there is nothing to define. This is the larger half of the work, and no LLM does it for you.</span></p></li>
+      <li><h3 style="font-size:16.5px"><span class="hu">20–30 jól megválasztott mutató</span><span class="en">20–30 well-chosen metrics</span></h3><p class="small muted" style="margin-top:4px"><span class="hu">Nem az összes mező. A kevés, pontosan definiált mutató többet ér, mint a teljes séma.</span><span class="en">Not every column. A few precisely defined metrics beat the full schema.</span></p></li>
+      <li><h3 style="font-size:16.5px"><span class="hu">Teszt&#8209;készlet ismert helyes válasszal</span><span class="en">A test set with known correct answers</span></h3><p class="small muted" style="margin-top:4px"><span class="hu">Néhány tucat valódi kérdés — köztük olyanok, amikre a helyes válasz az elutasítás.</span><span class="en">A few dozen real questions — including ones whose correct answer is a refusal.</span></p></li>
+      <li><h3 style="font-size:16.5px"><span class="hu">Naplózás</span><span class="en">Logging</span></h3><p class="small muted" style="margin-top:4px"><span class="hu">Mit kérdeztek, mi futott le, mit válaszolt a rendszer. Visszajátszhatóság nélkül nincs bizalom.</span><span class="en">What was asked, what ran, what the system answered. No replay, no trust.</span></p></li>
+      <li><h3 style="font-size:16.5px"><span class="hu">Egy gazda</span><span class="en">An owner</span></h3><p class="small muted" style="margin-top:4px"><span class="hu">Aki a definíciókat karbantartja, ha változik az üzlet. Ez a legkönnyebben kihagyott és a leggyakrabban hiányzó elem.</span><span class="en">Someone who maintains the definitions as the business changes. The easiest element to skip, and the one most often missing.</span></p></li>
+    </ol>
+    <div class="stack">
+      <div class="card">
+        <h3><span class="hu">Amit ez a projekt megtanított</span><span class="en">What this project taught</span></h3>
+        <ul class="plain small" style="margin-top:11px">
+          <li><span class="hu">A nyelvi modell nem az adatbázist nem érti — <strong>a szavainkat nem érti</strong>. „Aktív", „letöltés", „hűségvállalás": mind mást jelent az adatban, a riportban és a folyosón.</span><span class="en">A language model's problem isn't the database — <strong>it's our words</strong>. “Active”, “download”, “pledge”: each means something different in the data, in the report and in the corridor.</span></li>
+          <li><span class="hu">A leíró értékét nem a terjedelme adja, hanem hogy <strong>meg meri mondani, mit nem tud</strong>.</span><span class="en">A descriptor's worth is not its length but that it <strong>dares to say what it doesn't know</strong>.</span></li>
+          <li><span class="hu">A szűkítés — 300 objektumból 44 — nem veszteség. Ez <strong>maga a munka</strong>.</span><span class="en">The narrowing — 300 objects down to 44 — is not a loss. It <strong>is</strong> the work.</span></li>
+          <li><span class="hu">Ami csendben romlik el, sokkal drágább, mint ami hangosan. Ezért lett minden tanulságból kód, nem jegyzet.</span><span class="en">What breaks quietly costs far more than what breaks loudly. That is why every lesson became code, not a note.</span></li>
+        </ul>
+      </div>
+      <div class="card flat">
+        <h3 style="font-size:17px"><span class="hu">Hol tart most</span><span class="en">Where it stands</span></h3>
+        <p class="small muted" style="margin-top:7px"><span class="hu">A leíró első négy blokkja kész és éles teszten átment; a maradék négy folyamatban. A metrika&#8209;szótár első kiadása lezárt definíciókkal indult. A következő mérföldkő a V1: ugyanez a réteg, több emberrel, naplózva.</span><span class="en">The descriptor's first four blocks are complete and have passed an end&#8209;to&#8209;end test; the remaining four are in progress. The metric dictionary shipped its first edition with closed definitions. The next milestone is V1: the same layer, more people, logged.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="page">
+  <p><span class="hu">Anonimizált use case egy élő projektből. A megbízó, a márka, a tábla&#8209; és mezőnevek nem szerepelnek; a volumenek kerekítve. A módszertan, a lépések, a hibák és a döntések az eredetivel azonosak.</span><span class="en">An anonymised use case from a live project. The client, the brand and all table and field names are omitted; volumes are rounded. The methodology, the steps, the failures and the decisions are identical to the original.</span></p>
+  <p style="margin-top:10px">Udvari István · <span class="hu">adatelemzés</span><span class="en">data analytics</span> · 2026</p>
+</footer>
+
 </div>
+<style>[hidden]{display:none!important}</style>
+<script>
+(function(){
+"use strict";
+var $ = function(id){return document.getElementById(id)};
+var esc = function(s){return s};
+
+/* ============ language + theme ============ */
+var root = document.documentElement;
+function setLang(l){
+  root.setAttribute('data-lang', l);
+  root.setAttribute('lang', l);
+  $('lang-hu').setAttribute('aria-pressed', l==='hu');
+  $('lang-en').setAttribute('aria-pressed', l==='en');
+  try{ localStorage.setItem('ca-lang', l) }catch(e){}
+}
+function setTheme(t){
+  if(t){ root.setAttribute('data-theme', t) } else { root.removeAttribute('data-theme') }
+  $('th-l').setAttribute('aria-pressed', t==='light');
+  $('th-d').setAttribute('aria-pressed', t==='dark');
+  try{ t ? localStorage.setItem('ca-theme', t) : localStorage.removeItem('ca-theme') }catch(e){}
+}
+$('lang-hu').onclick = function(){ setLang('hu') };
+$('lang-en').onclick = function(){ setLang('en') };
+$('th-l').onclick = function(){ setTheme(root.getAttribute('data-theme')==='light' ? null : 'light') };
+$('th-d').onclick = function(){ setTheme(root.getAttribute('data-theme')==='dark' ? null : 'dark') };
+try{
+  var sl = localStorage.getItem('ca-lang'); if(sl){ setLang(sl) } else { setLang('hu') }
+  var st = localStorage.getItem('ca-theme'); if(st){ setTheme(st) }
+}catch(e){ setLang('hu') }
+
+/* ============ 1. the chain ============ */
+var NODES = [
+  {ic:'i-user',  hu:['Felhasználó','a kérdés'],       en:['Person','the question']},
+  {ic:'i-llm',   hu:['Modell','értelmezés'],          en:['Model','interpretation']},
+  {ic:'i-layer', hu:['Szemantikai réteg','definíciók'],en:['Semantic layer','definitions']},
+  {ic:'i-db',    hu:['Adatbázis','lekérdezés'],       en:['Database','the query']},
+  {ic:'i-msg',   hu:['Modell','megfogalmazás'],       en:['Model','phrasing']},
+  {ic:'i-back',  hu:['Felhasználó','a válasz'],       en:['Person','the answer']}
+];
+var QHU = 'Hány aktív programtagunk van, és hányat érünk el közülük push üzenettel?';
+var QEN = 'How many active members do we have, and how many can we reach with a push message?';
+
+function two(hu,en){ return '<div class="hu">'+hu+'</div><div class="en">'+en+'</div>' }
+
+var SLIDES = [
+{step:null, html: two(
+ '<p class="stepno">Bevezető</p><h3>Kérdezni könnyű.<br>Jól válaszolni nehéz.</h3>'+
+ '<p class="lede" style="max-width:40ch">Hogyan lesz egy hétköznapi kérdésből olyan szám, amire rá lehet bízni egy döntést — és hol dől el, hogy igaz&#8209;e.</p>'+
+ '<p class="tiny" style="border-top:1px solid var(--hair);padding-top:11px;max-width:52ch">Lépegetés: a gombokkal vagy a <b>&larr;</b> <b>&rarr;</b> billentyűkkel. A felső sávban bármelyik állomásra rá lehet ugrani.</p>',
+ '<p class="stepno">Intro</p><h3>Asking is easy.<br>Answering well is hard.</h3>'+
+ '<p class="lede" style="max-width:40ch">How an everyday question turns into a number you can base a decision on — and where it is decided whether it is true.</p>'+
+ '<p class="tiny" style="border-top:1px solid var(--hair);padding-top:11px;max-width:52ch">Move with the buttons or the <b>&larr;</b> <b>&rarr;</b> keys. You can jump to any stop in the bar above.</p>')},
+
+{step:null, html: two(
+ '<p class="stepno">Áttekintés</p><h3>Hat állomás, egy kérdés útja</h3>'+
+ '<div class="cols"><div>'+
+ '<ul class="plain small"><li>A modell <strong>soha nem beszél közvetlenül</strong> az adatbázissal.</li>'+
+ '<li>A harmadik állomás dönti el, hogy megbízható&#8209;e az eredmény.</li>'+
+ '<li>A hatodik állomás nem díszlet: ott derül ki, hogy a válasz <strong>ellenőrizhető&#8209;e</strong>.</li>'+
+ '<li>A lánc kör: a válasz a következő kérdés kiindulópontja.</li></ul></div>'+
+ '<div class="payload"><p class="cap">Végigviszünk egy kérdést</p><p class="quote">„'+QHU+'"</p></div></div>',
+ '<p class="stepno">Overview</p><h3>Six stops, one question’s journey</h3>'+
+ '<div class="cols"><div>'+
+ '<ul class="plain small"><li>The model <strong>never talks directly</strong> to the database.</li>'+
+ '<li>The third stop decides whether the result can be trusted.</li>'+
+ '<li>The sixth stop is not decoration: that is where it shows whether the answer is <strong>checkable</strong>.</li>'+
+ '<li>The chain is a loop: the answer is where the next question starts.</li></ul></div>'+
+ '<div class="payload"><p class="cap">One question, all the way through</p><p class="quote">&ldquo;'+QEN+'&rdquo;</p></div></div>')},
+
+{step:0, html: two(
+ '<p class="stepno">1. állomás</p><h3>A kérdés</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">Üzleti kérdés, hétköznapi nyelven.</p>'+
+ '<ul class="plain small"><li>Nem ismeri a táblaneveket — és nem is kell ismernie.</li>'+
+ '<li>Olyan szavakat használ, amik <em>neki</em> egyértelműek: „aktív tag", „elérni", „push".</li>'+
+ '<li>Holnap ugyanezt megkérdezheti, és joggal várja ugyanazt a számot.</li></ul></div>'+
+ '<div class="payload"><p class="cap">Amit a felhasználó beír</p><p class="quote">„'+QHU+'"</p></div></div>',
+ '<p class="stepno">Stop 1</p><h3>The question</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">A business question, in plain language.</p>'+
+ '<ul class="plain small"><li>They don’t know the table names — and shouldn’t have to.</li>'+
+ '<li>They use words that are obvious <em>to them</em>: &ldquo;active member&rdquo;, &ldquo;reach&rdquo;, &ldquo;push&rdquo;.</li>'+
+ '<li>They may ask again tomorrow, and rightly expect the same number.</li></ul></div>'+
+ '<div class="payload"><p class="cap">What the user types</p><p class="quote">&ldquo;'+QEN+'&rdquo;</p></div></div>')},
+
+{step:1, html: two(
+ '<p class="stepno">2. állomás</p><h3>Az értelmezés</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">A modell <strong>szándékot fordít</strong> — nem adatot keres.</p>'+
+ '<ul class="plain small"><li>Kibontja: melyik mutató, milyen bontásban, milyen időszakra, milyen szűrővel.</li>'+
+ '<li>Nincs közvetlen hozzáférése az adatbázishoz. Ez szándékos.</li>'+
+ '<li>Ha a kérdés kétértelmű, <strong>visszakérdez vagy kettőt ad</strong> — nem tippel.</li></ul></div>'+
+ '<div class="payload"><p class="cap">Amit a modell előállít</p><p class="kv">'+
+ '<b>mutató:</b> <em>programtag</em><br><b>második mutató:</b> <em>push&#8209;hozzájárulás</em><br>'+
+ '<b>bontás:</b> —<br><b>időszak:</b> <em>jelen állapot</em><br><b>szűrő:</b> <em>technikai user nélkül</em></p></div></div>',
+ '<p class="stepno">Stop 2</p><h3>Interpretation</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">The model <strong>translates intent</strong> — it doesn’t go looking for data.</p>'+
+ '<ul class="plain small"><li>It works out: which metric, split by what, for which period, under which filter.</li>'+
+ '<li>It has no direct access to the database. That is deliberate.</li>'+
+ '<li>If the question is ambiguous it <strong>asks back, or gives both</strong> — it does not guess.</li></ul></div>'+
+ '<div class="payload"><p class="cap">What the model produces</p><p class="kv">'+
+ '<b>metric:</b> <em>member</em><br><b>second metric:</b> <em>push consent</em><br>'+
+ '<b>split by:</b> —<br><b>period:</b> <em>current state</em><br><b>filter:</b> <em>excluding technical users</em></p></div></div>')},
+
+{step:2, html: two(
+ '<p class="stepno">3. állomás — itt dől el minden</p><h3>A szemantikai réteg</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">Itt van leírva, <strong>mit jelentenek a szavak</strong>. Az üzleti definíciók egyetlen forrása.</p>'+
+ '<ul class="plain small"><li>Az „aktív tag" egyetlen helyen van definiálva — nem promptban, nem fejben.</li>'+
+ '<li>Mutatók, kapcsolatok, szűrési szabályok és jogosultságok egy helyen.</li>'+
+ '<li>A modell <strong>csak az itt engedélyezett mezőkből</strong> építkezhet.</li>'+
+ '<li>Ha a definíció változik, minden válasz vele változik.</li></ul></div>'+
+ '<div class="payload"><p class="cap">A mutató definíciója</p><p class="kv">'+
+ '<b>név:</b> <em>programtag</em><br><b>számítás:</b> egyedi ügyfél darabszám<br>'+
+ '<b>feltétel:</b> státusz = tag<br>&nbsp;&nbsp;&nbsp;<b>és</b> technikai user nélkül<br>'+
+ '<b>gazda:</b> ügyfélszolgálat<br><b>jelölés:</b> <span class="tag ok">✓ megerősítve</span><br>'+
+ '<b>korlát:</b> <em>jelen idejű, nincs története</em></p></div></div>',
+ '<p class="stepno">Stop 3 — where it is decided</p><h3>The semantic layer</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">This is where the words are <strong>defined</strong>. The single source for business definitions.</p>'+
+ '<ul class="plain small"><li>&ldquo;Active member&rdquo; is defined in one place — not in a prompt, not in someone’s head.</li>'+
+ '<li>Metrics, joins, filter rules and access rights live together.</li>'+
+ '<li>The model may build <strong>only from fields allowed here</strong>.</li>'+
+ '<li>Change the definition and every answer changes with it.</li></ul></div>'+
+ '<div class="payload"><p class="cap">The metric definition</p><p class="kv">'+
+ '<b>name:</b> <em>member</em><br><b>measure:</b> distinct customer count<br>'+
+ '<b>where:</b> status = member<br>&nbsp;&nbsp;&nbsp;<b>and</b> not a technical user<br>'+
+ '<b>owner:</b> customer service<br><b>mark:</b> <span class="tag ok">✓ confirmed</span><br>'+
+ '<b>limit:</b> <em>present tense, no history</em></p></div></div>')},
+
+{step:3, html: two(
+ '<p class="stepno">4. állomás</p><h3>A lekérdezés</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">Idáig eljutva az SQL már csak <strong>végrehajtás</strong>.</p>'+
+ '<ul class="plain small"><li>A réteg által jóváhagyott lekérdezés fut, a felhasználó saját jogosultságával.</li>'+
+ '<li>Néhány sor eredmény megy vissza — <strong>nem a nyers adat</strong>.</li>'+
+ '<li>Szöveg helyett numerikus kódra szűrünk: az nem tud csendben elromlani.</li>'+
+ '<li>Minden futás naplózható és visszajátszható.</li></ul></div>'+
+ '<div class="payload"><p class="cap">Ami az adatbázison lefut</p><pre class="sql"><span class="k">SELECT</span> <span class="k">COUNT</span>(*)                      <span class="k">AS</span> tag,\n       <span class="k">SUM</span>(<span class="k">CASE WHEN</span> push_consent = 1\n                <span class="k">THEN</span> 1 <span class="k">ELSE</span> 0 <span class="k">END</span>) <span class="k">AS</span> elerheto\n<span class="k">FROM</span>   ugyfel_nezet\n<span class="k">WHERE</span>  statusz_kod = 1\n  <span class="k">AND</span>  technikai   = 0;</pre>'+
+ '<table style="margin-top:12px"><thead><tr><th>tag</th><th class="r">fő</th></tr></thead><tbody>'+
+ '<tr><td>programtag</td><td class="r num">196 000</td></tr>'+
+ '<tr><td>ebből push&#8209;szal elérhető</td><td class="r num">134 500</td></tr></tbody></table></div></div>',
+ '<p class="stepno">Stop 4</p><h3>The query</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">By this point the SQL is just <strong>execution</strong>.</p>'+
+ '<ul class="plain small"><li>Approved SQL runs, under the user’s own permissions.</li>'+
+ '<li>A few result rows come back — <strong>not the raw data</strong>.</li>'+
+ '<li>We filter on numeric codes, not text: those cannot fail silently.</li>'+
+ '<li>Every run is logged and can be replayed.</li></ul></div>'+
+ '<div class="payload"><p class="cap">What runs on the database</p><pre class="sql"><span class="k">SELECT</span> <span class="k">COUNT</span>(*)                     <span class="k">AS</span> members,\n       <span class="k">SUM</span>(<span class="k">CASE WHEN</span> push_consent = 1\n                <span class="k">THEN</span> 1 <span class="k">ELSE</span> 0 <span class="k">END</span>) <span class="k">AS</span> reachable\n<span class="k">FROM</span>   customer_view\n<span class="k">WHERE</span>  status_code = 1\n  <span class="k">AND</span>  technical   = 0;</pre>'+
+ '<table style="margin-top:12px"><thead><tr><th>metric</th><th class="r">people</th></tr></thead><tbody>'+
+ '<tr><td>members</td><td class="r num">196,000</td></tr>'+
+ '<tr><td>reachable by push</td><td class="r num">134,500</td></tr></tbody></table></div></div>')},
+
+{step:4, html: two(
+ '<p class="stepno">5. állomás</p><h3>A megfogalmazás</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">A modell <strong>megfogalmazza</strong> a számot — nem kitalálja.</p>'+
+ '<ul class="plain small"><li>Az eredménysorokból lesz mondat, táblázat vagy ábra.</li>'+
+ '<li>Csak arról beszélhet, ami az eredményben <strong>benne van</strong>.</li>'+
+ '<li>A korlátot ugyanilyen hangsúllyal mondja ki, mint a számot.</li></ul></div>'+
+ '<div class="payload"><p class="cap">Amit a modell ír</p>'+
+ '<p class="resline">196 000 programtagunk van, és közülük 134 500 fő (68,5%) érhető el push üzenettel.</p>'+
+ '<div class="limit"><span class="tag wa">korlát</span><span>Ez a <strong>jelenlegi</strong> hozzájárulás&#8209;állapot. Arra, hogy hányan vonták vissza idén, nem tudok válaszolni — nincs hozzájárulás&#8209;történet.</span></div></div></div>',
+ '<p class="stepno">Stop 5</p><h3>The phrasing</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">The model <strong>puts the number into words</strong> — it doesn’t invent it.</p>'+
+ '<ul class="plain small"><li>Result rows become a sentence, a table or a chart.</li>'+
+ '<li>It may only talk about what the result <strong>contains</strong>.</li>'+
+ '<li>It states the limit with the same emphasis as the number.</li></ul></div>'+
+ '<div class="payload"><p class="cap">What the model writes</p>'+
+ '<p class="resline">We have 196,000 members, of whom 134,500 (68.5%) are reachable by push.</p>'+
+ '<div class="limit"><span class="tag wa">limit</span><span>This is the <strong>current</strong> consent state. How many withdrew consent this year is something I cannot answer — there is no consent history.</span></div></div></div>')},
+
+{step:5, html: two(
+ '<p class="stepno">6. állomás — a lánc bezárul</p><h3>A válasz a felhasználónál</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">A vázlatból ez az állomás hiányzott — pedig <strong>itt derül el, ér&#8209;e valamit az egész</strong>. Egy szám, amit nem lehet ellenőrizni, nem válasz: tipp, jó tipográfiával.</p>'+
+ '<ul class="plain small"><li>A válasz mellé <strong>négy dolog jár</strong>: az as&#8209;of dátum, a használt definíció, a lefutott lekérdezés és a korlát.</li>'+
+ '<li>A felhasználó <strong>vitatkozhat</strong>: „nem így értettem az aktívat" — és a réteg meg tudja mutatni, mi a másik olvasat.</li>'+
+ '<li>A válasz a következő kérdés kiindulópontja — a lánc nem egyenes, hanem kör.</li>'+
+ '<li>Ami itt visszakerül a rendszerbe — a pontosítás, az új becenév, a hiányzó definíció — <strong>az a réteg következő verziója</strong>.</li></ul></div>'+
+ '<div class="payload"><p class="cap">Amit a felhasználó lát</p>'+
+ '<p class="resline">196 000 programtag · 134 500 elérhető</p>'+
+ '<p class="kv" style="margin-top:11px"><b>adatállapot:</b> <em>legutóbbi frissítés</em><br><b>definíció:</b> <em>programtag = státusz szerint</em><br><b>másik olvasat:</b> <em>100 000 fő</em> — megmutatom<br><b>lekérdezés:</b> <em>megnyitható</em><br><b>korlát:</b> <em>jelen idejű hozzájárulás</em></p>'+
+ '<div class="limit" style="margin-top:12px"><span class="tag sig">&#8629;</span><span class="small">„És ebből hányan nyitottak meg push üzenetet az elmúlt hónapban?" — <em>a következő kérdés</em></span></div></div></div>',
+ '<p class="stepno">Stop 6 — the chain closes</p><h3>The answer, back with the person</h3>'+
+ '<div class="cols"><div><p class="muted" style="margin-bottom:13px">This stop was missing from the draft — and yet <strong>this is where it shows whether any of it was worth anything</strong>. A number you cannot check is not an answer: it is a guess in good typography.</p>'+
+ '<ul class="plain small"><li>The answer comes with <strong>four things</strong>: the as&#8209;of date, the definition used, the query that ran, and the limit.</li>'+
+ '<li>The user can <strong>push back</strong>: &ldquo;that’s not what I meant by active&rdquo; — and the layer can show the other reading.</li>'+
+ '<li>The answer is where the next question starts — the chain is a loop, not a line.</li>'+
+ '<li>What flows back in here — the correction, the new nickname, the missing definition — <strong>is the layer’s next version</strong>.</li></ul></div>'+
+ '<div class="payload"><p class="cap">What the user sees</p>'+
+ '<p class="resline">196,000 members · 134,500 reachable</p>'+
+ '<p class="kv" style="margin-top:11px"><b>data as of:</b> <em>last refresh</em><br><b>definition:</b> <em>member = by status</em><br><b>other reading:</b> <em>100,000</em> — show me<br><b>query:</b> <em>open it</em><br><b>limit:</b> <em>present-tense consent</em></p>'+
+ '<div class="limit" style="margin-top:12px"><span class="tag sig">&#8629;</span><span class="small">&ldquo;And how many of them opened a push message last month?&rdquo; — <em>the next question</em></span></div></div></div>')}
+];
+
+var idx = 0;
+var rail = $('rail'), stage = $('stage'), dots = $('dots');
+
+NODES.forEach(function(n,i){
+  var b = document.createElement('button');
+  b.className = 'node' + (i===5 ? ' loop' : '');
+  b.setAttribute('role','tab');
+  b.innerHTML = '<span class="disc"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#'+n.ic+'"/></svg></span>'+
+    '<span class="nm"><span class="hu">'+n.hu[0]+'</span><span class="en">'+n.en[0]+'</span></span>'+
+    '<span class="sb"><span class="hu">'+n.hu[1]+'</span><span class="en">'+n.en[1]+'</span></span>';
+  b.onclick = function(){
+    for(var s=0;s<SLIDES.length;s++){ if(SLIDES[s].step===i){ go(s); return } }
+  };
+  rail.appendChild(b);
+});
+SLIDES.forEach(function(_,i){
+  var d = document.createElement('button');
+  d.className='dot'; d.setAttribute('aria-label','Slide '+(i+1));
+  d.onclick = function(){ go(i) };
+  dots.appendChild(d);
+});
+
+function go(i){
+  idx = Math.max(0, Math.min(SLIDES.length-1, i));
+  var sl = SLIDES[idx];
+  stage.innerHTML = '<div class="slide">'+sl.html+'</div>';
+  var nodes = rail.children;
+  for(var n=0;n<nodes.length;n++){
+    nodes[n].className = 'node' + (n===5?' loop':'') +
+      (sl.step===n ? ' on' : (sl.step!==null && n<sl.step ? ' done' : ''));
+    nodes[n].setAttribute('aria-selected', sl.step===n);
+  }
+  for(var d=0;d<dots.children.length;d++){ dots.children[d].setAttribute('aria-current', d===idx) }
+  $('prev').disabled = idx===0;
+  $('next').disabled = idx===SLIDES.length-1;
+}
+$('prev').onclick = function(){ go(idx-1) };
+$('next').onclick = function(){ go(idx+1) };
+document.addEventListener('keydown', function(e){
+  if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  if(e.key==='ArrowRight'){ go(idx+1) } else if(e.key==='ArrowLeft'){ go(idx-1) }
+});
+go(0);
+
+/* ============ 2. the simulator ============ */
+var SIMQ = [
+{
+ hu:{btn:'Hány programtagunk van?',
+  q:'„Hány programtagunk van?"',
+  intent:'<span class="kv"><b>mutató:</b> <em>programtag</em> · <b>időszak:</b> <em>jelen állapot</em> · <b>szűrő:</b> <em>technikai user nélkül</em></span>',
+  def:'<strong>programtag</strong> = státusz szerint tag, technikai felhasználók nélkül <span class="tag ok">✓ megerősítve</span><br><span class="small muted">A technikai szűrő biztonságos: a mezőben nincs üres érték — ezt megmértük, nem feltételeztük.</span>',
+  sql:'<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> programtag\n<span class="k">FROM</span>   ugyfel_nezet\n<span class="k">WHERE</span>  statusz_kod = 1\n  <span class="k">AND</span>  technikai   = 0;',
+  res:'<table><thead><tr><th>mutató</th><th class="r">fő</th></tr></thead><tbody><tr><td>programtag</td><td class="r num">196 000</td></tr></tbody></table>',
+  ans:'196 000 programtagunk van.',
+  lim:'Ha „aktív" alatt szigorúbb aktivitást értettél, van egy lazább aktivitás&#8209;jelző mező is: az 100 000 főt ad. A kettő <strong>kétszeres</strong> különbség — ezért nem választok magamtól.'},
+ en:{btn:'How many members do we have?',
+  q:'“How many members do we have?”',
+  intent:'<span class="kv"><b>metric:</b> <em>member</em> · <b>period:</b> <em>current state</em> · <b>filter:</b> <em>excluding technical users</em></span>',
+  def:'<strong>member</strong> = member by status, technical users excluded <span class="tag ok">✓ confirmed</span><br><span class="small muted">The technical filter is safe: the field has no empty values — measured, not assumed.</span>',
+  sql:'<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> members\n<span class="k">FROM</span>   customer_view\n<span class="k">WHERE</span>  status_code = 1\n  <span class="k">AND</span>  technical   = 0;',
+  res:'<table><thead><tr><th>metric</th><th class="r">people</th></tr></thead><tbody><tr><td>members</td><td class="r num">196,000</td></tr></tbody></table>',
+  ans:'We have 196,000 members.',
+  lim:'If by “active” you meant something stricter, there is a looser activity flag too: that gives 100,000. The two differ by a factor of <strong>two</strong> — which is why I don’t pick one on my own.'}
+},
+{
+ hu:{btn:'Hány letöltés volt múlt hónapban?',
+  q:'„Hány ajánlat&#8209;letöltés volt múlt hónapban, és hány embertől?"',
+  intent:'<span class="kv"><b>mutató:</b> <em>letöltés (db)</em> + <em>letöltő (fő)</em> · <b>időszak:</b> <em>előző naptári hónap</em></span>',
+  def:'<strong>letöltés</strong> = a 6&#8209;os esemény&#8209;típuskód. A riportnézet magyar felirata ugyanezt jelenti — <strong>mérés igazolta</strong>, hogy a két út karakterre ugyanazt adja. Gépi szűrésben mégis a numerikus kód az elsődleges: <span class="tag no">az ékezetes szöveg csendben nullát adhat</span>',
+  sql:'<span class="k">SELECT</span> <span class="k">COUNT</span>(*)                   <span class="k">AS</span> letoltes,\n       <span class="k">COUNT</span>(<span class="k">DISTINCT</span> ugyfel_id) <span class="k">AS</span> fo\n<span class="k">FROM</span>   esemeny\n<span class="k">WHERE</span>  tipus_kod = 6\n  <span class="k">AND</span>  datum >= @honap_eleje\n  <span class="k">AND</span>  datum <  @honap_vege;',
+  res:'<table><thead><tr><th>mutató</th><th class="r">érték</th></tr></thead><tbody><tr><td>letöltés</td><td class="r num">6 100</td></tr><tr><td>letöltő</td><td class="r num">5 300</td></tr></tbody></table>',
+  ans:'6 100 letöltés, 5 300 embertől.',
+  lim:'<strong>Csonka hónap.</strong> Az adatállapot nem ér a hónap végéig, tehát a teljes hónap száma ennél magasabb lesz. A napi átlagból becsülhető, de az <em>becslés</em>, és annak is mondom.'},
+ en:{btn:'How many downloads last month?',
+  q:'“How many offer downloads last month, and from how many people?”',
+  intent:'<span class="kv"><b>metric:</b> <em>downloads</em> + <em>distinct downloaders</em> · <b>period:</b> <em>previous calendar month</em></span>',
+  def:'<strong>download</strong> = event type code 6. The report view’s label means the same thing — <strong>measurement confirmed</strong> both paths return identical figures. In machine filtering the numeric code still wins: <span class="tag no">accented text can silently return zero</span>',
+  sql:'<span class="k">SELECT</span> <span class="k">COUNT</span>(*)                    <span class="k">AS</span> downloads,\n       <span class="k">COUNT</span>(<span class="k">DISTINCT</span> customer_id) <span class="k">AS</span> people\n<span class="k">FROM</span>   event\n<span class="k">WHERE</span>  type_code = 6\n  <span class="k">AND</span>  event_date >= @month_start\n  <span class="k">AND</span>  event_date <  @month_end;',
+  res:'<table><thead><tr><th>metric</th><th class="r">value</th></tr></thead><tbody><tr><td>downloads</td><td class="r num">6,100</td></tr><tr><td>downloaders</td><td class="r num">5,300</td></tr></tbody></table>',
+  ans:'6,100 downloads, from 5,300 people.',
+  lim:'<strong>Partial month.</strong> The data does not reach the month’s end, so the full&#8209;month figure will be higher. It can be estimated from the daily average — but that is an <em>estimate</em>, and I say so.'}
+},
+{
+ hu:{btn:'Kit érünk el csak pusholva?',
+  q:'„Kinek van push hozzájárulása, de e&#8209;mail címe nincs?"',
+  intent:'<span class="kv"><b>mutató:</b> <em>programtag</em> · <b>bontás:</b> <em>push × e&#8209;mail hozzájárulás</em></span>',
+  def:'Mindkét hozzájárulás <strong>jelen idejű</strong> mező. Üres érték egyikben sincs — mérve —, tehát a négy kombináció kiadja a teljes állományt. <span class="tag wa">⚠ nincs hozzájárulás&#8209;történet</span>',
+  sql:'<span class="k">SELECT</span> push_consent, email_consent,\n       <span class="k">COUNT</span>(*) <span class="k">AS</span> fo\n<span class="k">FROM</span>   ugyfel_nezet\n<span class="k">WHERE</span>  statusz_kod = 1 <span class="k">AND</span> technikai = 0\n<span class="k">GROUP BY</span> push_consent, email_consent;',
+  res:'<table><thead><tr><th></th><th class="r">e&#8209;mail van</th><th class="r">e&#8209;mail nincs</th><th class="r">összesen</th></tr></thead><tbody>'+
+      '<tr><td><strong>push van</strong></td><td class="r num">125 400</td><td class="r num">9 000</td><td class="r num">134 500</td></tr>'+
+      '<tr><td><strong>push nincs</strong></td><td class="r num">42 200</td><td class="r num">19 600</td><td class="r num">61 500</td></tr>'+
+      '<tr><td>összesen</td><td class="r num">167 600</td><td class="r num">28 600</td><td class="r num">196 000</td></tr></tbody></table>',
+  ans:'Csak pusholható, e&#8209;mail nélkül: 9 000 fő — a programtagok 4,6%&#8209;a. A push gyakorlatilag az e&#8209;mail&#8209;bázis részhalmaza: aki push hozzájárulást ad, 93%&#8209;ban e&#8209;mailt is.',
+  lim:'Két dolog következik ebből, és mindkettőt érdemes kimondani: bármely kampány <strong>felső korlátja 176 700 fő</strong>, és <strong>19 600 fő egyik csatornán sem elérhető</strong> — a tagság tizede.'},
+ en:{btn:'Who is push-only?',
+  q:'“Who has push consent but no e&#8209;mail address?”',
+  intent:'<span class="kv"><b>metric:</b> <em>members</em> · <b>split by:</b> <em>push × e&#8209;mail consent</em></span>',
+  def:'Both consents are <strong>present&#8209;tense</strong> fields. Neither has empty values — measured — so the four combinations account for the whole base. <span class="tag wa">⚠ no consent history</span>',
+  sql:'<span class="k">SELECT</span> push_consent, email_consent,\n       <span class="k">COUNT</span>(*) <span class="k">AS</span> people\n<span class="k">FROM</span>   customer_view\n<span class="k">WHERE</span>  status_code = 1 <span class="k">AND</span> technical = 0\n<span class="k">GROUP BY</span> push_consent, email_consent;',
+  res:'<table><thead><tr><th></th><th class="r">e&#8209;mail yes</th><th class="r">e&#8209;mail no</th><th class="r">total</th></tr></thead><tbody>'+
+      '<tr><td><strong>push yes</strong></td><td class="r num">125,400</td><td class="r num">9,000</td><td class="r num">134,500</td></tr>'+
+      '<tr><td><strong>push no</strong></td><td class="r num">42,200</td><td class="r num">19,600</td><td class="r num">61,500</td></tr>'+
+      '<tr><td>total</td><td class="r num">167,600</td><td class="r num">28,600</td><td class="r num">196,000</td></tr></tbody></table>',
+  ans:'Push&#8209;only, with no e&#8209;mail: 9,000 people — 4.6% of members. Push is effectively a subset of the e&#8209;mail base: 93% of those who consent to push also consent to e&#8209;mail.',
+  lim:'Two things follow, and both are worth stating: any campaign has a <strong>ceiling of 176,700 people</strong>, and <strong>19,600 are reachable on neither channel</strong> — a tenth of the membership.'}
+},
+{
+ hu:{btn:'Adj célcsoport-listát',
+  q:'„Adj célcsoportot: programtag, push hozzájárulással, aki még nem töltötte le a kiemelt ajánlatot."',
+  intent:'<span class="kv"><b>feladattípus:</b> <em>célcsoport&#8209;export</em> · <b>alap:</b> <em>programtag + push</em> · <b>kizárás:</b> <em>az ajánlat letöltői</em></span>',
+  def:'A „nem töltötte le" a 6&#8209;os kódra vonatkozik. A <strong>megtekintés nem zár ki</strong> — aki látta, de nem töltötte le, bent marad. Ez döntés, nem magától értődő: retargetingnél így jó. Kimondva, és visszavonható.',
+  sql:'<span class="c">-- 1) alap</span>\n<span class="k">SELECT</span> kulcs <span class="k">FROM</span> ugyfel_nezet\n<span class="k">WHERE</span> statusz_kod = 1 <span class="k">AND</span> push_consent = 1\n  <span class="k">AND</span> technikai = 0\n<span class="k">EXCEPT</span>\n<span class="c">-- 2) akik letöltötték</span>\n<span class="k">SELECT</span> kulcs <span class="k">FROM</span> esemeny\n<span class="k">WHERE</span> ajanlat_id = @ajanlat <span class="k">AND</span> tipus_kod = 6;',
+  res:'<table><thead><tr><th>lépés</th><th class="r">fő</th></tr></thead><tbody>'+
+      '<tr><td>programtag + push hozzájárulás</td><td class="r num">134 500</td></tr>'+
+      '<tr><td>az ajánlatot letöltötte (az alapból)</td><td class="r num">− 300</td></tr>'+
+      '<tr><td><strong>célcsoport</strong></td><td class="r num"><strong>134 200</strong></td></tr></tbody></table>'+
+      '<p class="tiny" style="margin-top:9px">Adatminőség: hiányzó azonosító <strong>0</strong> · nem szabályos formátumú <strong>0</strong> · duplikátum <strong>0</strong></p>',
+  ans:'134 200 fős célcsoport, egyoszlopos táblázatban, kampányfeltöltésre kész. A lekérdezés 1,6 s, a fájl kiírása 3,8 s.',
+  lim:'<strong>Itt bukott ki a csendes nulla.</strong> Az első ellenőrző lekérdezés 0 letöltést adott, miközben az ajánlaton bizonyítottan volt 400+ letöltési esemény. Azóta őr áll rajta: ha van esemény, de a szűrés 0 sort ad, a szkript <strong>megáll</strong>. Nyers azonosító a beszélgetésben nem jelenik meg — csak a fájlban.'},
+ en:{btn:'Build me a target list',
+  q:'“Build a target list: members with push consent who haven’t yet downloaded the featured offer.”',
+  intent:'<span class="kv"><b>task type:</b> <em>target export</em> · <b>base:</b> <em>members + push</em> · <b>exclude:</b> <em>those who downloaded</em></span>',
+  def:'“Hasn’t downloaded” refers to code 6. A <strong>view does not exclude</strong> — someone who saw the offer but didn’t download stays in. That is a decision, not a given: for retargeting it is the right one. Stated, and reversible.',
+  sql:'<span class="c">-- 1) base</span>\n<span class="k">SELECT</span> key_id <span class="k">FROM</span> customer_view\n<span class="k">WHERE</span> status_code = 1 <span class="k">AND</span> push_consent = 1\n  <span class="k">AND</span> technical = 0\n<span class="k">EXCEPT</span>\n<span class="c">-- 2) those who downloaded</span>\n<span class="k">SELECT</span> key_id <span class="k">FROM</span> event\n<span class="k">WHERE</span> offer_id = @offer <span class="k">AND</span> type_code = 6;',
+  res:'<table><thead><tr><th>step</th><th class="r">people</th></tr></thead><tbody>'+
+      '<tr><td>members + push consent</td><td class="r num">134,500</td></tr>'+
+      '<tr><td>downloaded the offer (from the base)</td><td class="r num">− 300</td></tr>'+
+      '<tr><td><strong>target list</strong></td><td class="r num"><strong>134,200</strong></td></tr></tbody></table>'+
+      '<p class="tiny" style="margin-top:9px">Data quality: missing identifiers <strong>0</strong> · malformed <strong>0</strong> · duplicates <strong>0</strong></p>',
+  ans:'A 134,200&#8209;person target list, single column, ready for campaign upload. Query 1.6 s, file write 3.8 s.',
+  lim:'<strong>This is where the silent zero surfaced.</strong> The first verification query returned 0 downloads while the offer provably had 400+ download events. A guard now watches for it: if events exist but the filter returns 0 rows, the script <strong>stops</strong>. No raw identifier ever appears in the conversation — only in the file.'}
+}
+];
+
+var qbar = $('qbar'), trace = $('trace'), qi = 0;
+var TLBL = [
+ ['Kérdés','Question'],['Értelmezés','Interpretation'],['A réteg definíciója','The layer’s definition'],
+ ['Lekérdezés','The query'],['Eredmény','Result'],['Válasz','Answer']
+];
+function renderSim(i){
+  qi = i;
+  for(var b=0;b<qbar.children.length;b++){ qbar.children[b].setAttribute('aria-pressed', b===i) }
+  var h = SIMQ[i].hu, e = SIMQ[i].en;
+  var parts = [
+    ['<p class="quote">'+h.q+'</p>', '<p class="quote">'+e.q+'</p>', ''],
+    [h.intent, e.intent, ''],
+    ['<p class="small">'+h.def+'</p>', '<p class="small">'+e.def+'</p>', ' hi'],
+    ['<pre class="sql">'+h.sql+'</pre>', '<pre class="sql">'+e.sql+'</pre>', ''],
+    [h.res, e.res, ''],
+    ['<p class="resline">'+h.ans+'</p><div class="limit"><span class="tag wa">korlát</span><span>'+h.lim+'</span></div>',
+     '<p class="resline">'+e.ans+'</p><div class="limit"><span class="tag wa">limit</span><span>'+e.lim+'</span></div>', '']
+  ];
+  var out = '';
+  for(var r=0;r<parts.length;r++){
+    out += '<div class="trow'+parts[r][2]+'"><div class="lbl">'+
+      '<span class="hu">'+TLBL[r][0]+'</span><span class="en">'+TLBL[r][1]+'</span></div>'+
+      '<div class="bdy"><div class="hu">'+parts[r][0]+'</div><div class="en">'+parts[r][1]+'</div></div></div>';
+  }
+  trace.innerHTML = out;
+}
+SIMQ.forEach(function(q,i){
+  var b = document.createElement('button');
+  b.className='qbtn'; b.setAttribute('role','tab');
+  b.innerHTML = '<span class="hu">'+q.hu.btn+'</span><span class="en">'+q.en.btn+'</span>';
+  b.onclick = function(){ renderSim(i) };
+  qbar.appendChild(b);
+});
+renderSim(0);
+
+/* ============ 3. the funnel ============ */
+var FUN = [
+ {v:294, hu:['~300 objektum','A séma teljes tartalma'],
+  en:['~300 objects','Everything in the schema'],
+  ehu:'<p class="small muted">Az operatív adatbázis 251 táblája és 43 nézete. Ez az, amit egy „add oda a sémát a modellnek" megoldás odaadna — és pontosan ezért nem működik. A rendszer nem elemzésre épült: az objektumok nagy része az ügyfélportál működéséhez és a banki adatátadáshoz van.</p><p class="small muted" style="margin-top:9px">Rajtuk kívül <strong>további kilenc adatbázis</strong> kapcsolódik a rendszerhez — ötről addig egyetlen leírás sem tudott.</p>',
+  een:'<p class="small muted">The operational database’s 251 tables and 43 views. This is what a “just hand the model the schema” approach would hand over — and precisely why it fails. The system wasn’t built for analysis: most objects exist to run the customer portal and the bank’s data exchange.</p><p class="small muted" style="margin-top:9px">Beyond them, <strong>nine further databases</strong> connect to the system — five of which no existing description mentioned at all.</p>'},
+ {v:216, hu:['216 nem üres','Amiben egyáltalán van adat'],
+  en:['216 non-empty','Anything with data in it'],
+  ehu:'<p class="small muted">A séma harmada — <strong>78 tábla</strong> — egyetlen sort sem tartalmaz. Ezek régi funkciók maradványai, félbehagyott fejlesztések, vagy olyan modulok, amiket sosem kapcsoltak be.</p><p class="small muted" style="margin-top:9px">Egy modell számára ezek különösen veszélyesek: a nevük beszédes, a tartalmuk nincs. Egy üres táblára épülő válasz nem hibaüzenetet ad, hanem <strong>nullát</strong> — és a nulla legitim válasznak látszik.</p>',
+  een:'<p class="small muted">A third of the schema — <strong>78 tables</strong> — holds not a single row. Leftovers of old features, abandoned development, modules never switched on.</p><p class="small muted" style="margin-top:9px">These are especially dangerous for a model: the names are suggestive, the contents are not there. An answer built on an empty table doesn’t raise an error, it returns <strong>zero</strong> — and zero looks like a legitimate answer.</p>'},
+ {v:44, hu:['44 objektum','Amit éles kód ténylegesen használ'],
+  en:['44 objects','What production code actually uses'],
+  ehu:'<p class="small muted">Ez nem becslés: <strong>590 SQL&#8209;fájl</strong> teljes átolvasásából jött. Minden objektumhoz tartozik egy szám — hány <em>különböző munkában</em> volt rá szükség —, és ez jobban méri a fontosságot, mint a sorszám vagy a méret.</p><p class="small muted" style="margin-top:9px">A tanulság már itt megjött: a napi munka <strong>14&#8209;szer</strong> gyakrabban fut egy nézeten, mint a mögötte lévő nyers táblán. A kettő ugyanazt tartalmazza, de máshogy nevezi.</p>',
+  een:'<p class="small muted">Not an estimate: it came from reading all <strong>590 SQL files</strong>. Each object carries a number — how many <em>separate pieces of work</em> needed it — and that measures importance better than row counts or size.</p><p class="small muted" style="margin-top:9px">The lesson arrived right here: everyday work runs on a view <strong>14 times</strong> more often than on the raw table behind it. Same content, different names.</p>'},
+ {v:23, hu:['23 objektum','Az első kör hatóköre'],
+  en:['23 objects','Scope of round one'],
+  ehu:'<p class="small muted">Négy blokk: <em>ki az ügyfél</em> és <em>mit tett az ajánlatokkal</em>. A maradék húsz objektum — token, kommunikáció, tranzakció — nem azért maradt ki, mert nem fontos, hanem mert <strong>előbb tesztelni akartunk</strong>.</p><p class="small muted" style="margin-top:9px">A kérdés ugyanis nem az, hogy le tudjuk&#8209;e írni az egészet, hanem hogy a leírtakból <strong>valóban meg lehet&#8209;e válaszolni egy kérdést</strong>. Ha nem, a szerkezeten kell javítani — mielőtt a duplájára írjuk.</p>',
+  een:'<p class="small muted">Four blocks: <em>who the customer is</em> and <em>what they did with the offers</em>. The remaining twenty objects — tokens, communications, transactions — were left out not because they don’t matter but because <strong>we wanted to test first</strong>.</p><p class="small muted" style="margin-top:9px">The question was never whether the whole thing can be documented, but whether what <em>is</em> documented <strong>can actually answer a question</strong>. If not, fix the structure — before writing twice as much of it.</p>'},
+ {v:4, hu:['3–5 objektum','Amennyit egy tipikus kérdés megérint'],
+  en:['3–5 objects','What a typical question touches'],
+  ehu:'<p class="small muted">Ide tart a tölcsér. Egy éles célcsoport&#8209;kérdés az ügyfélnézetet, az eseménytáblát, az ajánlattörzset és egy fordítótáblát érint — <strong>négy objektumot a háromszázból</strong>.</p><p class="small muted" style="margin-top:9px">Ez a lényeg: nem attól lesz jó a válasz, hogy a modell <em>mindent</em> lát, hanem attól, hogy pontosan azt a négyet látja — jelentéssel, definícióval, korláttal együtt.</p>',
+  een:'<p class="small muted">This is where the funnel lands. A live targeting question touches the customer view, the event table, the offer master and one lookup table — <strong>four objects out of three hundred</strong>.</p><p class="small muted" style="margin-top:9px">That is the point: an answer isn’t good because the model sees <em>everything</em>, but because it sees exactly those four — with their meaning, their definition and their limits attached.</p>'}
+];
+var funnel = $('funnel'), fexpl = $('fexpl');
+function showF(i){
+  for(var b=0;b<funnel.children.length;b++){ funnel.children[b].setAttribute('aria-pressed', b===i) }
+  fexpl.innerHTML = '<h4><span class="hu">'+FUN[i].hu[1]+'</span><span class="en">'+FUN[i].en[1]+'</span></h4>'+
+    '<div class="hu" style="margin-top:8px">'+FUN[i].ehu+'</div><div class="en" style="margin-top:8px">'+FUN[i].een+'</div>';
+}
+FUN.forEach(function(f,i){
+  var w = Math.max(9, f.v/294*100);
+  var b = document.createElement('button');
+  b.className='fbar';
+  b.innerHTML = '<span class="flab"><span class="hu">'+f.hu[1]+'</span><span class="en">'+f.en[1]+'</span></span>'+
+    '<span class="ftrack"><span class="ffill" style="width:'+w.toFixed(1)+'%"></span>'+
+    '<span class="fnum"><span class="hu">'+f.hu[0]+'</span><span class="en">'+f.en[0]+'</span></span></span>';
+  b.onclick = function(){ showF(i) };
+  funnel.appendChild(b);
+});
+showF(0);
+
+/* ============ 4. the quiz ============ */
+var QUIZ = [
+ {ok:true,
+  hu:['Hány aktív programtagunk van?','<b>Megválaszolható</b> — de nem egy számmal. Az „aktív" szónak két olvasata van a rendszerben, és a kettő <b>kétszeres</b> eltérést ad. A réteg nem dönt helyettünk: megadja az alapértelmezettet, kimondja, melyiket használta, és felajánlja a másikat.'],
+  en:['How many active members do we have?','<b>Answerable</b> — but not with one number. “Active” has two readings in this system, and they differ by a factor of <b>two</b>. The layer doesn’t decide for us: it gives the default, states which it used, and offers the other.']},
+ {ok:false,
+  hu:['Hogyan alakult a prémium szegmens letöltési aránya tavaly?','<b>Nem válaszolható meg.</b> A szegmens <i>jelen idejű</i> attribútum: azt tudjuk, ki melyik szegmensben van <b>ma</b>, nem azt, hol volt tavaly márciusban. A mai szegmenssel visszaszámolt idősor hihetően néz ki — és hamis. Erre csak külön havi pillanatképekből lehetne válaszolni.'],
+  en:['How did the premium segment’s download rate move last year?','<b>Not answerable.</b> Segment is a <i>present&#8209;tense</i> attribute: we know who sits in which segment <b>today</b>, not where they sat last March. A time series computed with today’s segment looks plausible — and is false. Answering it would need separate monthly snapshots.']},
+ {ok:true,
+  hu:['Hány ajánlat&#8209;letöltés volt múlt hónapban?','<b>Megválaszolható</b> — egy kötelező megjegyzéssel. Az adatállapot nem ér a hónap végéig, tehát a hónap <b>csonka</b>: a végleges szám magasabb lesz. Ha ezt a válasz nem mondja ki, a következő havi összehasonlítás lesz hibás.'],
+  en:['How many offer downloads were there last month?','<b>Answerable</b> — with one mandatory caveat. The data doesn’t reach the month’s end, so the month is <b>partial</b>: the final figure will be higher. If the answer omits that, next month’s comparison is the thing that breaks.']},
+ {ok:false,
+  hu:['Hányan vonták vissza idén a push hozzájárulásukat?','<b>Nem válaszolható meg.</b> A hozzájárulás egyetlen mező, ami a <i>mostani</i> állapotot tartalmazza — nincs mellette történet. Azt tudjuk, hányan <b>nem</b> járulnak hozzá ma; azt nem, hogy közülük ki és mikor gondolta meg magát.'],
+  en:['How many withdrew their push consent this year?','<b>Not answerable.</b> Consent is a single field holding the <i>current</i> state — there is no history beside it. We know how many do <b>not</b> consent today; we do not know which of them changed their mind, or when.']},
+ {ok:true,
+  hu:['Mennyit töltöttek le két éve a 25–30 évesek?','<b>Megválaszolható</b> — de nem a mai korsávval. Az életkort az <b>esemény időpontjára</b> kell visszaszámolni, különben a tavalyi 24 évest ma 26&#8209;osként soroljuk be. Ráadásul a sáv felső határa maga is definíciós kérdés: a két olvasat <b>22%</b> eltérést ad.'],
+  en:['What did 25–30&#8209;year&#8209;olds download two years ago?','<b>Answerable</b> — but not with today’s age band. Age must be recomputed <b>as of the event</b>, or last year’s 24&#8209;year&#8209;old gets counted as a 26&#8209;year&#8209;old today. And the band’s upper bound is itself a definition: the two readings differ by <b>22%</b>.']},
+ {ok:false,
+  hu:['Mennyi a prémium ügyfelek aránya a prémium&#8209;jelző mező alapján?','<b>Nem válaszolható meg</b> — pontosabban: a mező <b>elavult</b>, nem szabad rá építeni. Az adatbázisban ott van, kitöltve, és lefut rá a lekérdezés. Ez a legalattomosabb eset: nincs hibaüzenet, csak egy szám, ami évek óta nem frissül.'],
+  en:['What share of customers is premium, per the premium flag?','<b>Not answerable</b> — more precisely: the field is <b>deprecated</b> and must not be built on. It is still there, populated, and a query against it runs fine. This is the nastiest case: no error, just a number that hasn’t been maintained for years.']}
+];
+var quizEl = $('quiz'), scoreEl = $('qscore'), answered = 0, correct = 0;
+QUIZ.forEach(function(q){
+  var c = document.createElement('div');
+  c.className = 'qcard';
+  c.innerHTML =
+   '<p class="qq"><span class="hu">'+q.hu[0]+'</span><span class="en">'+q.en[0]+'</span></p>'+
+   '<div class="qpick"><button data-v="1"><span class="hu">Megválaszolható</span><span class="en">Answerable</span></button>'+
+   '<button data-v="0"><span class="hu">Nem válaszolható meg</span><span class="en">Not answerable</span></button></div>'+
+   '<div class="qrev"><span class="hu">'+q.hu[1]+'</span><span class="en">'+q.en[1]+'</span></div>';
+  var btns = c.querySelectorAll('.qpick button');
+  for(var k=0;k<btns.length;k++){
+    btns[k].onclick = function(){
+      if(c.classList.contains('answered')) return;
+      var picked = this.getAttribute('data-v')==='1';
+      c.classList.add('answered');
+      for(var m=0;m<btns.length;m++){
+        var isRight = (btns[m].getAttribute('data-v')==='1') === q.ok;
+        btns[m].className = isRight ? 'right' : (btns[m]===this ? 'wrong' : '');
+      }
+      answered++; if(picked===q.ok){ correct++ }
+      scoreEl.innerHTML = '<span class="hu">'+correct+' / '+answered+' eltalálva</span>'+
+                          '<span class="en">'+correct+' / '+answered+' correct</span>';
+    };
+  }
+  quizEl.appendChild(c);
+});
+
+})();
+</script>
 </body>
 </html>

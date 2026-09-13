@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Sentiment & Label Pipeline — István Udvari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0e1a14;
+  --surface:   #152010;
+  --surface2:  #1c2a1a;
+  --border:    #2a3d28;
+  --accent:    #4ade80;
+  --accent-dim:#2a6640;
+  --text:      #e8e6df;
+  --text-mid:  #9aab96;
+  --text-dim:  #546a50;
+  --pos:       #4ade80;
+  --neu:       #94a3b8;
+  --neg:       #f87171;
+  --amber:     #fbbf24;
+  --mono:      'IBM Plex Mono', monospace;
+  --sans:      'IBM Plex Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.65;
+  font-weight:300;
+}
+
+/* ── UTILS ── */
+.mono{font-family:var(--mono)}
+strong{font-weight:500}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(14,26,20,.92);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:52px;
+}
+.nav-back{
+  font-family:var(--mono);font-size:11px;
+  color:var(--text-dim);letter-spacing:.08em;
+}
+.nav-back:hover{color:var(--accent)}
+.nav-tags{display:flex;gap:8px}
+.nav-tag{
+  font-family:var(--mono);font-size:10px;
+  padding:3px 8px;border-radius:2px;
+  border:1px solid var(--border);
+  color:var(--text-dim);
+}
+
+/* ── HERO ── */
+.hero{
+  max-width:860px;margin:0 auto;
+  padding:80px 32px 56px;
+  border-bottom:1px solid var(--border);
+}
+.hero-eyebrow{
+  font-family:var(--mono);font-size:11px;
+  color:var(--accent);letter-spacing:.12em;
+  margin-bottom:20px;
+}
+.hero h1{
+  font-size:clamp(28px,4vw,46px);
+  font-weight:300;line-height:1.2;
+  color:var(--text);
+  margin-bottom:20px;
+  letter-spacing:-.02em;
+}
+.hero h1 em{font-style:italic;color:var(--text-mid)}
+.hero-lead{
+  font-size:17px;color:var(--text-mid);
+  max-width:620px;line-height:1.7;
+  margin-bottom:32px;
+}
+.hero-stats{display:flex;gap:32px;flex-wrap:wrap}
+.hstat{display:flex;flex-direction:column;gap:3px}
+.hstat-val{
+  font-family:var(--mono);font-size:22px;
+  font-weight:500;color:var(--accent);
+}
+.hstat-label{font-size:12px;color:var(--text-dim)}
+
+/* ── PHASES ── */
+.phases{max-width:860px;margin:0 auto;padding:0 32px}
+
+.phase{
+  padding:56px 0;
+  border-bottom:1px solid var(--border);
+}
+.phase-header{
+  display:grid;grid-template-columns:160px 1fr;gap:32px;
+  align-items:start;margin-bottom:40px;
+}
+.phase-num{
+  font-family:var(--mono);font-size:11px;
+  color:var(--text-dim);padding-top:4px;
+  letter-spacing:.06em;
+}
+.phase h2{
+  font-size:22px;font-weight:400;
+  color:var(--text);letter-spacing:-.01em;
+  margin-bottom:8px;
+}
+.phase-sub{font-size:14px;color:var(--text-mid)}
+
+.phase-body{
+  display:grid;grid-template-columns:160px 1fr;gap:32px;
+}
+.phase-side{padding-top:2px}
+.side-stack{display:flex;flex-direction:column;gap:6px}
+.side-chip{
+  font-family:var(--mono);font-size:10px;
+  padding:4px 8px;border:1px solid var(--border);
+  border-radius:2px;color:var(--text-dim);
+  letter-spacing:.04em;
+}
+.side-chip.accent{border-color:var(--accent-dim);color:var(--accent)}
+
+/* ── CODE BLOCK ── */
+.code-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:2px solid var(--accent-dim);
+  border-radius:3px;
+  padding:16px 20px;
+  font-family:var(--mono);font-size:12px;
+  line-height:1.7;color:var(--text-mid);
+  overflow-x:auto;
+  margin:16px 0;
+  white-space:pre;
+}
+.code-block .c-green{color:var(--accent)}
+.code-block .c-dim{color:var(--text-dim)}
+.code-block .c-amber{color:var(--amber)}
+.code-block .c-str{color:#86efac}
+
+/* ── PROMPT BOX ── */
+.prompt-box{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:3px;padding:20px 24px;
+  margin:16px 0;font-size:13px;
+  line-height:1.75;color:var(--text-mid);
+}
+.prompt-box strong{color:var(--text);font-weight:500}
+
+/* ── METRICS TABLE ── */
+.metric-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  margin:20px 0;
+}
+.metric-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:3px;padding:14px 16px;
+}
+.metric-card.highlight{border-color:var(--accent-dim)}
+.mc-label{font-size:11px;color:var(--text-dim);margin-bottom:6px;font-family:var(--mono)}
+.mc-val{font-size:24px;font-weight:500;color:var(--text);font-family:var(--mono)}
+.mc-val.pos{color:var(--pos)}
+.mc-val.neg{color:var(--neg)}
+.mc-sub{font-size:11px;color:var(--text-dim);margin-top:3px}
+
+/* ── BATCH TIMELINE ── */
+.batch-timeline{
+  display:flex;flex-direction:column;gap:0;
+  margin:20px 0;position:relative;
+}
+.bt-item{
+  display:grid;grid-template-columns:100px 1fr;gap:16px;
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.bt-item:last-child{border-bottom:none}
+.bt-time{font-family:var(--mono);font-size:11px;color:var(--text-dim);padding-top:2px}
+.bt-content{font-size:13px;color:var(--text-mid)}
+.bt-content strong{color:var(--text);font-weight:500;display:block;margin-bottom:2px}
+.bt-pill{
+  display:inline-block;font-family:var(--mono);font-size:10px;
+  padding:2px 7px;border-radius:2px;margin-top:4px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text-dim);
+}
+.bt-pill.done{background:rgba(74,222,128,.08);border-color:var(--accent-dim);color:var(--accent)}
+
+/* ── INTERACTIVE DEMO ── */
+.demo-section{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  margin:20px 0;overflow:hidden;
+}
+.demo-header{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.demo-title{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.08em}
+.demo-sub{font-size:11px;color:var(--text-dim)}
+
+.demo-tabs{
+  display:flex;border-bottom:1px solid var(--border);
+}
+.demo-tab{
+  font-family:var(--mono);font-size:11px;
+  padding:10px 18px;cursor:pointer;
+  color:var(--text-dim);border-bottom:2px solid transparent;
+  transition:all .15s;letter-spacing:.04em;
+  background:none;border-top:none;border-left:none;border-right:none;
+}
+.demo-tab:hover{color:var(--text)}
+.demo-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+.demo-body{padding:20px}
+
+/* chart */
+.chart-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.chart-row{display:flex;align-items:center;gap:10px}
+.chart-label{
+  font-family:var(--mono);font-size:11px;
+  color:var(--text-mid);width:130px;flex-shrink:0;text-align:right;
+}
+.chart-bar-bg{
+  flex:1;height:22px;background:var(--surface2);
+  border-radius:2px;overflow:hidden;position:relative;
+}
+.chart-bar{height:100%;border-radius:2px;transition:width .6s ease}
+.chart-count{
+  font-family:var(--mono);font-size:11px;
+  color:var(--text-dim);width:30px;text-align:right;
+}
+.bar-pos{background:rgba(74,222,128,.35)}
+.bar-neu{background:rgba(148,163,184,.3)}
+.bar-neg{background:rgba(248,113,113,.35)}
+
+/* sentiment pills */
+.sent-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:11px;
+  padding:3px 9px;border-radius:2px;
+}
+.sent-pos{background:rgba(74,222,128,.12);color:var(--pos);border:1px solid rgba(74,222,128,.2)}
+.sent-neg{background:rgba(248,113,113,.12);color:var(--neg);border:1px solid rgba(248,113,113,.2)}
+.sent-neu{background:rgba(148,163,184,.1);color:var(--neu);border:1px solid rgba(148,163,184,.2)}
+
+/* chat viewer */
+.chat-list-mini{display:flex;flex-direction:column;gap:4px;margin-bottom:16px}
+.cli{
+  padding:8px 12px;border-radius:2px;cursor:pointer;
+  border:1px solid transparent;transition:all .12s;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.cli:hover{background:var(--surface2)}
+.cli.active{background:var(--surface2);border-color:var(--border)}
+.cli-left{font-size:12px;color:var(--text-mid)}
+.cli-id{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-right:8px}
+
+.chat-detail-mini{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:3px;padding:16px;
+}
+.cdm-meta{
+  display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;
+}
+.cdm-id{font-family:var(--mono);font-size:10px;color:var(--text-dim)}
+
+.msg-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.msg{
+  padding:8px 12px;border-radius:3px;
+  font-size:13px;line-height:1.55;max-width:78%;
+}
+.msg.user{
+  align-self:flex-end;
+  background:var(--surface2);border:1px solid var(--border);
+}
+.msg.bot{
+  align-self:flex-start;
+  background:rgba(74,222,128,.05);
+  border:1px solid rgba(74,222,128,.1);
+}
+.msg-role{
+  font-family:var(--mono);font-size:9px;
+  color:var(--text-dim);margin-bottom:4px;letter-spacing:.08em;
+}
+.msg.bot .msg-role{color:var(--accent)}
+
+.ai-result-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  margin-top:14px;
+}
+.air-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:2px;padding:10px 12px;
+}
+.air-label{
+  font-family:var(--mono);font-size:9px;color:var(--text-dim);
+  margin-bottom:8px;letter-spacing:.08em;
+}
+.label-chips{display:flex;flex-wrap:wrap;gap:4px}
+.lchip{
+  font-family:var(--mono);font-size:10px;
+  padding:2px 7px;border-radius:2px;
+}
+.lchip-h{background:rgba(167,139,250,.12);color:#c4b5fd;border:1px solid rgba(167,139,250,.2)}
+.lchip-a{background:rgba(74,222,128,.1);color:var(--accent);border:1px solid rgba(74,222,128,.2)}
+
+.intensity-row{
+  display:flex;align-items:center;gap:8px;margin-top:8px;
+  font-family:var(--mono);font-size:10px;color:var(--text-dim);
+}
+.int-dots{display:flex;gap:3px}
+.int-dot{width:7px;height:7px;border-radius:50%;background:var(--border)}
+.int-dot.filled-pos{background:var(--pos)}
+.int-dot.filled-neg{background:var(--neg)}
+.int-dot.filled-neu{background:var(--neu)}
+
+/* ── PIPELINE FLOW ── */
+.pipe-flow{display:flex;flex-direction:column;gap:0;margin:20px 0}
+.pf-step{
+  display:grid;grid-template-columns:36px 1fr;gap:16px;
+  padding:14px 0;border-bottom:1px solid var(--border);
+}
+.pf-step:last-child{border-bottom:none}
+.pf-icon{
+  width:36px;height:36px;border-radius:3px;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:14px;color:var(--text-dim);
+  flex-shrink:0;
+}
+.pf-icon.active{border-color:var(--accent-dim);color:var(--accent)}
+.pf-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px}
+.pf-desc{font-size:12px;color:var(--text-dim);line-height:1.5}
+
+/* ── N8N NODES ── */
+.n8n-flow{
+  display:flex;align-items:center;gap:0;
+  flex-wrap:wrap;margin:20px 0;row-gap:12px;
+}
+.n8n-node{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:3px;padding:8px 12px;
+  font-family:var(--mono);font-size:11px;color:var(--text-mid);
+  white-space:nowrap;
+}
+.n8n-node.trigger{border-color:var(--accent-dim);color:var(--accent)}
+.n8n-node.claude{border-color:#7c6ff7;color:#a78bfa}
+.n8n-node.output{border-color:#2a6640;color:var(--accent)}
+.n8n-arrow{
+  font-size:12px;color:var(--text-dim);
+  padding:0 4px;flex-shrink:0;
+}
+
+/* ── INSIGHT BOXES ── */
+.insight{
+  border-left:2px solid var(--accent-dim);
+  padding:12px 16px;margin:16px 0;
+  font-size:13px;color:var(--text-mid);
+  line-height:1.6;
+}
+.insight strong{color:var(--text);font-weight:500}
+
+/* ── FOOTER ── */
+footer{
+  max-width:860px;margin:0 auto;
+  padding:40px 32px 60px;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:16px;
+  border-top:1px solid var(--border);
+}
+.footer-id{font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+.footer-note{font-size:12px;color:var(--text-dim)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .phase-header,.phase-body{grid-template-columns:1fr}
+  .phase-side{display:flex;flex-wrap:wrap;gap:6px}
+  .side-stack{flex-direction:row;flex-wrap:wrap}
+  .metric-grid{grid-template-columns:1fr 1fr}
+  .ai-result-row{grid-template-columns:1fr}
+  .hero-stats{gap:20px}
+  nav{padding:0 16px}
+  .hero,.phases{padding-left:16px;padding-right:16px}
+}
+
+/* reduced motion */
+@media(prefers-reduced-motion:reduce){
+  .chart-bar{transition:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html" class="nav-back mono">← Vissza a projektekhez</a>
+  <div class="nav-tags">
+    <span class="nav-tag">python</span>
+    <span class="nav-tag">claude api</span>
+    <span class="nav-tag">n8n</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow mono">Ügyfélszolgálat · Loyalty Analytics · NLP</div>
+  <h1>Automatikus sentiment<br>és <em>témafelismerés</em><br>chatbot-exportokból</h1>
+  <p class="hero-lead">
+    Egy autóipari ügyfél chatbot-naplóinak gépi feldolgozása: Claude API-alapú 
+    sentiment elemzés, témacímkézés és emberi visszamérés — Python batch pipeline-tól 
+    az éles n8n workflow-ig.
+  </p>
+  <div class="hero-stats">
+    <div class="hstat">
+      <span class="hstat-val mono">10 000+</span>
+      <span class="hstat-label">feldolgozott chat</span>
+    </div>
+    <div class="hstat">
+      <span class="hstat-val mono">87%</span>
+      <span class="hstat-label">emberi egyezési arány</span>
+    </div>
+    <div class="hstat">
+      <span class="hstat-val mono">~$25</span>
+      <span class="hstat-label">historikus batch költség</span>
+    </div>
+    <div class="hstat">
+      <span class="hstat-val mono">3 fázis</span>
+      <span class="hstat-label">batch → review → éles</span>
+    </div>
+  </div>
+</section>
+
+<!-- PHASES -->
+<div class="phases">
+
+<!-- ═══════ PHASE 1 ═══════ -->
+<section class="phase" id="phase1">
+  <div class="phase-header">
+    <div class="phase-num mono">fázis 01</div>
+    <div>
+      <h2>Felmérés és feltanítás</h2>
+      <p class="phase-sub">Python · Anthropic Batch API · JSON export</p>
+    </div>
+  </div>
+  <div class="phase-body">
+    <div class="phase-side">
+      <div class="side-stack">
+        <span class="side-chip accent mono">Python</span>
+        <span class="side-chip mono">Batch API</span>
+        <span class="side-chip mono">Pandas</span>
+        <span class="side-chip mono">JSON / CSV</span>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px;color:var(--text-mid);margin-bottom:16px">
+        A kiindulópont: exportált chatbot-naplók (JSON) és az emberi munkatársak 
+        által manuálisan felcímkézett adatok (CSV). A cél egy skálázható, 
+        reprodukálható gépi pipeline kiépítése, amely mindkettőt felváltja.
+      </p>
+
+      <div class="insight">
+        <strong>Batch API vs. real-time:</strong> 10 000 chatnél az aszinkron 
+        Batch API ~50%-os árengedményt ad — a feldolgozás 1–4 óra alatt fut le 
+        a háttérben, a Python script közben leáll. Egyszeri historikus futtatásnál 
+        ez a helyes választás.
+      </div>
+
+      <div class="batch-timeline">
+        <div class="bt-item">
+          <div class="bt-time mono">t=0 perc</div>
+          <div class="bt-content">
+            <strong>Batch beküldés</strong>
+            JSON + CSV beolvasás, chat_id alapú join, batch request összeállítás és POST.
+            <div><span class="bt-pill mono">batch_01xyz... visszakapva</span></div>
+          </div>
+        </div>
+        <div class="bt-item">
+          <div class="bt-time mono">t=0–180 perc</div>
+          <div class="bt-content">
+            <strong>Háttérben fut</strong>
+            Anthropic Batch API feldolgozza a kéréseket. Script leáll, nem kell várni.
+          </div>
+        </div>
+        <div class="bt-item">
+          <div class="bt-time mono">t≈180 perc</div>
+          <div class="bt-content">
+            <strong>Poll + eredmény letöltés</strong>
+            Status: <span class="bt-pill done mono">ended</span> — eredmények letöltve, chat_id-nként parse.
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:8px">Egy prompt, három kimenet chatenként:</p>
+      <div class="prompt-box">
+        <strong>Elemezd az ügyfél üzeneteit</strong> (a bot válaszait figyelmen kívül hagyva).<br><br>
+        Ismert kategóriák: [szerviz időpont, árajánlat kérés, hibrid érdeklődés, trade-in, panasz/reklamáció, ...]<br><br>
+        Adj meg:<br>
+        — <strong>labels</strong>: 1–3 illő kategória a listából<br>
+        — <strong>new_topic</strong>: ha van olyan téma, ami nem illik egyik kategóriába sem (max 3 szó), egyébként null<br>
+        — <strong>sentiment</strong>: "pozitív" | "semleges" | "negatív"<br>
+        — <strong>intensity</strong>: 1–5 (1=enyhe, 5=erős)<br>
+        — <strong>emotion</strong>: "elégedett" | "érdeklődő" | "bizonytalan" | "frustrált" | "panaszkodó"<br><br>
+        Válasz csak JSON-ban.
+      </div>
+
+      <div class="code-block"><span class="c-dim"># Batch eredmény feldolgozása</span>
+<span class="c-green">for</span> result <span class="c-green">in</span> client.messages.batches.results(batch_id):
+    chat_id = result.custom_id
+    parsed  = json.loads(result.result.message.content[<span class="c-amber">0</span>].text)
+    
+    records.append({
+        <span class="c-str">"chat_id"</span>  : chat_id,
+        <span class="c-str">"labels"</span>   : parsed[<span class="c-str">"labels"</span>],
+        <span class="c-str">"new_topic"</span>: parsed[<span class="c-str">"new_topic"</span>],
+        <span class="c-str">"sentiment"</span>: parsed[<span class="c-str">"sentiment"</span>],
+        <span class="c-str">"intensity"</span>: parsed[<span class="c-str">"intensity"</span>],
+        <span class="c-str">"emotion"</span>  : parsed[<span class="c-str">"emotion"</span>],
+    })</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ PHASE 2 ═══════ -->
+<section class="phase" id="phase2">
+  <div class="phase-header">
+    <div class="phase-num mono">fázis 02</div>
+    <div>
+      <h2>Visszamérés emberi munkával</h2>
+      <p class="phase-sub">HTML review tool · AI vs. ember diff · prompt finomhangolás</p>
+    </div>
+  </div>
+  <div class="phase-body">
+    <div class="phase-side">
+      <div class="side-stack">
+        <span class="side-chip mono">Chat Review Tool</span>
+        <span class="side-chip mono">Confusion matrix</span>
+        <span class="side-chip mono">Few-shot példák</span>
+        <span class="side-chip accent mono">87% egyezés</span>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px;color:var(--text-mid);margin-bottom:20px">
+        Az AI kimenetét és az emberi címkéket egy egyedi HTML review tool-ban 
+        hasonlítjuk össze. A visszamérés célja kettős: a prompt javítása, 
+        és a jóváhagyott new_topic értékek beépítése a label listába.
+      </p>
+
+      <!-- INTERAKTÍV DEMO -->
+      <div class="demo-section">
+        <div class="demo-header">
+          <span class="demo-title mono">◈ interaktív demo — anonimizált adatok</span>
+          <span class="demo-sub">60 szimulált chat · valós prompt struktúra</span>
+        </div>
+        <div class="demo-tabs">
+          <button class="demo-tab active" onclick="switchTab('overview')">Összefoglaló</button>
+          <button class="demo-tab" onclick="switchTab('chats')">Chat review</button>
+          <button class="demo-tab" onclick="switchTab('newtopics')">Új témák</button>
+        </div>
+
+        <!-- TAB: OVERVIEW -->
+        <div class="demo-body" id="tab-overview">
+          <div class="metric-grid">
+            <div class="metric-card highlight">
+              <div class="mc-label mono">Egyezési arány</div>
+              <div class="mc-val pos mono">87%</div>
+              <div class="mc-sub">AI = emberi címke</div>
+            </div>
+            <div class="metric-card">
+              <div class="mc-label mono">Feldolgozott chat</div>
+              <div class="mc-val mono">60</div>
+              <div class="mc-sub">demo adatkészlet</div>
+            </div>
+            <div class="metric-card">
+              <div class="mc-label mono">Új témák</div>
+              <div class="mc-val amber mono" style="color:var(--amber)" id="new-topic-count">—</div>
+              <div class="mc-sub">AI által azonosítva</div>
+            </div>
+          </div>
+
+          <p style="font-size:13px;color:var(--text-dim);margin-bottom:10px">Sentiment megoszlás (AI eredmény)</p>
+          <div class="chart-wrap" id="sentiment-chart"></div>
+
+          <p style="font-size:13px;color:var(--text-dim);margin:16px 0 10px">Témakategóriák</p>
+          <div class="chart-wrap" id="category-chart"></div>
+        </div>
+
+        <!-- TAB: CHATS -->
+        <div class="demo-body" id="tab-chats" style="display:none">
+          <div style="display:grid;grid-template-columns:200px 1fr;gap:16px">
+            <div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;letter-spacing:.06em">CHATOK</div>
+              <div class="chat-list-mini" id="mini-chat-list"></div>
+            </div>
+            <div id="mini-chat-detail">
+              <div style="color:var(--text-dim);font-size:13px;font-family:var(--mono)">← válassz chatet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: NEW TOPICS -->
+        <div class="demo-body" id="tab-newtopics" style="display:none">
+          <p style="font-size:13px;color:var(--text-mid);margin-bottom:16px">
+            Az AI által azonosított, előre nem definiált témák. Hetente átnézve 
+            bekerülhetnek a label listába — ez a félautomatikus tanulási ciklus.
+          </p>
+          <div id="new-topics-list"></div>
+        </div>
+      </div>
+
+      <div class="insight">
+        <strong>Prompt finomhangolás:</strong> ahol az AI és az ember eltért, 
+        a konkrét chat-példák bekerültek a prompt few-shot példái közé. 
+        Ez a visszamérés a promptot iterálható termékké alakítja.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ PHASE 3 ═══════ -->
+<section class="phase" id="phase3">
+  <div class="phase-header">
+    <div class="phase-num mono">fázis 03</div>
+    <div>
+      <h2>Éles pipeline — n8n dataflow</h2>
+      <p class="phase-sub">n8n · Webhook · Claude API real-time · Google Sheets</p>
+    </div>
+  </div>
+  <div class="phase-body">
+    <div class="phase-side">
+      <div class="side-stack">
+        <span class="side-chip accent mono">n8n</span>
+        <span class="side-chip mono">Webhook</span>
+        <span class="side-chip mono">HTTP Request</span>
+        <span class="side-chip mono">Google Sheets</span>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:14px;color:var(--text-mid);margin-bottom:20px">
+        A végleges, finomhangolt prompt éles forgalomba kerül. Minden lezárt 
+        chat automatikusan feldolgozásra kerül: a sentiment és a témacímkék 
+        valós időben állnak rendelkezésre riportáláshoz.
+      </p>
+
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:10px">n8n workflow — élő chat feldolgozás</p>
+      <div class="n8n-flow">
+        <div class="n8n-node trigger mono">Webhook<br><span style="font-size:9px;color:var(--text-dim)">chat lezárva</span></div>
+        <div class="n8n-arrow">→</div>
+        <div class="n8n-node mono">JSON parse<br><span style="font-size:9px;color:var(--text-dim)">üzenet összeállítás</span></div>
+        <div class="n8n-arrow">→</div>
+        <div class="n8n-node claude mono">Claude API<br><span style="font-size:9px;color:var(--text-dim)">real-time</span></div>
+        <div class="n8n-arrow">→</div>
+        <div class="n8n-node mono">Parse JSON<br><span style="font-size:9px;color:var(--text-dim)">labels + sentiment</span></div>
+        <div class="n8n-arrow">→</div>
+        <div class="n8n-node output mono">Sheets / DB<br><span style="font-size:9px;color:var(--text-dim)">mentés</span></div>
+      </div>
+
+      <div class="pipe-flow">
+        <div class="pf-step">
+          <div class="pf-icon active mono">W</div>
+          <div>
+            <div class="pf-name">Webhook trigger</div>
+            <div class="pf-desc">A chatbot platform minden lezárt chat után HTTP POST-ot küld. Tartalmaz: session ID, timestamp, üzenetlista.</div>
+          </div>
+        </div>
+        <div class="pf-step">
+          <div class="pf-icon mono">P</div>
+          <div>
+            <div class="pf-name">Prompt összeállítás</div>
+            <div class="pf-desc">Code node: csak az ügyfélüzenetek kinyerése, összefűzése. A label lista és a few-shot példák statikusan beépítve.</div>
+          </div>
+        </div>
+        <div class="pf-step">
+          <div class="pf-icon active mono">AI</div>
+          <div>
+            <div class="pf-name">Claude API hívás</div>
+            <div class="pf-desc">HTTP Request node → Anthropic API. Átlagos válaszidő: ~1,2 s. Kimenet: JSON (labels, sentiment, intensity, emotion, new_topic).</div>
+          </div>
+        </div>
+        <div class="pf-step">
+          <div class="pf-icon mono">↗</div>
+          <div>
+            <div class="pf-name">Eredmény mentés + heti new_topic review</div>
+            <div class="pf-desc">Címkék és sentiment Google Sheets-be kerülnek. Az új témák külön lapon gyűlnek — heti emberi jóváhagyás után bekerülnek a label listába.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight">
+        <strong>Miért n8n és nem Python?</strong> Az éles pipeline nem egyszeri 
+        batch, hanem folyamatos eseményvezérelt feldolgozás. Az n8n vizuálisan 
+        menedzselhető, nincs szükség szerverre, és a webhook + HTTP Request 
+        kombináció elegendő — felesleges lenne Python script-et üzemeltetni 
+        ugyanerre.
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /phases -->
+
+<footer>
+  <span class="footer-id mono">István Udvari · Data & AI Specialist</span>
+  <span class="footer-note">Demo adatok anonimizáltak. Ügyfél neve nem szerepel.</span>
+</footer>
+
+<script>
+// ── DEMO DATA ──────────────────────────────────────────────────
+const CHATS = [{"chat_id":"CH-2024-1001","date":"2024-10-17","category":"Hibrid / EV kérdés","messages":[{"role":"user","text":"Milyen a kompakt hibrid crossover fogyasztása?"},{"role":"bot","text":"Városi körülmények között akár 4,0 l/100 km alatt."},{"role":"user","text":"Ez tölt kívülről is?"},{"role":"bot","text":"Nem, self-charging rendszer, külső töltés nem szükséges."}],"human_labels":["hibrid érdeklődés","fogyasztás kérdés"],"ai_labels":["hibrid érdeklődés","fogyasztás kérdés"],"new_topic":null,"sentiment":"semleges","emotion":"érdeklődő","intensity":3,"confidence":4},{"chat_id":"CH-2024-1002","date":"2024-10-14","category":"Panasz / reklamáció","messages":[{"role":"user","text":"3 hete várok a visszahívásra!"},{"role":"bot","text":"Elnézést a késedelemért! Továbbítjuk a panaszát."},{"role":"user","text":"Ez már a második alkalom."},{"role":"bot","text":"Megértjük a frusztrációját, prioritásként kezeljük az ügyét."}],"human_labels":["garancia reklamáció","panasz"],"ai_labels":["garancia reklamáció","panasz"],"new_topic":"flotta ajánlat","sentiment":"negatív","emotion":"frustrált","intensity":4,"confidence":5},{"chat_id":"CH-2024-1003","date":"2024-10-13","category":"Árajánlat kérés","messages":[{"role":"user","text":"Mennyibe kerül a RAV4 PHEV?"},{"role":"bot","text":"19 990 000 Ft-tól indul."},{"role":"user","text":"Van akció?"},{"role":"bot","text":"Jelenleg nincs kampány, de kereskedőink kínálhatnak kedvezményt."}],"human_labels":["árajánlat"],"ai_labels":["árajánlat","finanszírozás"],"new_topic":null,"sentiment":"pozitív","emotion":"érdeklődő","intensity":5,"confidence":4},{"chat_id":"CH-2024-1004","date":"2024-11-02","category":"Szerviz időpont","messages":[{"role":"user","text":"Foglalnék egy szervizidőpontot a hibrid crossoveremhez."},{"role":"bot","text":"Természetesen! Melyik szervizünket keresi fel?"},{"role":"user","text":"A győri szerviz mikor ér rá?"},{"role":"bot","text":"Kérem látogasson el weboldalunkra az online foglaláshoz."}],"human_labels":["garancia","szerviz időpont"],"ai_labels":["garancia","szerviz időpont"],"new_topic":null,"sentiment":"semleges","emotion":"bizonytalan","intensity":2,"confidence":3},{"chat_id":"CH-2024-1005","date":"2024-10-21","category":"Trade-in","messages":[{"role":"user","text":"Visszavesznek egy 2021-es Corollát?"},{"role":"bot","text":"Igen, Trade-In programunkkal."},{"role":"user","text":"45 000 km-rel mennyit ér?"},{"role":"bot","text":"Pontos értékbecsléshez hozza be személyesen."}],"human_labels":["trade-in","értékesítési szándék"],"ai_labels":["trade-in","értékesítési szándék"],"new_topic":"akkumulátor csere","sentiment":"pozitív","emotion":"elégedett","intensity":4,"confidence":5},{"chat_id":"CH-2024-1006","date":"2024-11-18","category":"Általános érdeklődés","messages":[{"role":"user","text":"Mikor jön ki az új Land Cruiser?"},{"role":"bot","text":"A várható megjelenés 2025 vége."},{"role":"user","text":"Magyar piacra is jön?"},{"role":"bot","text":"Igen, tervezzük a magyarországi bevezetést."}],"human_labels":["modell érdeklődés"],"ai_labels":["modell érdeklődés"],"new_topic":null,"sentiment":"pozitív","emotion":"érdeklődő","intensity":5,"confidence":4},{"chat_id":"CH-2024-1007","date":"2024-10-09","category":"Panasz / reklamáció","messages":[{"role":"user","text":"A javítás után ugyanaz a hiba jött elő."},{"role":"bot","text":"Sajnáljuk! Kérjük hozza vissza, ingyenesen megvizsgálják."},{"role":"user","text":"Már két napot töltöttem szervizben."},{"role":"bot","text":"Megértjük, kapcsolatba lépünk a szervizzel az Ön nevében."}],"human_labels":["garancia reklamáció"],"ai_labels":["garancia reklamáció","panasz"],"new_topic":"autóklub kedvezmény","sentiment":"negatív","emotion":"panaszkodó","intensity":5,"confidence":5},{"chat_id":"CH-2024-1008","date":"2024-11-07","category":"Hibrid / EV kérdés","messages":[{"role":"user","text":"Mekkora hatótávja van a bZ4X-nek?"},{"role":"bot","text":"Akár 516 km WLTP szerint."},{"role":"user","text":"Télen mennyit veszít?"},{"role":"bot","text":"Hideg időben kb. 20-30%-os csökkenés várható."}],"human_labels":["hibrid érdeklődés","fogyasztás kérdés"],"ai_labels":["hibrid érdeklődés","fogyasztás kérdés"],"new_topic":null,"sentiment":"semleges","emotion":"érdeklődő","intensity":3,"confidence":4},{"chat_id":"CH-2024-1009","date":"2024-10-25","category":"Árajánlat kérés","messages":[{"role":"user","text":"Lízingre is elérhető?"},{"role":"bot","text":"Igen, a márka finanszírozási partnerén keresztül."},{"role":"user","text":"Milyen futamidők vannak?"},{"role":"bot","text":"3–5 év közötti futamidőt ajánlunk. Kalkulátor a weboldalon."}],"human_labels":["árajánlat","finanszírozás"],"ai_labels":["árajánlat","finanszírozás"],"new_topic":null,"sentiment":"pozitív","emotion":"érdeklődő","intensity":5,"confidence":5},{"chat_id":"CH-2024-1010","date":"2024-11-14","category":"Trade-in","messages":[{"role":"user","text":"Autócsere érdekel, van ilyen?"},{"role":"bot","text":"Igen! Régi autóját beszámítjuk az új vételárába."},{"role":"user","text":"Hogyan zajlik?"},{"role":"bot","text":"Értékbecslés a kereskedőnél, ajánlat, döntés — teljesen ingyenes."}],"human_labels":["trade-in"],"ai_labels":["trade-in","értékesítési szándék"],"new_topic":"tartós bérlet","sentiment":"semleges","emotion":"bizonytalan","intensity":2,"confidence":3}];
+
+// ── UTILS ──────────────────────────────────────────────────────
+function getMatchStatus(chat) {
+  const h = new Set((chat.human_labels||[]).map(l=>l.toLowerCase().trim()));
+  const a = new Set((chat.ai_labels||[]).map(l=>l.toLowerCase().trim()));
+  if(!h.size && !a.size) return 'match';
+  const inter = [...h].filter(x=>a.has(x)).length;
+  if(inter === Math.max(h.size, a.size)) return 'match';
+  if(inter === 0) return 'mismatch';
+  return 'partial';
+}
+
+function sentPill(s) {
+  const cls = s==='pozitív'?'sent-pos':s==='negatív'?'sent-neg':'sent-neu';
+  const dot = s==='pozitív'?'●':s==='negatív'?'●':'○';
+  return `<span class="sent-pill ${cls}">${dot} ${s}</span>`;
+}
+
+function intensityDots(val, sentiment) {
+  const cls = sentiment==='pozitív'?'filled-pos':sentiment==='negatív'?'filled-neg':'filled-neu';
+  return Array.from({length:5},(_,i)=>
+    `<span class="int-dot ${i<val?cls:''}"></span>`).join('');
+}
+
+// ── CHARTS ────────────────────────────────────────────────────
+function buildCharts() {
+  // sentiment
+  const sentCounts = {pozitív:0,semleges:0,negatív:0};
+  CHATS.forEach(c=>{ if(sentCounts[c.sentiment]!==undefined) sentCounts[c.sentiment]++; });
+  const maxS = Math.max(...Object.values(sentCounts));
+  const sentEl = document.getElementById('sentiment-chart');
+  sentEl.innerHTML = [
+    ['pozitív','bar-pos',sentCounts['pozitív']],
+    ['semleges','bar-neu',sentCounts['semleges']],
+    ['negatív','bar-neg',sentCounts['negatív']],
+  ].map(([label,cls,count])=>`
+    <div class="chart-row">
+      <div class="chart-label mono">${label}</div>
+      <div class="chart-bar-bg">
+        <div class="chart-bar ${cls}" style="width:${Math.round(count/maxS*100)}%"></div>
+      </div>
+      <div class="chart-count mono">${count}</div>
+    </div>`).join('');
+
+  // categories
+  const catCounts = {};
+  CHATS.forEach(c=>{ catCounts[c.category]=(catCounts[c.category]||0)+1; });
+  const sorted = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]);
+  const maxC = sorted[0][1];
+  const catEl = document.getElementById('category-chart');
+  catEl.innerHTML = sorted.map(([cat,count])=>`
+    <div class="chart-row">
+      <div class="chart-label mono" style="font-size:10px">${cat}</div>
+      <div class="chart-bar-bg">
+        <div class="chart-bar bar-neu" style="width:${Math.round(count/maxC*100)}%"></div>
+      </div>
+      <div class="chart-count mono">${count}</div>
+    </div>`).join('');
+
+  // new topic count
+  const ntCount = CHATS.filter(c=>c.new_topic).length;
+  document.getElementById('new-topic-count').textContent = ntCount;
+}
+
+// ── CHAT LIST ────────────────────────────────────────────────
+let activeChat = null;
+function buildChatList() {
+  const el = document.getElementById('mini-chat-list');
+  el.innerHTML = CHATS.map((c,i)=>{
+    const status = getMatchStatus(c);
+    const dot = status==='match'?'<span style="color:var(--pos)">●</span>':
+                status==='mismatch'?'<span style="color:var(--neg)">●</span>':
+                '<span style="color:var(--amber)">●</span>';
+    return `<div class="cli ${i===0?'active':''}" onclick="selectChat(${i})" id="cli-${i}">
+      <div class="cli-left"><span class="cli-id">${c.chat_id}</span>${c.category.split(' ')[0]}</div>
+      <div>${dot}</div>
+    </div>`;
+  }).join('');
+  selectChat(0);
+}
+
+function selectChat(i) {
+  if(activeChat!==null) {
+    const prev = document.getElementById(`cli-${activeChat}`);
+    if(prev) prev.classList.remove('active');
+  }
+  activeChat = i;
+  const el = document.getElementById(`cli-${i}`);
+  if(el) el.classList.add('active');
+
+  const c = CHATS[i];
+  const status = getMatchStatus(c);
+  const badgeColor = status==='match'?'var(--pos)':status==='mismatch'?'var(--neg)':'var(--amber)';
+  const badgeLabel = status==='match'?'egyező':status==='mismatch'?'eltérő':'részleges';
+
+  const msgs = c.messages.map(m=>`
+    <div class="msg ${m.role}">
+      <div class="msg-role">${m.role==='user'?'Ügyfél':'Bot'}</div>
+      ${m.text}
+    </div>`).join('');
+
+  const hlabels = (c.human_labels||[]).map(l=>`<span class="lchip lchip-h">${l}</span>`).join('');
+  const alabels = (c.ai_labels||[]).map(l=>`<span class="lchip lchip-a">${l}</span>`).join('');
+
+  document.getElementById('mini-chat-detail').innerHTML = `
+    <div class="chat-detail-mini">
+      <div class="cdm-meta">
+        <span class="cdm-id">${c.chat_id} · ${c.date}</span>
+        ${sentPill(c.sentiment)}
+        <span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:2px;border:1px solid ${badgeColor};color:${badgeColor}">${badgeLabel}</span>
+      </div>
+      <div class="msg-list">${msgs}</div>
+      <div class="ai-result-row">
+        <div class="air-box">
+          <div class="air-label">Emberi címkék</div>
+          <div class="label-chips">${hlabels||'<span style="color:var(--text-dim);font-size:11px">—</span>'}</div>
+        </div>
+        <div class="air-box">
+          <div class="air-label">AI címkék</div>
+          <div class="label-chips">${alabels||'<span style="color:var(--text-dim);font-size:11px">—</span>'}</div>
+          <div class="intensity-row">
+            <span>${c.emotion}</span>
+            <div class="int-dots">${intensityDots(c.intensity, c.sentiment)}</div>
+            <span>${c.intensity}/5</span>
+          </div>
+        </div>
+      </div>
+      ${c.new_topic?`<div style="margin-top:10px;padding:8px 10px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.15);border-radius:2px;font-family:var(--mono);font-size:11px;color:#7dd3fc">◈ Új téma: ${c.new_topic}</div>`:''}
+    </div>`;
+}
+
+// ── NEW TOPICS ───────────────────────────────────────────────
+function buildNewTopics() {
+  const topics = CHATS.filter(c=>c.new_topic);
+  const el = document.getElementById('new-topics-list');
+  if(!topics.length){ el.innerHTML='<p style="color:var(--text-dim);font-size:13px">Nincs új téma a demo adatokban.</p>'; return; }
+  el.innerHTML = topics.map(c=>`
+    <div style="display:grid;grid-template-columns:120px 1fr 120px;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">${c.chat_id}</span>
+      <span style="font-family:var(--mono);font-size:12px;color:#7dd3fc">◈ ${c.new_topic}</span>
+      <span style="font-size:11px;color:var(--text-dim)">${c.category}</span>
+    </div>`).join('');
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function switchTab(name) {
+  ['overview','chats','newtopics'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = t===name?'block':'none';
+  });
+  document.querySelectorAll('.demo-tab').forEach((btn,i)=>{
+    btn.classList.toggle('active', ['overview','chats','newtopics'][i]===name);
+  });
+  if(name==='chats' && activeChat===null) buildChatList();
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', ()=>{
+  buildCharts();
+  buildChatList();
+  buildNewTopics();
+  setTimeout(()=>{
+    document.querySelectorAll('.chart-bar').forEach(b=>{
+      const w = b.style.width; b.style.width='0';
+      requestAnimationFrame(()=>{ b.style.width=w; });
+    });
+  }, 200);
+});
+</script>
+</body>
+</html>

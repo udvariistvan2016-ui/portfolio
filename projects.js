@@ -194,15 +194,67 @@ const PROJEKTEK = [
   },
 
   {
-    cim: "Conversational Analytics SQL adatbázison",
-    leiras: "Természetes nyelvű lekérdezés éles adatbázison Claude + MCP kapcsolaton keresztül. Pilot koncepció és architektúra.",
+    cim: "Beszélgetésalapú adatelemzés SQL adatbázison",
+    leiras: "Hogyan lesz egy hétköznapi kérdésből olyan szám, amire kampányt lehet bízni: szemantikai réteg, metrika-szótár, jogosultság és mérés. Anonimizált use case egy élő projektből.",
     cim_en: "Conversational analytics on an SQL database",
-    leiras_en: "Natural-language querying of a live database via Claude + MCP. Pilot concept and architecture.",
+    leiras_en: "How an everyday question becomes a number you can base a campaign on: a semantic layer, a metric dictionary, permissions and measurement. An anonymised use case from a live project.",
     fajl: "conversational-analytics.html",
-    cimkek: ["Claude", "SQL", "Power BI", "Munka"],
-    tipus: "helykitöltő",
-    rang: -10,
-    datum: "2026-04",
+    cimkek: ["SQL", "Python", "AI / LLM", "Munka"],
+    tipus: "esettanulmány",
+    rang: 91,
+    datum: "2026-09",
+    kiemelt: false
+  },
+
+  {
+    cim: "Ügyfélérték-index: súlyozás és mérce",
+    leiras: "Hét viselkedési blokkból pontozza a hűségprogram tagjait, állítható súlyokkal. A csúszka mellett fut a mérce: egy kihagyott időszakon méri, hogy az új beállítás tényleg jobb-e, vagy csak más. 40 000 szintetikus tagon.",
+    cim_en: "Customer value index: weights and a yardstick",
+    leiras_en: "Scores loyalty programme members from seven behavioural blocks with adjustable weights. Beside the sliders runs the yardstick: it measures on a held-out period whether a new setup is genuinely better, or merely different. On 40,000 synthetic members.",
+    fajl: "ugyfelertek-index.html",
+    cimkek: ["Szegmentáció", "ML / Data Science", "CRM", "Munka"],
+    tipus: "interaktív demó",
+    rang: 94,
+    datum: "2026-09",
+    kiemelt: false
+  },
+
+  {
+    cim: "Chat-sentiment és témafelismerés pipeline",
+    leiras: "Chatbot-naplók gépi feldolgozása: sentiment és témacímkék LLM-mel, emberi visszaméréssel finomhangolt prompttal — a historikus batch futástól az éles n8n workflow-ig.",
+    cim_en: "Chat sentiment and topic labelling pipeline",
+    leiras_en: "Machine processing of chatbot logs: sentiment and topic labels with an LLM, the prompt tuned against human labelling — from a historical batch run to a live n8n workflow.",
+    fajl: "chat-sentiment-analysis-case-study.html",
+    cimkek: ["Python", "Claude", "n8n", "Munka"],
+    tipus: "esettanulmány",
+    rang: 89,
+    datum: "2026-09",
+    kiemelt: false
+  },
+
+  {
+    cim: "Sankey-diagram: hol megy tovább a mennyiség",
+    leiras: "Mikor mond többet egy áramlásábra az oszlopdiagramnál, és mit kell eldönteni ahhoz, hogy olvasható maradjon. Ügyféláramlás, energia, bevétel és webes forgalom példákon, kitalált adatokkal.",
+    cim_en: "Sankey diagram: where the volume goes next",
+    leiras_en: "When a flow diagram says more than a bar chart, and what you have to decide to keep it readable. On customer flow, energy, revenue and web traffic examples, with invented data.",
+    fajl: "sankey-diagram.html",
+    cimkek: ["Vizualizáció", "Szegmentáció", "Python", "Munka"],
+    tipus: "adatvizualizáció",
+    rang: 83,
+    datum: "2026-09",
+    kiemelt: false
+  },
+
+  {
+    cim: "UpSet meets JS: amikor a Venn már nem elég",
+    leiras: "Halmazábrázolás négy-hat halmaznál, ahol a Venn-diagram olvashatatlanná válik. A hover tanítja meg a formát: minden kiemelés kimondja, milyen nézetet látsz éppen.",
+    cim_en: "UpSet meets JS: when a Venn is no longer enough",
+    leiras_en: "Set visualisation for four to six sets, where a Venn diagram becomes unreadable. Hover teaches the form: every highlight states which view you are reading.",
+    fajl: "upset-meets-js.html",
+    cimkek: ["Vizualizáció", "Python", "Munka"],
+    tipus: "adatvizualizáció",
+    rang: 82,
+    datum: "2026-09",
     kiemelt: false
   }
 

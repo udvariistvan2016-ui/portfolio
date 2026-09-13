@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sankey-diagram — hol megy tovább a mennyiség — Udvari István</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F3F0;
+  --card:#FFFFFF;
+  --ink:#15181C;
+  --muted:#6E7480;
+  --line:#DCDED8;
+  --accent:#1F6F5C;
+  --accent-soft:#E2EDE8;
+  --radius:4px;
+  --c0:#378ADD;
+  --c1:#1D9E75;
+  --c2:#EF9F27;
+  --c3:#D85A30;
+  --in:#66BB6A;
+  --out:#E57373;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+code{background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:3px;font-size:.86em}
+
+.topwrap{position:sticky;top:41px;z-index:99999}
+.subnav{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  background:var(--card);border-bottom:1px solid var(--line);
+  padding:0 20px;overflow:hidden;
+}
+.navlinks{
+  display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.04em;
+  color:var(--muted);text-decoration:none;padding:11px 9px;white-space:nowrap;
+  border-bottom:2px solid transparent;
+}
+.navlinks a:hover{color:var(--accent);border-bottom-color:var(--accent-soft)}
+.langtoggle{display:flex;gap:0;flex:none;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.langtoggle button{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;
+  border:0;background:var(--card);color:var(--muted);padding:5px 10px;cursor:pointer;
+}
+.langtoggle button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.langtoggle button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+main{max-width:1080px;margin:0 auto;padding:0 22px 90px}
+section{scroll-margin-top:58px;padding:52px 0 0}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 14px;
+}
+h1{font-size:clamp(32px,5vw,52px);font-weight:600;letter-spacing:-.028em;line-height:1.06;margin:0 0 20px}
+h2{font-size:clamp(23px,3vw,30px);font-weight:600;letter-spacing:-.02em;line-height:1.2;margin:0 0 8px}
+h3{font-size:17px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px}
+h4{font-size:13.5px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 15px}
+.lead{font-size:clamp(17px,2vw,20px);color:#3C424C;line-height:1.55;max-width:74ch;margin-bottom:22px}
+.sub{color:var(--muted);max-width:78ch;margin-bottom:26px}
+.small{font-size:13.5px;color:var(--muted)}
+.hint{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+strong{font-weight:600}
+
+header.hero{padding:44px 0 0}
+.banner{
+  border:1px solid var(--line);border-left:3px solid var(--accent);
+  background:var(--card);border-radius:var(--radius);
+  padding:16px 18px;margin:0 0 30px;max-width:82ch;
+}
+.banner h4{color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase}
+.banner p{margin:0;font-size:14px;color:#4A505A}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px}
+.kpi b{display:block;font-family:"IBM Plex Mono",monospace;font-size:25px;font-weight:500;letter-spacing:-.02em;color:var(--accent);line-height:1.1}
+.kpi span{display:block;font-size:12.5px;color:var(--muted);margin-top:5px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.grid2fixed{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:720px){.grid2fixed{grid-template-columns:1fr}}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+.note{
+  border:1px dashed var(--line);border-radius:var(--radius);
+  background:transparent;padding:16px 18px;
+}
+.note h4{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.note p{font-size:13.5px;color:#4A505A;margin:0}
+.note p + p{margin-top:9px}
+
+.yesno{border-top:3px solid var(--line)}
+.yesno.yes{border-top-color:var(--accent)}
+.yesno.no{border-top-color:#D85A30}
+.yesno .tag{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  margin:0 0 8px;
+}
+.yesno.yes .tag{color:var(--accent)}
+.yesno.no .tag{color:#A8391A}
+.yesno p{font-size:14px;color:#4A505A;margin:0}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.chip{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:6px 12px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--card);
+  color:var(--ink);cursor:pointer;transition:all .14s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted);font-weight:400;border-bottom:1px solid var(--ink);
+}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{font-family:"IBM Plex Mono",monospace}
+.swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px;vertical-align:1px}
+
+.chart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.chart h4{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.chart .cap{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.45}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:"IBM Plex Mono",monospace}
+.sankeybox{overflow-x:auto;overflow-y:visible;padding-bottom:4px}
+.sankeybox svg{min-width:0}
+#custchart svg,#exchart svg{min-width:720px}
+.rib{transition:opacity .12s;cursor:pointer}
+.nodehit{cursor:pointer}
+
+.readout{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;
+  margin-top:12px;min-height:72px;
+}
+.readout .cell{background:var(--paper);border-radius:var(--radius);padding:10px 12px}
+.readout .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.readout .v{font-size:15px;font-weight:600;margin-top:3px;letter-spacing:-.01em}
+.readout .v.mono{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:16px}
+
+.heat td.cellbtn{
+  cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:12px;
+  text-align:center;padding:9px 6px;border:1px solid #fff;
+}
+.heat td.lab{font-size:12px;color:var(--muted);font-weight:500}
+.heat td.lab .swatch{margin-right:6px}
+.heat thead th{text-align:center;font-size:10px;padding:8px 4px;white-space:normal;line-height:1.3}
+.heat td.dead{background:var(--paper);color:#C5C9C2}
+
+.callout{
+  text-align:left;font:inherit;color:inherit;cursor:pointer;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 15px;transition:all .14s;
+}
+.callout:hover{border-color:var(--accent)}
+.callout[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.callout .num{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--accent);letter-spacing:.06em}
+.callout h4{margin:4px 0 4px}
+.callout p{font-size:13px;color:#4A505A;margin:0}
+
+.verdict{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);padding:18px 20px}
+.verdict p{margin:0;font-size:14.5px;color:#3C424C}
+.verdict p + p{margin-top:10px}
+
+.stackchips{display:flex;flex-wrap:wrap;gap:7px}
+.stackchips span{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:5px 10px;
+  background:var(--accent-soft);color:var(--accent);border-radius:3px;
+}
+footer{
+  border-top:1px solid var(--line);margin-top:60px;padding:24px 0 0;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:10px 20px;background:#15181C;color:#F2F3F0;position:sticky;top:0;z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
+  <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
+</div>
+<!-- portfolio: a vissza-link sav + a lap sajat fejlece egyutt ~90 px -->
+<style>html{scroll-padding-top:100px}</style>
+
+<div class="topwrap">
+<nav class="subnav">
+  <div class="navlinks">
+    <a href="#miez" data-hu="Mi ez" data-en="What it is"></a>
+    <a href="#anatomia" data-hu="Anatómia" data-en="Anatomy"></a>
+    <a href="#mikor" data-hu="Mikor használd" data-en="When to use"></a>
+    <a href="#peldak" data-hu="Más példák" data-en="Other examples"></a>
+    <a href="#ugyfel" data-hu="Ügyféláramlás" data-en="Customer flow"></a>
+    <a href="#matrix" data-hu="Mátrix helyett" data-en="Instead of a matrix"></a>
+    <a href="#dontesek" data-hu="Döntések" data-en="Choices"></a>
+  </div>
+  <div class="langtoggle" role="group" aria-label="Nyelv / Language">
+    <button type="button" id="lang-hu" aria-pressed="true">HU</button>
+    <button type="button" id="lang-en" aria-pressed="false">EN</button>
+  </div>
+</nav>
+</div>
+
+<main>
+
+<header class="hero">
+  <p class="eyebrow" data-hu="Vizualizáció · anonimizált · kitalált adat" data-en="Visualisation · anonymised · synthetic data"></p>
+  <h1 data-hu="Sankey-diagram: hol megy tovább a mennyiség" data-en="Sankey diagram: where the quantity goes next"></h1>
+  <p class="lead" data-hu="A Sankey-diagram azt mutatja, <strong>honnan hova megy, hogyan áramlik</strong> egy mennyiség. A szalag vastagsága maga a mennyiség: ami vastag, az a domináns út, ami vékony, az a ritka átjárás. Akkor kell, ha a kérdés nem a „mennyi”, hanem a „hova lett belőle”." data-en="A Sankey diagram shows <strong>where a quantity goes, how it flows</strong>. Ribbon width is the quantity: thick is the dominant path, thin is the rare crossing. Use it when the question is not “how much”, but “where did it go”."></p>
+
+  <div class="banner">
+    <h4 data-hu="Ezen az oldalon minden szám kitalált" data-en="Every number on this page is synthetic"></h4>
+    <p data-hu="Az ügyféláramlás ugyanabból a szintetikus kohorszból jön, mint a K-means esettanulmány: a metrikák számítottak, üzleti tartalom nem következtethető ki belőlük. A többi példa — energia, bevétel, webes forgalom — illusztráció, nem mért adat." data-en="The customer flow comes from the same synthetic cohort as the K-means case study: the figures are computed, but no business content can be inferred. The other examples — energy, revenue, web traffic — are illustrations, not measured data."></p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><b>2</b><span data-hu="oszlop: forrás és cél" data-en="columns: source and target"></span></div>
+    <div class="kpi"><b data-hu="vastagság" data-en="width"></b><span data-hu="a szalag szélessége a mennyiség" data-en="ribbon width is the quantity"></span></div>
+    <div class="kpi"><b id="kpi-stay">92%</b><span data-hu="helyben marad a következő hónapban" data-en="stay in the same group next month"></span></div>
+    <div class="kpi"><b>+ / −</b><span data-hu="a be- és kilépők is látszanak" data-en="entrants and leavers stay visible"></span></div>
+  </div>
+</header>
+
+<section id="miez">
+  <p class="eyebrow" data-hu="01 · Mi ez" data-en="01 · What it is"></p>
+  <h2 data-hu="Egy megmaradó mennyiség két bontásban" data-en="One conserved quantity, two breakdowns"></h2>
+  <p class="sub" data-hu="A név Matthew Henry Phineas Riall Sankey ír kapitánytól jön, aki 1898-ban egy gőzgép hatásfokát rajzolta így: a bejövő energia vastag szalagja elágazott hasznos munkára és veszteségre. A forma régebbi — Charles Minard 1869-es Napóleon-térképe ugyanezt a vastagság = mennyiség elvet használta —, a Sankey mára a „honnan–hova” ábra közneve lett." data-en="The name comes from Captain Matthew Henry Phineas Riall Sankey, who in 1898 drew a steam engine’s efficiency this way: the thick incoming-energy ribbon split into useful work and losses. The form is older — Charles Minard’s 1869 map of Napoleon’s march used the same width-equals-quantity rule — and Sankey is now the common name for a from–to chart."></p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 data-hu="Amit megmutat" data-en="What it shows"></h3>
+      <p class="small" data-hu="Ugyanaz a mennyiség két kategóriarendszer között. Bal oldalon egy bontás (honnan), jobb oldalon egy másik (hova). A szalagok a kettő közti leképezést viszik: nem csak az összegeket, hanem a kereszteződéseket is." data-en="The same quantity between two category systems. On the left, one breakdown (from); on the right, another (to). The ribbons carry the mapping between them: not only the totals, but the crossings."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Amit megőriz" data-en="What it conserves"></h3>
+      <p class="small" data-hu="Ami balról kilép, jobbra megérkezik — plusz a rendszerbe belépő és onnan kilépő mennyiség, ha van ilyen. Ha a két oldal nem egyezik, az ábra hazudik, vagy hiányzik egy csomópont. Ezért jó ellenőrző ábra is: a számok összege látszik." data-en="What leaves on the left arrives on the right — plus anything entering or leaving the system, if that exists. If the two sides do not match, the chart is lying or a node is missing. That also makes it a check: the totals are visible."></p>
+    </div>
+  </div>
+</section>
+
+<section id="anatomia">
+  <p class="eyebrow" data-hu="02 · Anatómia" data-en="02 · Anatomy"></p>
+  <h2 data-hu="Négy elem, ennyi az egész" data-en="Four parts, that is the whole thing"></h2>
+  <p class="sub" data-hu="Válassz egy részt. Az ábra azt emeli ki, a többi elhalványul. A példa szándékosan kicsi: 100 egység megy át A-ból és B-ből X-be és Y-ba, semmi nem vész el." data-en="Pick a part. The chart highlights it and fades the rest. The example is deliberately small: 100 units pass from A and B into X and Y, and nothing is lost."></p>
+
+  <div class="chips" id="anatomychips" style="margin:0 0 14px"></div>
+  <div class="grid2">
+    <div class="chart">
+      <h4 data-hu="100 egység, két forrás, két cél" data-en="100 units, two sources, two targets"></h4>
+      <div id="anatomychart" class="sankeybox"></div>
+      <p class="cap" id="anatomycap"></p>
+    </div>
+    <div class="stack" id="anatomytext"></div>
+  </div>
+</section>
+
+<section id="mikor">
+  <p class="eyebrow" data-hu="03 · Mikor" data-en="03 · When"></p>
+  <h2 data-hu="Akkor, ha a kereszteződés a kérdés" data-en="When the crossing is the question"></h2>
+  <p class="sub" data-hu="Egy egymásra pakolt oszlop megmutatja, mennyi van A-ból és B-ből, és mennyi lesz X-ből és Y-ból. Azt nem, hogy A-ból mennyi ment X-be. A Sankey pont ezt a hiányzó leképezést rajzolja meg." data-en="A stacked bar shows how much is in A and B, and how much ends up in X and Y. It does not show how much of A went to X. The Sankey is the chart that draws that missing mapping."></p>
+
+  <div class="grid2">
+    <div class="chart">
+      <h4 data-hu="Amit egy oszlop elveszít" data-en="What a bar chart loses"></h4>
+      <div id="barcompare"></div>
+      <p class="cap" data-hu="Ugyanaz a 100 egység. Balra a forrás, jobbra a cél — de a kereszteződés eltűnt. A-ból 40 ment X-be és 20 Y-ba; ezt innen nem lehet kiolvasni." data-en="The same 100 units. Source on the left, target on the right — but the crossing has vanished. 40 of A went to X and 20 to Y; you cannot read that here."></p>
+    </div>
+    <div class="chart">
+      <h4 data-hu="Amit a Sankey megtart" data-en="What the Sankey keeps"></h4>
+      <div id="sankeycompare" class="sankeybox"></div>
+      <p class="cap" data-hu="Ugyanazok a számok, a leképezéssel együtt. A vastag kék szalag: A → X, 40 egység. Ez a mondat az oszlopból nem jön ki." data-en="The same numbers, with the mapping. The thick blue ribbon: A → X, 40 units. That sentence does not come out of the bars."></p>
+    </div>
+  </div>
+
+  <div class="grid2fixed" style="margin-top:18px">
+    <div class="card yesno yes">
+      <p class="tag" data-hu="Használd, ha" data-en="Use it when"></p>
+      <h3 data-hu="Ugyanaz a mennyiség két bontásban" data-en="The same quantity in two breakdowns"></h3>
+      <p data-hu="Energia forrásból felhasználásba, bevétel csatornából költségnembe, látogatás forrásból kimenetbe, ügyfél egyik állapotból a másikba. A kérdés: honnan jött, ami ott van." data-en="Energy from source to use, revenue from channel to cost type, visits from source to outcome, a customer from one state to another. The question: where did what is there come from."></p>
+    </div>
+    <div class="card yesno yes">
+      <p class="tag" data-hu="Használd, ha" data-en="Use it when"></p>
+      <h3 data-hu="A rendszerbe be- és kilépés is a történet" data-en="Entry and exit are part of the story"></h3>
+      <p data-hu="Egy sima átmenetmátrix csak a közösen meglévő elemeket látja. Aki megjelent vagy eltűnt, az kimarad. Pszeudo-csomóponttal a Sankey ezt is viszi." data-en="A plain transition matrix only sees the elements present on both sides. Anyone who appeared or vanished is missing. With pseudo-nodes, the Sankey carries that too."></p>
+    </div>
+    <div class="card yesno no">
+      <p class="tag" data-hu="Ne használd, ha" data-en="Do not use it when"></p>
+      <h3 data-hu="Túl sok a kategória" data-en="There are too many categories"></h3>
+      <p data-hu="Nyolc–tíz fölött a szalagok összekuszálódnak, és az ábra hajgombóccá válik. Ilyenkor a legnagyobb áramlások táblája többet mond, vagy a kategóriákat előbb össze kell vonni." data-en="Above eight or ten categories the ribbons tangle and the chart becomes a hairball. A table of the largest flows then says more, or the categories need merging first."></p>
+    </div>
+    <div class="card yesno no">
+      <p class="tag" data-hu="Ne használd, ha" data-en="Do not use it when"></p>
+      <h3 data-hu="A kérdés rangsor, idősor vagy arány egy pillanatban" data-en="The question is a ranking, a time series, or a snapshot share"></h3>
+      <p data-hu="Egy mutató időben: vonal. Sorrend: oszlop. Egy torta összetétele egy időpontban: oszlop vagy treemap. A Sankey ezekre nem jobb, csak zsúfoltabb." data-en="One metric over time: a line. A ranking: a bar. The composition of a whole at one moment: a bar or a treemap. A Sankey is not better at these, only noisier."></p>
+    </div>
+  </div>
+</section>
+
+<section id="peldak">
+  <p class="eyebrow" data-hu="04 · Más területek" data-en="04 · Other domains"></p>
+  <h2 data-hu="Ugyanaz a forma, három teljesen más mennyiség" data-en="The same form, three entirely different quantities"></h2>
+  <p class="sub" data-hu="Az ügyféláramlás csak egy alkalmazás. A Sankey akkor jó, ha a mennyiség megmarad, és a két oldal kategóriái különböznek. Válts példát: a szalagok másról szólnak, a olvasási szabály ugyanaz." data-en="Customer flow is only one application. A Sankey works when the quantity is conserved and the two sides use different categories. Switch examples: the ribbons are about something else, the reading rule is the same."></p>
+
+  <div class="chips" id="exchips" style="margin:0 0 14px"></div>
+  <div class="chart">
+    <h4 id="extitle"></h4>
+    <div id="exchart" class="sankeybox"></div>
+    <p class="cap" id="excap"></p>
+  </div>
+  <div class="readout" id="exreadout"></div>
+</section>
+
+<section id="ugyfel">
+  <p class="eyebrow" data-hu="05 · Ügyféláramlás" data-en="05 · Customer flow"></p>
+  <h2 data-hu="Mi történik egy hónap alatt" data-en="What happens in a month"></h2>
+  <p class="sub" data-hu="Egy hazai bank hűségprogramjának szintetikus kohorsza: négy viselkedés-profil, gördülő 12 hónapos ablak, két szomszédos havi futás. Kattints egy csomópontra, hogy csak az onnan kiinduló vagy oda érkező szalagok maradjanak. A kapcsolók a maradókat, a mozgást, a belépőket és a kiesőket választják szét." data-en="A synthetic cohort from a Hungarian bank’s loyalty programme: four behavioural profiles, a rolling 12-month window, two neighbouring monthly runs. Click a node to keep only the ribbons that leave it or arrive there. The switches separate those who stay, those who move, those who enter and those who leave."></p>
+
+  <div class="chips" id="custchips" style="margin:0 0 14px"></div>
+  <div class="chart">
+    <h4 data-hu="Ügyfélszintű áramlás: referenciahónap → következő hónap" data-en="Member-level flow: reference month → next month"></h4>
+    <div id="custchart" class="sankeybox"></div>
+    <p class="cap" data-hu="Vidd az egeret egy szalagra, vagy koppints rá a pontos számokért. A zöld csomópont a következő hónapban belépő, a piros a kieső. „Belépő → kieső” szalag definíció szerint nem létezhet." data-en="Hover a ribbon, or tap it, for exact numbers. The green node is members entering next month, the red node those leaving. An “entering → leaving” ribbon cannot exist by definition."></p>
+  </div>
+  <div class="readout" id="custreadout"></div>
+
+  <div class="grid2" style="margin-top:16px">
+    <div class="card">
+      <h3 data-hu="A legnagyobb elmozdulások" data-en="The largest movements"></h3>
+      <p class="small" style="margin:6px 0 10px" data-hu="A helyben maradók nélkül — azokat az ábra átlós, vastag szalagjai mutatják." data-en="Excluding those who stay put — the thick diagonal ribbons in the diagram show those."></p>
+      <div class="tablewrap"><table id="flowtable"></table></div>
+    </div>
+    <div class="stack">
+      <div class="verdict">
+        <p data-hu="A közös kohorszon a helyben maradók aránya <strong>{STAY}</strong>, az egyezés (ARI) <strong>{ARI}</strong>. A partíció nagyrészt ugyanaz, de nem mozdulatlan." data-en="On the common cohort the share who stay is <strong>{STAY}</strong>, agreement (ARI) is <strong>{ARI}</strong>. The partition is largely the same, but not frozen."></p>
+        <p data-hu="Ez a kívánt viselkedés. Ha mindenki maradna, a szegmentáció nem érzékelne változást; ha a szalagok mind kereszteznének, nem lehetne rá kampányt tervezni." data-en="This is the desired behaviour. If everyone stayed, the segmentation would detect no change; if every ribbon crossed, you could not plan a campaign on it."></p>
+      </div>
+      <div class="note">
+        <h4 data-hu="A vastag átló is információ" data-en="The thick diagonal is information too"></h4>
+        <p data-hu="Sankeynél a szem a keresztező szalagokra megy. Itt viszont a történet fele az, hogy a többség marad. A „csak elmozdulás” kapcsoló azért kell, hogy a ritka, de üzletileg fontos átjárások ne vesszenek el a maradók mellett." data-en="On a Sankey the eye goes to the crossing ribbons. Here, though, half the story is that most members stay. The “movements only” switch exists so that the rare, commercially important crossings are not lost beside those who stay."></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="matrix">
+  <p class="eyebrow" data-hu="06 · Mátrix" data-en="06 · Matrix"></p>
+  <h2 data-hu="A számok megvannak táblában is — a súlyuk nincs" data-en="The numbers exist in a table too — their weight does not"></h2>
+  <p class="sub" data-hu="Kattints egy cellára: a fenti áramlási ábrán a hozzá tartozó szalag kiemelkedik. A tábla pontos, de a 6915 és a 35 ugyanakkora helyet foglal. A Sankey a különbséget a vastagsággal mondja el. A szürke sarok üres: belépőből kieső egy hónap alatt nem lehet." data-en="Click a cell: the matching ribbon lights up on the flow diagram above. The table is exact, but 6,915 and 35 occupy the same amount of space. The Sankey tells the difference with width. The grey corner is empty: an entrant cannot also leave in the same month."></p>
+
+  <div class="chart">
+    <h4 data-hu="Átmenetmátrix, belépőkkel és kiesőkkel" data-en="Transition matrix, with entrants and leavers"></h4>
+    <div class="tablewrap"><table class="heat" id="heattable"></table></div>
+    <p class="cap" data-hu="A színezés a cella méretéhez igazodik, a forrás színén. A diagonális a helyben maradás. Az ARI csak a belső 4×4-re érvényes — a belépő és kieső sor/oszlop nincs benne." data-en="Colour follows cell size, in the source’s colour. The diagonal is staying put. ARI applies only to the inner 4×4 — the entering row and leaving column are not in it."></p>
+  </div>
+</section>
+
+<section id="dontesek">
+  <p class="eyebrow" data-hu="07 · Döntések" data-en="07 · Choices"></p>
+  <h2 data-hu="Amit a tankönyvi Sankey nem mond el" data-en="What a textbook Sankey does not tell you"></h2>
+  <p class="sub" data-hu="Az ábra akkor működik, ha néhány döntést előre meghoztál. Ezek itt nem díszítés kérdései voltak, hanem azé, hogy az üzleti kérdés egyáltalán látszódjon." data-en="The chart works only if a few decisions are made up front. Here they were not decoration; they were what made the business question visible at all."></p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 data-hu="Pszeudo-csomópont a be- és kilépőknek" data-en="Pseudo-nodes for entrants and leavers"></h3>
+      <p class="small" data-hu="A kohorsz minden hónapban változik. Ha csak a közös tagokat rajzolod, a kiesők eltűnnek, pedig gyakran épp az a kérdés, hova mentek. Balra a belépő, jobbra a kieső: így a rendszerhatár is része az ábrának." data-en="The cohort changes every month. Draw only the common members and the leavers vanish, even though the question is often precisely where they went. Entering on the left, leaving on the right: the system boundary becomes part of the chart."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Szín a forrás szerint" data-en="Colour by source"></h3>
+      <p class="small" data-hu="A szalag a bal oldali csomópont színét viszi magával. Így egy pillantásra látszik, honnan jön a mennyiség. A cél szerinti színezés akkor jobb, ha az a kérdés, miből áll össze, ami jobbra van." data-en="Each ribbon keeps the colour of its left-hand node, so you can see at a glance where the quantity comes from. Colouring by target is better when the question is what the right-hand side is made of."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Felirat csak küszöb fölött" data-en="Labels only above a threshold"></h3>
+      <p class="small" data-hu="Itt 500 tag felett kerül szám a szalagra, és még akkor is csak akkor, ha nem ütközik egy másikkal. A többit a tooltip adja. Egy Sankey, amin minden szalag fel van címkézve, olvashatatlan." data-en="Here a number goes on a ribbon only above 500 members, and only if it does not collide with another. The rest is in the tooltip. A Sankey with every ribbon labelled is unreadable."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Tábla a ritka, de fontos utaknak" data-en="A table for the rare but important paths"></h3>
+      <p class="small" data-hu="A szem a vastag szalagokra megy. A 135 fős átjárás a koncentráltból az egyszeri belépőkbe az ábrán szinte eltűnik, a táblában viszont ott van. A kettő együtt teljes." data-en="The eye goes to the thick ribbons. The 135-member crossing from concentrated burst to one-off visitors almost vanishes on the chart, but it is there in the table. The two together are complete."></p>
+    </div>
+  </div>
+</section>
+
+<section id="tanulsag">
+  <p class="eyebrow" data-hu="08 · Tanulságok" data-en="08 · Takeaways"></p>
+  <h2 data-hu="Mikor érdemes lerajzolni" data-en="When it is worth drawing"></h2>
+  <div class="grid3">
+    <div class="card"><h3 data-hu="A kérdés a leképezés" data-en="The question is the mapping"></h3><p class="small" data-hu="Ha a két oldal kategóriái különböznek, és számít, hogy melyik honnan jön, a Sankey a megfelelő forma. Ha csak a méret számít, elég az oszlop." data-en="If the two sides use different categories and it matters which came from where, Sankey is the right form. If only size matters, a bar is enough."></p></div>
+    <div class="card"><h3 data-hu="A megmaradás nem opció" data-en="Conservation is not optional"></h3><p class="small" data-hu="A két oldal összegének egyeznie kell, vagy a különbözetet be- és kilépő csomópont viszi. Ha ez nincs meg, az ábra szebb lesz, mint az adat." data-en="The two sides have to sum to the same total, or the difference has to sit in enter/leave nodes. Without that, the chart will look cleaner than the data."></p></div>
+    <div class="card"><h3 data-hu="Kevesebb kategória, több mondat" data-en="Fewer categories, more sentences"></h3><p class="small" data-hu="Négy–hat csomópont oldalanként olvasható. Afölött előbb vonj össze, aztán rajzolj. A ritka utakat a tábla viszi, nem a szalag." data-en="Four to six nodes a side stay readable. Above that, merge first, then draw. Rare paths belong in the table, not on a ribbon."></p></div>
+  </div>
+  <div style="margin-top:26px">
+    <p class="hint" data-hu="Felhasznált eszközök" data-en="Built with"></p>
+    <div class="stackchips" style="margin-top:10px">
+      <span>SVG</span><span>JavaScript</span><span>Python</span><span>pandas</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span data-hu="Anonimizált vizualizáció · minden adat kitalált" data-en="Anonymised visualisation · all data synthetic"></span>
+  <span class="mono" style="opacity:.7">Udvari István · Data Analyst</span>
+</footer>
+
+</main>
+
+<script>
+const DATA = {"meta":{"unit_customer_hu":"tag","unit_customer_en":"members","labels_hu":["Koncentrált, rövid","Egyszeri belépők","Szakaszos, mérsékelt","Intenzív, rendszeres"],"labels_en":["Concentrated burst","One-off visitors","Intermittent, moderate","Intensive, regular"],"colors":["#378ADD","#1D9E75","#EF9F27","#D85A30"],"in":"#66BB6A","out":"#E57373"},"customer":{"flows":[[4710,135,548,141],[112,5987,805,0],[35,30,6915,51],[40,0,34,3635]],"leavers":[129,455,152,86],"entrants":[545,495,294,154],"base_n":24000,"compare_n":24666,"common_n":23178,"stability_ari":0.7777,"label_min":500},"examples":{"energy":{"unit_hu":"TWh","unit_en":"TWh","left_title_hu":"Forrás","left_title_en":"Source","right_title_hu":"Felhasználás","right_title_en":"Use","label_min":12,"left":[{"id":"coal","hu":"Szén","en":"Coal","color":"#5C6670"},{"id":"gas","hu":"Földgáz","en":"Natural gas","color":"#378ADD"},{"id":"nuc","hu":"Nukleáris","en":"Nuclear","color":"#EF9F27"},{"id":"ren","hu":"Megújuló","en":"Renewables","color":"#1D9E75"}],"right":[{"id":"el","hu":"Villamos energia","en":"Electricity","color":"#1F6F5C"},{"id":"ht","hu":"Hő","en":"Heat","color":"#D85A30"},{"id":"tr","hu":"Közlekedés","en":"Transport","color":"#378ADD"},{"id":"ls","hu":"Veszteség","en":"Losses","color":"#9AA1AB"}],"links":[{"from":"coal","to":"el","n":18},{"from":"coal","to":"ht","n":22},{"from":"coal","to":"tr","n":4},{"from":"coal","to":"ls","n":12},{"from":"gas","to":"el","n":14},{"from":"gas","to":"ht","n":16},{"from":"gas","to":"tr","n":18},{"from":"gas","to":"ls","n":8},{"from":"nuc","to":"el","n":28},{"from":"nuc","to":"ht","n":2},{"from":"nuc","to":"ls","n":6},{"from":"ren","to":"el","n":20},{"from":"ren","to":"ht","n":6},{"from":"ren","to":"tr","n":12},{"from":"ren","to":"ls","n":4}]},"budget":{"unit_hu":"egység","unit_en":"units","left_title_hu":"Bevétel","left_title_en":"Revenue","right_title_hu":"Felhasználás","right_title_en":"Allocation","label_min":10,"left":[{"id":"sub","hu":"Előfizetés","en":"Subscription","color":"#1F6F5C"},{"id":"txn","hu":"Tranzakció","en":"Transaction","color":"#378ADD"},{"id":"oth","hu":"Egyéb","en":"Other","color":"#EF9F27"}],"right":[{"id":"prd","hu":"Termék","en":"Product","color":"#1D9E75"},{"id":"grw","hu":"Növekedés","en":"Growth","color":"#378ADD"},{"id":"ops","hu":"Üzemeltetés","en":"Operations","color":"#5C6670"},{"id":"rsv","hu":"Tartalék","en":"Reserve","color":"#9AA1AB"}],"links":[{"from":"sub","to":"prd","n":22},{"from":"sub","to":"grw","n":10},{"from":"sub","to":"ops","n":10},{"from":"sub","to":"rsv","n":6},{"from":"txn","to":"prd","n":12},{"from":"txn","to":"grw","n":8},{"from":"txn","to":"ops","n":8},{"from":"txn","to":"rsv","n":4},{"from":"oth","to":"prd","n":6},{"from":"oth","to":"grw","n":4},{"from":"oth","to":"ops","n":6},{"from":"oth","to":"rsv","n":4}]},"web":{"unit_hu":"látogatás","unit_en":"visits","left_title_hu":"Csatorna","left_title_en":"Channel","right_title_hu":"Kimenet","right_title_en":"Outcome","label_min":800,"left":[{"id":"org","hu":"Organikus","en":"Organic","color":"#1D9E75"},{"id":"paid","hu":"Fizetett","en":"Paid","color":"#378ADD"},{"id":"dir","hu":"Direkt","en":"Direct","color":"#1F6F5C"},{"id":"em","hu":"E-mail","en":"Email","color":"#EF9F27"}],"right":[{"id":"br","hu":"Böngészés","en":"Browse","color":"#378ADD"},{"id":"su","hu":"Regisztráció","en":"Sign-up","color":"#1D9E75"},{"id":"buy","hu":"Vásárlás","en":"Purchase","color":"#1F6F5C"},{"id":"bo","hu":"Kilépés","en":"Bounce","color":"#E57373"}],"links":[{"from":"org","to":"br","n":1800},{"from":"org","to":"su","n":900},{"from":"org","to":"buy","n":700},{"from":"org","to":"bo","n":800},{"from":"paid","to":"br","n":1100},{"from":"paid","to":"su","n":500},{"from":"paid","to":"buy","n":300},{"from":"paid","to":"bo","n":900},{"from":"dir","to":"br","n":600},{"from":"dir","to":"su","n":250},{"from":"dir","to":"buy","n":350},{"from":"dir","to":"bo","n":300},{"from":"em","to":"br","n":200},{"from":"em","to":"su","n":250},{"from":"em","to":"buy","n":250},{"from":"em","to":"bo","n":200}]}}};
+
+const TITLES = {
+  hu: "Sankey-diagram — hol megy tovább a mennyiség — Udvari István",
+  en: "Sankey diagram — where the quantity goes next — Udvari István"
+};
+const CC = DATA.meta.colors;
+const IN_C = DATA.meta.in;
+const OUT_C = DATA.meta.out;
+
+const state = {
+  lang: "hu",
+  anatomy: "parts",
+  example: "energy",
+  mode: "all",
+  focus: null,
+  hover: null,
+  cell: null
+};
+
+function L(hu, en) { return state.lang === "hu" ? hu : en; }
+function el(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function fmt(v, d) {
+  if (v === null || v === undefined || Number.isNaN(v)) return "–";
+  d = d === undefined ? 0 : d;
+  return Number(v).toLocaleString(state.lang === "hu" ? "hu-HU" : "en-US", {
+    minimumFractionDigits: d, maximumFractionDigits: d
+  });
+}
+function fmtInt(v) { return fmt(v, 0); }
+function pct(v, d) { return fmt(v * 100, d === undefined ? 1 : d) + "%"; }
+function nm(nd) { return state.lang === "hu" ? nd.hu : nd.en; }
+function svg(w, h, inner, extra) {
+  return '<svg viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="xMidYMid meet" role="img"' +
+    (extra || "") + ">" + inner + "</svg>";
+}
+
+function tokens() {
+  const C = DATA.customer;
+  const stay = C.flows.reduce((a, row, i) => a + row[i], 0);
+  return { "{STAY}": pct(stay / C.common_n, 0), "{ARI}": fmt(C.stability_ari, 3) };
+}
+function applyLang() {
+  const tk = tokens();
+  document.querySelectorAll("[data-hu]").forEach(node => {
+    let txt = state.lang === "hu" ? node.getAttribute("data-hu") : node.getAttribute("data-en");
+    if (txt === null) return;
+    Object.keys(tk).forEach(k => { txt = txt.split(k).join(tk[k]); });
+    node.innerHTML = txt;
+  });
+  document.documentElement.lang = state.lang;
+  document.title = TITLES[state.lang];
+  el("lang-hu").setAttribute("aria-pressed", state.lang === "hu");
+  el("lang-en").setAttribute("aria-pressed", state.lang === "en");
+}
+
+/* ---------- generic Sankey ---------- */
+function totalsFromLinks(left, right, links) {
+  const Ltot = {}, Rtot = {};
+  left.forEach(n => { Ltot[n.id] = 0; });
+  right.forEach(n => { Rtot[n.id] = 0; });
+  links.forEach(lk => { Ltot[lk.from] += lk.n; Rtot[lk.to] += lk.n; });
+  left.forEach(n => { n.n = Ltot[n.id]; });
+  right.forEach(n => { n.n = Rtot[n.id]; });
+}
+
+function drawSankey(spec, opts) {
+  opts = opts || {};
+  const left = spec.left.map(n => Object.assign({}, n));
+  const right = spec.right.map(n => Object.assign({}, n));
+  const links = spec.links.map(lk => Object.assign({}, lk)).filter(lk => lk.n > 0);
+
+  const mode = opts.mode || "all";
+  const focus = opts.focus;
+  const hover = opts.hover;
+  const active = opts.activeCell;
+
+  function visible(lk) {
+    if (mode === "stay" && lk.kind !== "stay") return false;
+    if (mode === "move" && lk.kind !== "move") return false;
+    if (mode === "in" && lk.kind !== "in") return false;
+    if (mode === "out" && lk.kind !== "out") return false;
+    return true;
+  }
+  const shown = links.filter(visible);
+  totalsFromLinks(left, right, shown);
+  const leftN = left.filter(n => n.n > 0);
+  const rightN = right.filter(n => n.n > 0);
+
+  const W = spec.width || 900, H = spec.height || 430;
+  const mt = 52, mb = 18, lw = spec.lw || 168, bw = 11, pad = 12;
+  const xL = lw, xR = W - lw - bw;
+  const leftTot = leftN.reduce((a, n) => a + n.n, 0);
+  const rightTot = rightN.reduce((a, n) => a + n.n, 0);
+  const nPad = Math.max(leftN.length, rightN.length, 1) - 1;
+  const availH = H - mt - mb - pad * nPad;
+  const sc = leftTot > 0 ? availH / leftTot : 1;
+
+  function place(arr) {
+    let y = mt;
+    arr.forEach(nd => {
+      nd.y = y;
+      nd.h = Math.max(2.5, nd.n * sc);
+      nd.cur = y;
+      y += nd.h + pad;
+    });
+  }
+  place(leftN); place(rightN);
+
+  const lIndex = {};
+  leftN.forEach((n, i) => { lIndex[n.id] = i; });
+  const rIndex = {};
+  rightN.forEach((n, i) => { rIndex[n.id] = i; });
+
+  shown.sort((a, b) => (lIndex[a.from] - lIndex[b.from]) || (rIndex[a.to] - rIndex[b.to]));
+  shown.forEach(lk => {
+    const sn = leftN[lIndex[lk.from]];
+    lk.y1 = sn.cur;
+    sn.cur += lk.n * sc;
+  });
+  rightN.forEach(nd => {
+    shown.filter(l => l.to === nd.id).forEach(lk => {
+      lk.y2 = nd.cur;
+      nd.cur += lk.n * sc;
+    });
+  });
+
+  function lit(lk) {
+    if (focus) {
+      if (focus.side === "l" && lk.from !== focus.id) return false;
+      if (focus.side === "r" && lk.to !== focus.id) return false;
+    }
+    if (hover && (lk.from !== hover.from || lk.to !== hover.to)) return false;
+    if (active && (lk.from !== active.from || lk.to !== active.to)) return false;
+    return true;
+  }
+  const anyFilter = !!(focus || hover || active);
+
+  let s = "";
+  s += '<text x="' + (xL + bw) + '" y="22" text-anchor="end" font-size="11" fill="#15181C" font-weight="500">' +
+    esc(spec.leftTitle) + "</text>";
+  if (spec.leftSub) {
+    s += '<text x="' + (xL + bw) + '" y="37" text-anchor="end" font-size="10" fill="#9AA1AB">' +
+      esc(spec.leftSub) + "</text>";
+  }
+  s += '<text x="' + xR + '" y="22" font-size="11" fill="#15181C" font-weight="500">' +
+    esc(spec.rightTitle) + "</text>";
+  if (spec.rightSub) {
+    s += '<text x="' + xR + '" y="37" font-size="10" fill="#9AA1AB">' + esc(spec.rightSub) + "</text>";
+  }
+
+  const LABEL_MIN = spec.labelMin || 0;
+  const placed = [];
+  let labelSvg = "";
+  const drawLinks = shown.slice().sort((a, b) => b.n - a.n);
+  drawLinks.forEach(lk => {
+    const h = Math.max(1.2, lk.n * sc);
+    const x1 = xL + bw, x2 = xR, xm = (x1 + x2) / 2;
+    const a1 = lk.y1, b1 = lk.y1 + h, a2 = lk.y2, b2 = lk.y2 + h;
+    const src = leftN[lIndex[lk.from]];
+    const col = src.pseudo ? (lk.kind === "in" ? IN_C : src.color) : src.color;
+    const on = lit(lk);
+    const op = !anyFilter ? 0.34 : (on ? 0.62 : 0.05);
+    s += '<path class="rib" data-from="' + esc(lk.from) + '" data-to="' + esc(lk.to) +
+      '" d="M' + x1 + "," + a1.toFixed(1) + " C" + xm + "," + a1.toFixed(1) + " " + xm + "," +
+      a2.toFixed(1) + " " + x2 + "," + a2.toFixed(1) + " L" + x2 + "," + b2.toFixed(1) + " C" +
+      xm + "," + b2.toFixed(1) + " " + xm + "," + b1.toFixed(1) + " " + x1 + "," + b1.toFixed(1) +
+      ' Z" fill="' + col + '" opacity="' + op + '"></path>';
+    if (on && lk.n >= LABEL_MIN && !anyFilter) {
+      const my = (a1 + b1 + a2 + b2) / 4;
+      const cands = [xm, xm - 96, xm + 96];
+      let lx = null;
+      for (let ci = 0; ci < cands.length && lx === null; ci++) {
+        const cx = cands[ci];
+        if (!placed.some(p => Math.abs(p.x - cx) < 50 && Math.abs(p.y - my) < 15)) lx = cx;
+      }
+      if (lx !== null) {
+        placed.push({ x: lx, y: my });
+        labelSvg += '<rect x="' + (lx - 22) + '" y="' + (my - 8) + '" width="44" height="15" rx="2" fill="#FFFFFF" opacity=".85"/>' +
+          '<text x="' + lx + '" y="' + (my + 3) + '" text-anchor="middle" font-size="10" fill="#15181C">' +
+          fmtInt(lk.n) + "</text>";
+      }
+    }
+  });
+  s += labelSvg;
+
+  function drawNodes(arr, x, side) {
+    arr.forEach(nd => {
+      const focused = focus && focus.side === side && focus.id === nd.id;
+      const faded = focus && !(focus.side === side && focus.id === nd.id);
+      s += '<rect class="nodehit" data-side="' + side + '" data-id="' + esc(nd.id) +
+        '" x="' + x + '" y="' + nd.y + '" width="' + bw + '" height="' + nd.h + '" rx="2" fill="' +
+        nd.color + '" opacity="' + (faded ? 0.22 : (nd.pseudo ? 0.85 : 1)) + '"></rect>';
+      const tx = side === "l" ? x - 9 : x + bw + 9;
+      const anc = side === "l" ? "end" : "start";
+      const yc = nd.y + nd.h / 2;
+      const fill = faded ? "#B0B6BE" : "#15181C";
+      const name = nm(nd);
+      s += '<text class="nodehit" data-side="' + side + '" data-id="' + esc(nd.id) +
+        '" x="' + tx + '" y="' + (yc - 1) + '" text-anchor="' + anc + '" font-size="10.5" fill="' + fill +
+        '" font-weight="' + (focused ? "600" : "400") + '">' + esc(name) + "</text>";
+      const shareBase = side === "l" ? leftTot : rightTot;
+      const share = (nd.pseudo || spec.hideShare) ? "" : " · " + pct(nd.n / shareBase, 1);
+      s += '<text class="nodehit" data-side="' + side + '" data-id="' + esc(nd.id) +
+        '" x="' + tx + '" y="' + (yc + 11) + '" text-anchor="' + anc + '" font-size="9.5" fill="#9AA1AB">' +
+        fmtInt(nd.n) + share + "</text>";
+    });
+  }
+  drawNodes(leftN, xL, "l");
+  drawNodes(rightN, xR, "r");
+
+  if (spec.foot) {
+    s += '<text x="0" y="' + (H - 2) + '" font-size="9.5" fill="#9AA1AB">' + esc(spec.foot) + "</text>";
+  }
+
+  return { html: svg(W, H, s, ' style="max-height:none"'), left: leftN, right: rightN, links: shown };
+}
+
+function emptyReadout(msg) {
+  return '<div class="cell" style="grid-column:1/-1"><div class="k">' +
+    esc(L("szalag", "ribbon")) + '</div><div class="v" style="font-weight:500;color:#6E7480">' +
+    esc(msg) + "</div></div>";
+}
+function readoutCells(items) {
+  return items.map(it => '<div class="cell"><div class="k">' + esc(it.k) +
+    '</div><div class="v">' + it.v + "</div></div>").join("");
+}
+
+function describeLink(spec, lk) {
+  const src = spec.left.find(n => n.id === lk.from);
+  const tgt = spec.right.find(n => n.id === lk.to);
+  let srcTot = 0, tgtTot = 0;
+  spec.links.forEach(x => { if (x.from === lk.from) srcTot += x.n; if (x.to === lk.to) tgtTot += x.n; });
+  return readoutCells([
+    { k: L("honnan", "from"), v: esc(nm(src)) },
+    { k: L("hova", "to"), v: esc(nm(tgt)) },
+    { k: spec.unit, v: fmtInt(lk.n) },
+    { k: L("a forrásból", "of source"), v: pct(lk.n / srcTot, 1) },
+    { k: L("a célban", "of target"), v: pct(lk.n / tgtTot, 1) }
+  ]);
+}
+
+function bindSankey(box, spec, hoverId, onHover, onNode) {
+  const root = el(box);
+  root.onpointerover = ev => {
+    const p = ev.target.closest("[data-from]");
+    if (!p) return;
+    onHover({ from: p.getAttribute("data-from"), to: p.getAttribute("data-to") });
+  };
+  root.onpointerleave = () => onHover(null);
+  root.onclick = ev => {
+    const n = ev.target.closest("[data-side]");
+    if (n && onNode) {
+      onNode({ side: n.getAttribute("data-side"), id: n.getAttribute("data-id") });
+      return;
+    }
+    const p = ev.target.closest("[data-from]");
+    if (p) onHover({ from: p.getAttribute("data-from"), to: p.getAttribute("data-to") });
+  };
+}
+
+/* ---------- anatomy ---------- */
+function anatomySpec() {
+  return {
+    leftTitle: L("Forrás", "Source"),
+    rightTitle: L("Cél", "Target"),
+    unit: L("egység", "units"),
+    labelMin: 10,
+    hideShare: true,
+    width: 640, height: 280, lw: 56,
+    left: [
+      { id: "a", hu: "A", en: "A", color: "#378ADD" },
+      { id: "b", hu: "B", en: "B", color: "#1D9E75" }
+    ],
+    right: [
+      { id: "x", hu: "X", en: "X", color: "#EF9F27" },
+      { id: "y", hu: "Y", en: "Y", color: "#D85A30" }
+    ],
+    links: [
+      { from: "a", to: "x", n: 40, kind: "move" },
+      { from: "a", to: "y", n: 20, kind: "move" },
+      { from: "b", to: "x", n: 10, kind: "move" },
+      { from: "b", to: "y", n: 30, kind: "move" }
+    ]
+  };
+}
+
+const ANATOMY = [
+  { id: "parts", hu: "A négy elem", en: "The four parts",
+    title_hu: "Csomópont, szalag, vastagság, irány",
+    title_en: "Node, ribbon, width, direction",
+    body_hu: "Balra a forrás, jobbra a cél. A téglalap a csomópont, a görbe sáv a szalag. A vastagság a mennyiség, az irány mindig balról jobbra.",
+    body_en: "Source on the left, target on the right. The rectangle is the node, the curved band is the ribbon. Width is quantity, direction is always left to right." },
+  { id: "nodes", hu: "Csomópont", en: "Node",
+    title_hu: "Egy kategória, egy téglalap",
+    title_en: "One category, one rectangle",
+    body_hu: "A magasság a csomópont teljes mennyisége. A = 60, B = 40. Jobbra X = 50, Y = 50. A két oldal összege ugyanaz: 100.",
+    body_en: "Height is the node’s total quantity. A = 60, B = 40. On the right X = 50, Y = 50. Both sides sum to the same 100." },
+  { id: "flow", hu: "Szalag", en: "Ribbon",
+    title_hu: "Egy út a forrásból a célba",
+    title_en: "One path from source to target",
+    body_hu: "A kék szalag A-ból X-be 40 egységet visz. Ez a mondat az, ami egy oszlopdiagramon nincs meg: nemcsak a szélek, hanem a kapcsolat is.",
+    body_en: "The blue ribbon carries 40 units from A to X. That sentence is what a bar chart does not have: not only the edges, but the link." },
+  { id: "width", hu: "Vastagság", en: "Width",
+    title_hu: "Vastag = sok, vékony = kevés",
+    title_en: "Thick = much, thin = little",
+    body_hu: "A → X (40) kétszer vastagabb, mint A → Y (20), és négyszer vastagabb, mint B → X (10). A szem a mennyiséget a szalagról olvassa, nem a számról.",
+    body_en: "A → X (40) is twice as thick as A → Y (20), and four times as thick as B → X (10). The eye reads quantity from the ribbon, not from the number." },
+  { id: "dir", hu: "Irány", en: "Direction",
+    title_hu: "Balról jobbra, nincs visszaút",
+    title_en: "Left to right, no return path",
+    body_hu: "A klasszikus Sankey irányított és körmentes. Ami jobbra van, az a következő állapot, nem a forrás. Visszafelé áramlást külön oszloppal vagy másik ábrával kellene mutatni.",
+    body_en: "A classic Sankey is directed and acyclic. What sits on the right is the next state, not the source. A return flow would need another column, or another chart." }
+];
+
+function renderAnatomy() {
+  const spec = anatomySpec();
+  const hover = state.anatomy === "flow" ? { from: "a", to: "x" } : null;
+  const focus = state.anatomy === "nodes" || state.anatomy === "width" ? { side: "l", id: "a" } : null;
+  const drawn = drawSankey(spec, { hover: hover, focus: focus });
+  el("anatomychart").innerHTML = drawn.html;
+  el("anatomychips").innerHTML = ANATOMY.map(x =>
+    '<button type="button" class="chip" data-anatomy="' + x.id + '" aria-pressed="' +
+    (state.anatomy === x.id) + '">' + esc(L(x.hu, x.en)) + "</button>").join("");
+  const cur = ANATOMY.find(x => x.id === state.anatomy) || ANATOMY[0];
+  el("anatomytext").innerHTML = '<div class="card"><h3>' + esc(L(cur.title_hu, cur.title_en)) +
+    "</h3><p class=\"small\">" + esc(L(cur.body_hu, cur.body_en)) + "</p></div>";
+  el("anatomycap").textContent = L(
+    "A + B = X + Y = 100. Ez a megmaradás: ami kilép, megérkezik.",
+    "A + B = X + Y = 100. That is conservation: what leaves, arrives."
+  );
+}
+
+function renderBars() {
+  const W = 640, H = 220, ml = 70, mr = 24, mt = 18, mb = 36;
+  const inner = W - ml - mr, bh = 46, gap = 36;
+  const items = [
+    { y: mt, parts: [{ n: 60, c: "#378ADD", l: "A" }, { n: 40, c: "#1D9E75", l: "B" }], lab: L("Forrás", "Source") },
+    { y: mt + bh + gap, parts: [{ n: 50, c: "#EF9F27", l: "X" }, { n: 50, c: "#D85A30", l: "Y" }], lab: L("Cél", "Target") }
+  ];
+  let s = "";
+  items.forEach(row => {
+    s += '<text x="' + (ml - 10) + '" y="' + (row.y + 28) + '" text-anchor="end" font-size="11" fill="#6E7480">' +
+      esc(row.lab) + "</text>";
+    let x = ml;
+    row.parts.forEach(p => {
+      const w = inner * p.n / 100;
+      s += '<rect x="' + x + '" y="' + row.y + '" width="' + w + '" height="' + bh + '" fill="' + p.c + '" rx="2"/>';
+      s += '<text x="' + (x + w / 2) + '" y="' + (row.y + 28) + '" text-anchor="middle" font-size="12" fill="#fff" font-weight="500">' +
+        p.l + " · " + p.n + "</text>";
+      x += w;
+    });
+  });
+  s += '<text x="' + (ml + inner / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="#9AA1AB">' +
+    esc(L("100 egység mindkét oldalon — a kapcsolat nincs rajta", "100 units on both sides — the link is not on the chart")) + "</text>";
+  el("barcompare").innerHTML = svg(W, H, s);
+}
+
+function renderCompareSankey() {
+  const spec = anatomySpec();
+  spec.width = 640; spec.height = 260; spec.lw = 56; spec.labelMin = 10;
+  spec.hideShare = true;
+  spec.leftTitle = L("Forrás", "Source");
+  spec.rightTitle = L("Cél", "Target");
+  el("sankeycompare").innerHTML = drawSankey(spec, {}).html;
+}
+
+/* ---------- examples ---------- */
+const EX_META = {
+  energy: {
+    hu: "Energia", en: "Energy",
+    title_hu: "Primerenergia → felhasználás (kitalált ország, TWh)",
+    title_en: "Primary energy → use (fictional country, TWh)",
+    cap_hu: "A klasszikus Sankey-téma: a vastag szalag a domináns út, a szürke a veszteség. A nukleáris szinte csak villamos energiába megy, a földgáz szétterül.",
+    cap_en: "The classic Sankey subject: the thick ribbon is the dominant path, grey is losses. Nuclear goes almost only into electricity; natural gas spreads out."
+  },
+  budget: {
+    hu: "Bevétel", en: "Revenue",
+    title_hu: "Bevételi csatorna → felhasználás (100 relatív egység)",
+    title_en: "Revenue channel → allocation (100 relative units)",
+    cap_hu: "Az előfizetés adja a termékfejlesztés felét. A tartalék mindhárom csatornából kap — ez a kereszteződés egy oszlopon nem látszana.",
+    cap_en: "Subscription funds half of product. The reserve is fed by all three channels — that crossing would not show on a bar."
+  },
+  web: {
+    hu: "Webes forgalom", en: "Web traffic",
+    title_hu: "Csatorna → kimenet (látogatás)",
+    title_en: "Channel → outcome (visits)",
+    cap_hu: "A fizetett forgalom nagyobb arányban lép ki, mint az organikus. Az e-mail kicsi, de a vásárlás aránya benne a legjobb.",
+    cap_en: "Paid traffic bounces at a higher rate than organic. Email is small, but its purchase share is the highest."
+  }
+};
+
+function exampleSpec(key) {
+  const ex = DATA.examples[key];
+  const meta = EX_META[key];
+  return {
+    leftTitle: L(ex.left_title_hu, ex.left_title_en),
+    rightTitle: L(ex.right_title_hu, ex.right_title_en),
+    unit: L(ex.unit_hu, ex.unit_en),
+    labelMin: ex.label_min,
+    width: 900, height: 380, lw: 150,
+    left: ex.left, right: ex.right, links: ex.links
+  };
+}
+
+function renderExamples() {
+  el("exchips").innerHTML = Object.keys(EX_META).map(k =>
+    '<button type="button" class="chip" data-ex="' + k + '" aria-pressed="' + (state.example === k) + '">' +
+    esc(L(EX_META[k].hu, EX_META[k].en)) + "</button>").join("");
+  const spec = exampleSpec(state.example);
+  const meta = EX_META[state.example];
+  el("extitle").textContent = L(meta.title_hu, meta.title_en);
+  el("excap").textContent = L(meta.cap_hu, meta.cap_en);
+  const hover = (state.hover && state.hover.box === "ex") ? state.hover : null;
+  el("exchart").innerHTML = drawSankey(spec, { hover: hover }).html;
+  if (hover) {
+    const lk = spec.links.find(x => x.from === hover.from && x.to === hover.to);
+    el("exreadout").innerHTML = lk ? describeLink(spec, lk) :
+      emptyReadout(L("Vidd az egeret egy szalagra.", "Hover a ribbon."));
+  } else {
+    el("exreadout").innerHTML = emptyReadout(L("Vidd az egeret egy szalagra a pontos számokért.", "Hover a ribbon for exact numbers."));
+  }
+  bindSankey("exchart", spec, "ex", h => {
+    state.hover = h ? { box: "ex", from: h.from, to: h.to } : null;
+    renderExamples();
+  });
+}
+
+/* ---------- customer ---------- */
+function customerSpec() {
+  const C = DATA.customer, M = DATA.meta;
+  const left = [{ id: "in", hu: "Kohorszba belép", en: "Entering cohort", color: IN_C, pseudo: true }];
+  const right = [{ id: "out", hu: "Kohorszból kiesik", en: "Leaving cohort", color: OUT_C, pseudo: true }];
+  M.labels_hu.forEach((hu, i) => {
+    left.push({ id: "c" + i, hu: hu, en: M.labels_en[i], color: CC[i] });
+    right.push({ id: "c" + i, hu: hu, en: M.labels_en[i], color: CC[i] });
+  });
+  const links = [];
+  for (let i = 0; i < 4; i++) {
+    links.push({ from: "c" + i, to: "out", n: C.leavers[i], kind: "out" });
+    for (let j = 0; j < 4; j++) {
+      if (C.flows[i][j] > 0) {
+        links.push({ from: "c" + i, to: "c" + j, n: C.flows[i][j], kind: i === j ? "stay" : "move" });
+      }
+    }
+  }
+  for (let j = 0; j < 4; j++) links.push({ from: "in", to: "c" + j, n: C.entrants[j], kind: "in" });
+  const stay = C.flows.reduce((a, row, i) => a + row[i], 0);
+  const entr = C.entrants.reduce((a, b) => a + b, 0);
+  const leav = C.leavers.reduce((a, b) => a + b, 0);
+  return {
+    leftTitle: L("Referenciahónap", "Reference month"),
+    rightTitle: L("Következő hónap", "Next month"),
+    leftSub: fmtInt(C.base_n) + " " + L("tag a kohorszban", "members in cohort"),
+    rightSub: fmtInt(C.compare_n) + " " + L("tag a kohorszban", "members in cohort"),
+    foot: L(
+      "Közös kohorsz: " + fmtInt(C.common_n) + " · belépő: " + fmtInt(entr) + " · kieső: " + fmtInt(leav) +
+        " · felirat " + fmtInt(C.label_min) + " tag felett",
+      "Common cohort: " + fmtInt(C.common_n) + " · entering: " + fmtInt(entr) +
+        " · leaving: " + fmtInt(leav) + " · labels above " + fmtInt(C.label_min) + " members"
+    ),
+    unit: L("tag", "members"),
+    labelMin: C.label_min,
+    width: 900, height: 470, lw: 168,
+    left: left, right: right, links: links,
+    stay: stay, entr: entr, leav: leav
+  };
+}
+
+const MODES = [
+  { id: "all", hu: "Összes áramlás", en: "All flows" },
+  { id: "stay", hu: "Csak maradók", en: "Stayers only" },
+  { id: "move", hu: "Csak elmozdulás", en: "Movements only" },
+  { id: "in", hu: "Belépők", en: "Entrants" },
+  { id: "out", hu: "Kiesők", en: "Leavers" }
+];
+
+function renderCustomer() {
+  const spec = customerSpec();
+  const C = DATA.customer;
+  const hover = (state.hover && state.hover.box === "cust") ? state.hover : null;
+  const active = state.cell;
+  el("custchips").innerHTML = MODES.map(m =>
+    '<button type="button" class="chip" data-mode="' + m.id + '" aria-pressed="' +
+    (state.mode === m.id) + '">' + esc(L(m.hu, m.en)) + "</button>").join("") +
+    (state.focus ? '<button type="button" class="chip" data-mode="clearfocus">' +
+      esc(L("fókusz törlése", "clear focus")) + "</button>" : "");
+  el("custchart").innerHTML = drawSankey(spec, {
+    mode: state.mode, focus: state.focus, hover: hover, activeCell: active
+  }).html;
+
+  const lk = hover ? spec.links.find(x => x.from === hover.from && x.to === hover.to) :
+    (active ? spec.links.find(x => x.from === active.from && x.to === active.to) : null);
+  if (lk) el("custreadout").innerHTML = describeLink(spec, lk);
+  else if (state.focus) {
+    const nds = state.focus.side === "l" ? spec.left : spec.right;
+    const nd = nds.find(n => n.id === state.focus.id);
+    el("custreadout").innerHTML = emptyReadout(
+      L("Fókusz: ", "Focus: ") + nm(nd) + L(" — csak az ide tartozó szalagok.", " — only the ribbons that belong here.")
+    );
+  } else {
+    el("custreadout").innerHTML = emptyReadout(
+      L("Vidd az egeret egy szalagra, vagy kattints egy csomópontra.", "Hover a ribbon, or click a node.")
+    );
+  }
+
+  const stayShare = spec.stay / C.common_n;
+  el("kpi-stay").textContent = pct(stayShare, 0);
+
+  const rows = spec.links.filter(lk => lk.kind !== "stay").sort((a, b) => b.n - a.n).slice(0, 10);
+  el("flowtable").innerHTML = "<thead><tr><th>" + L("honnan", "from") + "</th><th>" + L("hova", "to") +
+    "</th><th class=\"num\">" + L("tag", "members") + "</th><th class=\"num\">" + L("a forrásból", "of source") +
+    "</th></tr></thead><tbody>" + rows.map(lk => {
+      const src = spec.left.find(n => n.id === lk.from);
+      const tgt = spec.right.find(n => n.id === lk.to);
+      let srcTot = 0;
+      spec.links.forEach(x => { if (x.from === lk.from) srcTot += x.n; });
+      return "<tr><td><span class=\"swatch\" style=\"background:" + src.color + "\"></span>" +
+        esc(nm(src)) + "</td><td>" + esc(nm(tgt)) + "</td><td class=\"num\">" + fmtInt(lk.n) +
+        "</td><td class=\"num\">" + pct(lk.n / srcTot, 1) + "</td></tr>";
+    }).join("") + "</tbody>";
+
+  bindSankey("custchart", spec, "cust", h => {
+    state.hover = h ? { box: "cust", from: h.from, to: h.to } : null;
+    renderCustomer();
+    renderHeat();
+  }, node => {
+    if (state.focus && state.focus.side === node.side && state.focus.id === node.id) state.focus = null;
+    else state.focus = node;
+    state.hover = null;
+    renderCustomer();
+    renderHeat();
+  });
+}
+
+/* ---------- heatmap ---------- */
+function renderHeat() {
+  const C = DATA.customer, M = DATA.meta;
+  const labs = state.lang === "hu" ? M.labels_hu : M.labels_en;
+  const ids = ["c0", "c1", "c2", "c3"];
+  const mx = Math.max(
+    ...C.flows.flat(),
+    ...C.entrants,
+    ...C.leavers
+  );
+  function bg(n, color, dead) {
+    if (dead) return "#F2F3F0";
+    const t = Math.sqrt(n / mx);
+    const hex = color.replace("#", "");
+    const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + (0.12 + t * 0.72).toFixed(2) + ")";
+  }
+  function cell(from, to, n, color, dead) {
+    const on = state.cell && state.cell.from === from && state.cell.to === to;
+    const cls = dead ? "dead" : "cellbtn";
+    const style = "background:" + bg(n, color, dead) + (on ? ";outline:2px solid #15181C;outline-offset:-2px" : "");
+    if (dead) return '<td class="dead"></td>';
+    return '<td class="' + cls + '" data-from="' + from + '" data-to="' + to + '" style="' + style + '">' +
+      fmtInt(n) + "</td>";
+  }
+  let h = "<thead><tr><th></th>";
+  labs.forEach(lb => { h += "<th>" + esc(lb) + "</th>"; });
+  h += "<th>" + esc(L("Kieső", "Leaving")) + "</th></tr></thead><tbody>";
+  labs.forEach((lb, i) => {
+    h += '<tr><td class="lab"><span class="swatch" style="background:' + CC[i] + '"></span>' + esc(lb) + "</td>";
+    for (let j = 0; j < 4; j++) h += cell("c" + i, "c" + j, C.flows[i][j], CC[i], false);
+    h += cell("c" + i, "out", C.leavers[i], OUT_C, false);
+    h += "</tr>";
+  });
+  h += '<tr><td class="lab"><span class="swatch" style="background:' + IN_C + '"></span>' +
+    esc(L("Belépő", "Entering")) + "</td>";
+  for (let j = 0; j < 4; j++) h += cell("in", "c" + j, C.entrants[j], IN_C, false);
+  h += cell("in", "out", 0, "#ccc", true);
+  h += "</tr></tbody>";
+  el("heattable").innerHTML = h;
+}
+
+function renderAll() {
+  applyLang();
+  renderAnatomy();
+  renderBars();
+  renderCompareSankey();
+  renderExamples();
+  renderCustomer();
+  renderHeat();
+}
+
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("button");
+  if (!t) {
+    const cell = ev.target.closest("#heattable td.cellbtn");
+    if (cell) {
+      const next = { from: cell.getAttribute("data-from"), to: cell.getAttribute("data-to") };
+      if (state.cell && state.cell.from === next.from && state.cell.to === next.to) state.cell = null;
+      else state.cell = next;
+      state.hover = null;
+      renderCustomer();
+      renderHeat();
+    }
+    return;
+  }
+  if (t.id === "lang-hu") { state.lang = "hu"; renderAll(); return; }
+  if (t.id === "lang-en") { state.lang = "en"; renderAll(); return; }
+  if (t.dataset.anatomy) { state.anatomy = t.dataset.anatomy; renderAnatomy(); return; }
+  if (t.dataset.ex) { state.example = t.dataset.ex; state.hover = null; renderExamples(); return; }
+  if (t.dataset.mode === "clearfocus") { state.focus = null; renderCustomer(); return; }
+  if (t.dataset.mode) { state.mode = t.dataset.mode; renderCustomer(); renderHeat(); }
+});
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UpSet meets JS — amikor a Venn-diagram már nem elég — Udvari István</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F3F0;
+  --card:#FFFFFF;
+  --ink:#15181C;
+  --muted:#6E7480;
+  --line:#DCDED8;
+  --accent:#1F6F5C;
+  --accent-soft:#E2EDE8;
+  --radius:4px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+code{background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:3px;font-size:.86em}
+.topwrap{position:sticky;top:41px;z-index:99999}
+.subnav{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  background:var(--card);border-bottom:1px solid var(--line);padding:0 20px;overflow:hidden;
+}
+.navlinks{
+  display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.04em;
+  color:var(--muted);text-decoration:none;padding:11px 9px;white-space:nowrap;
+  border-bottom:2px solid transparent;
+}
+.navlinks a:hover{color:var(--accent);border-bottom-color:var(--accent-soft)}
+.langtoggle{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.langtoggle button{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;
+  border:0;background:var(--card);color:var(--muted);padding:5px 10px;cursor:pointer;
+}
+.langtoggle button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.langtoggle button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+main{max-width:1080px;margin:0 auto;padding:0 22px 90px}
+section{scroll-margin-top:58px;padding:52px 0 0}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+h1{font-size:clamp(32px,5vw,52px);font-weight:600;letter-spacing:-.028em;line-height:1.06;margin:0 0 20px}
+h2{font-size:clamp(23px,3vw,30px);font-weight:600;letter-spacing:-.02em;line-height:1.2;margin:0 0 8px}
+h3{font-size:17px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px}
+h4{font-size:13.5px;font-weight:600;margin:0 0 6px}
+p{margin:0 0 15px}
+.lead{font-size:clamp(17px,2vw,20px);color:#3C424C;line-height:1.55;max-width:74ch;margin-bottom:22px}
+.sub{color:var(--muted);max-width:78ch;margin-bottom:26px}
+.small{font-size:13.5px;color:var(--muted)}
+.hint{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+strong{font-weight:600}
+header.hero{padding:44px 0 0}
+.banner{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--card);border-radius:var(--radius);padding:16px 18px;margin:0 0 30px;max-width:82ch}
+.banner h4{color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase}
+.banner p{margin:0;font-size:14px;color:#4A505A}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px}
+.kpi b{display:block;font-family:"IBM Plex Mono",monospace;font-size:25px;font-weight:500;letter-spacing:-.02em;color:var(--accent);line-height:1.1}
+.kpi span{display:block;font-size:12.5px;color:var(--muted);margin-top:5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.grid2fixed{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:720px){.grid2fixed{grid-template-columns:1fr}}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.note{border:1px dashed var(--line);border-radius:var(--radius);padding:16px 18px}
+.note h4{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.note p{font-size:13.5px;color:#4A505A;margin:0}
+.note p + p{margin-top:9px}
+.yesno{border-top:3px solid var(--line)}
+.yesno.yes{border-top-color:var(--accent)}
+.yesno.no{border-top-color:#D85A30}
+.yesno .tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 8px}
+.yesno.yes .tag{color:var(--accent)}
+.yesno.no .tag{color:#A8391A}
+.yesno p{font-size:14px;color:#4A505A;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.chip{
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:6px 12px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--card);
+  color:var(--ink);cursor:pointer;transition:all .14s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:400;border-bottom:1px solid var(--ink)}
+td.num,th.num{font-family:"IBM Plex Mono",monospace}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.chart h4{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.chart .cap{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.45}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:"IBM Plex Mono",monospace}
+.ubox{overflow-x:auto;padding-bottom:4px}
+.ubox svg{min-width:560px}
+.ubox .hit,.ubox line,.ubox .ilab,.ubox .slab{transition:opacity .12s}
+.ubox .ilab,.ubox .slab{pointer-events:none}
+.ubox.classic,.ubox.classic .hit{pointer-events:none;cursor:default}
+#vennbox svg{min-width:0}
+.hit{cursor:pointer}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px;min-height:86px}
+.readout .cell{background:var(--paper);border-radius:var(--radius);padding:10px 12px}
+.readout .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.readout .v{font-size:15px;font-weight:600;margin-top:3px;letter-spacing:-.01em}
+.readout .wide{grid-column:1/-1}
+.readout .v.soft{font-weight:500;color:#4A505A;font-size:14px;line-height:1.45}
+.explain{
+  margin-top:12px;background:var(--accent-soft);border-radius:var(--radius);
+  padding:14px 16px;min-height:88px;
+}
+.explain .tag{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+.explain p{margin:0;font-size:14.5px;color:#24352F}
+.verdict{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);padding:18px 20px}
+.verdict p{margin:0;font-size:14.5px;color:#3C424C}
+.verdict p + p{margin-top:10px}
+.stackchips{display:flex;flex-wrap:wrap;gap:7px}
+.stackchips span,.stackchips a{font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:5px 10px;background:var(--accent-soft);color:var(--accent);border-radius:3px;text-decoration:none}
+footer{border-top:1px solid var(--line);margin-top:60px;padding:24px 0 0;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;padding:10px 20px;background:#15181C;color:#F2F3F0;position:sticky;top:0;z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+  <a href="../index.html" style="color:#8FD3BF;text-decoration:none;">&larr; Vissza a projektekhez</a>
+  <span style="opacity:.65;">Udvari István &middot; Data Analyst</span>
+</div>
+<!-- portfolio: a vissza-link sav + a lap sajat fejlece egyutt ~90 px -->
+<style>html{scroll-padding-top:100px}</style>
+<div class="topwrap">
+<nav class="subnav">
+  <div class="navlinks">
+    <a href="#miez" data-hu="Mi ez" data-en="What it is"></a>
+    <a href="#venn" data-hu="Venn határa" data-en="Where Venn fails"></a>
+    <a href="#anatomia" data-hu="Anatómia" data-en="Anatomy"></a>
+    <a href="#mikor" data-hu="Mikor használd" data-en="When to use"></a>
+    <a href="#peldak" data-hu="Más példák" data-en="Other examples"></a>
+    <a href="#csatorna" data-hu="Csatornák" data-en="Channels"></a>
+    <a href="#dontesek" data-hu="Döntések" data-en="Choices"></a>
+  </div>
+  <div class="langtoggle" role="group" aria-label="Nyelv / Language">
+    <button type="button" id="lang-hu" aria-pressed="true">HU</button>
+    <button type="button" id="lang-en" aria-pressed="false">EN</button>
+  </div>
+</nav>
+</div>
+
+<main>
+<header class="hero">
+  <p class="eyebrow" data-hu="Vizualizáció · anonimizált · kitalált adat" data-en="Visualisation · anonymised · synthetic data"></p>
+  <h1>UpSet meets JS</h1>
+  <p class="lead" data-hu="Halmazábrázolás akkor, amikor a Venn-diagram már nem elég. Az UpSet a metszeteket oszlopokba rendezi: egy oszlop egy kombináció, a magassága a mennyiség, a pontok pedig megmondják, melyik halmazok találkoznak. Ez az oldal a logikát hoverrel tanítja — a kiemelés mindig azt mondja, milyen nézetet látsz." data-en="Set visualisation for when a Venn diagram is no longer enough. UpSet lines the intersections up as columns: one column is one combination, its height is the quantity, and the dots say which sets meet. This page teaches the logic by hover — the highlight always tells you which view you are looking at."></p>
+  <div class="banner">
+    <h4 data-hu="Ezen az oldalon minden szám kitalált" data-en="Every number on this page is synthetic"></h4>
+    <p data-hu="A tagság-mátrixokat fix magú generátor állította elő, a metszeteket utána összeszámoltuk — ugyanaz a pipeline, mint egy éles aggregálásnál. Üzleti tartalom nem következtethető ki belőlük. Az UpSet ebben a projektben nem volt éles eszköz; a bemutató a forma miatt készült." data-en="The membership matrices were produced by a fixed-seed generator, then the intersections were counted — the same pipeline as a live aggregation. No business content can be inferred. UpSet was not a production tool on this project; the page exists to show the form."></p>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><b id="kpi-sets">6</b><span data-hu="halmaz — a Venn itt már olvashatatlan" data-en="sets — Venn is already unreadable here"></span></div>
+    <div class="kpi"><b id="kpi-combos">63</b><span data-hu="lehetséges nemüres metszet" data-en="possible non-empty intersections"></span></div>
+    <div class="kpi"><b id="kpi-shown">16</b><span data-hu="oszlop elég a domináns együttállásokhoz" data-en="columns cover the dominant combinations"></span></div>
+    <div class="kpi"><b>hover</b><span data-hu="megmondja, milyen nézetet látsz" data-en="tells you which view you are seeing"></span></div>
+  </div>
+</header>
+
+<section id="miez">
+  <p class="eyebrow" data-hu="01 · Mi ez" data-en="01 · What it is"></p>
+  <h2 data-hu="A metszetek listája, nem a körök játéka" data-en="A list of intersections, not a game of circles"></h2>
+  <p class="sub" data-hu="Alexander Lex és szerzőtársai 2014-ben publikálták az UpSetet: a halmazokat sorokba, a metszeteket oszlopokba tették. A forma onnan erős, hogy <strong>nem a síkidomok metszetét</strong> kell kiolvasni, hanem egy mátrixot — ugyanazt a nyelvet, amit egy táblázatnál már ismersz." data-en="Alexander Lex and colleagues published UpSet in 2014: sets as rows, intersections as columns. The form is strong because you do not have to read <strong>overlapping shapes</strong>, but a matrix — the same language you already know from a table."></p>
+  <div class="grid2">
+    <div class="card">
+      <h3 data-hu="Amit megmutat" data-en="What it shows"></h3>
+      <p class="small" data-hu="Melyik kombináció milyen gyakori. Nem csak azt, hogy A mekkora, hanem azt is, hogy A-ból mennyi van egyedül, mennyi B-vel, mennyi B-vel és C-vel. Ez a különbség a halmazméret és a metszetméret között." data-en="Which combination is how frequent. Not only how large A is, but how much of A is alone, how much sits with B, how much with B and C. That is the difference between set size and intersection size."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Amit a Venn elveszít" data-en="What Venn loses"></h3>
+      <p class="small" data-hu="Két-három kör még olvasható. Négynél a síkidomok száma 15, ötnél 31, hatnál 63. A terület már nem arányos, a címkék egymásra másznak, és a ritka, de fontos együttállás eltűnik a közepén." data-en="Two or three circles stay readable. At four the regions number 15, at five 31, at six 63. Area is no longer proportional, labels pile up, and the rare but important combination vanishes in the middle."></p>
+    </div>
+  </div>
+</section>
+
+<section id="venn">
+  <p class="eyebrow" data-hu="02 · A Venn határa" data-en="02 · Where Venn fails"></p>
+  <h2 data-hu="Add hozzá a következő kört" data-en="Add the next circle"></h2>
+  <p class="sub" data-hu="Ugyanaz a hárombetűs példa, egyre több halmazzal. Kettőnél a Venn a természetes választás. Ötnél már nem ábra, hanem dísz." data-en="The same lettered example, with more sets each time. At two, Venn is the natural choice. At five it is decoration, not a chart."></p>
+  <div class="chips" id="vennchips" style="margin:0 0 14px"></div>
+  <div class="grid2">
+    <div class="chart">
+      <h4 id="venntitle"></h4>
+      <div id="vennbox"></div>
+      <p class="cap" id="venncap"></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Hány régiót kellene kiolvasni?" data-en="How many regions would you have to read?"></h3>
+      <p class="small" data-hu="Nemüres metszetek száma: 2<sup>k</sup> − 1. A Venn mindegyiket egy síkidomba gyömöszöli. Az UpSet csak a nagyokat rakja ki oszlopnak — a farok a táblában marad." data-en="Non-empty intersections: 2<sup>k</sup> − 1. Venn stuffs every one of them into a region. UpSet only stands the large ones up as columns — the tail stays in a table."></p>
+      <div class="tablewrap" style="margin-top:10px"><table id="regiontable"></table></div>
+    </div>
+  </div>
+</section>
+
+<section id="anatomia">
+  <p class="eyebrow" data-hu="03 · Anatómia" data-en="03 · Anatomy"></p>
+  <h2 data-hu="Először a papírforma" data-en="First the print form"></h2>
+  <p class="sub" data-hu="Három halmaz, mind a hét metszet — így néz ki a klasszikus UpSet: az oszlop a mennyiség, a pont a tagság, a sáv a halmazméret. Nyomtatásban ennyi az egész: magadnak kell összerakni, melyik oszlop mit jelent." data-en="Three sets, all seven intersections — this is the classic UpSet: the column is the quantity, the dots are membership, the side bar is set size. In print that is the whole chart: you have to assemble for yourself what each column means."></p>
+  <div class="chart">
+    <h4 data-hu="Klasszikus UpSet — minden metszet kint van" data-en="Classic UpSet — every intersection is on the chart"></h4>
+    <div id="classicchart" class="ubox classic"></div>
+    <p class="cap" data-hu="A metszet <em>kizárólagos</em>: az oszlop azoké, akik pontosan ezekben a halmazokban vannak. A ∩ B itt nem tartalmazza az A ∩ B ∩ C-t — az külön oszlop, 12 elemmel." data-en="Intersections are <em>exclusive</em>: a column is the people who sit in exactly these sets. A ∩ B here does not include A ∩ B ∩ C — that is its own column, with 12 items."></p>
+  </div>
+  <div class="verdict" style="margin-top:16px">
+    <h3 data-hu="A hover a magyarázat" data-en="Hover is the explanation"></h3>
+    <p data-hu="Statikus ábrán az UpSet elsőre idegen: a pontok és az oszlopok ott vannak, a mondat nincs. JavaScripttel a kiemelés megmondja, oszlopot, sort vagy cellát látsz-e. Ettől lesz tanítható a forma — ez az, amit a „meets JS” a címben jelent." data-en="On a static figure UpSet looks alien at first: the dots and columns are there, the sentence is not. With JavaScript the highlight tells you whether you are looking at a column, a row or a cell. That is what makes the form teachable — and what “meets JS” means in the title."></p>
+  </div>
+  <h3 style="margin:28px 0 8px" data-hu="Hoverold a logikát" data-en="Hover the logic"></h3>
+  <p class="sub" data-hu="Ugyanaz a három halmaz, ugyanaz a hét oszlop. Vidd az egeret egy oszlopra, egy sorra, egy pontra vagy egy sávra. A zöld doboz mindig azt mondja ki, <strong>milyen nézetet látsz</strong> — ez az UpSet olvasási szabálya." data-en="The same three sets, the same seven columns. Hover a column, a row, a dot or a bar. The green box always states <strong>which view you are looking at</strong> — that is the reading rule of UpSet."></p>
+  <div class="chart">
+    <h4 data-hu="Ugyanaz a mátrix, most hoverrel" data-en="The same matrix, now with hover"></h4>
+    <div id="anatochart" class="ubox"></div>
+    <p class="cap" data-hu="A színek a sorokból jönnek. A kiemelés nem dísz: megmondja, éppen oszlopot, sort vagy cellát olvasol." data-en="The colours come from the rows. The highlight is not decoration: it tells you whether you are reading a column, a row or a cell."></p>
+  </div>
+  <div class="explain" id="anatoexplain"></div>
+  <div class="readout" id="anatoread"></div>
+</section>
+
+<section id="mikor">
+  <p class="eyebrow" data-hu="04 · Mikor" data-en="04 · When"></p>
+  <h2 data-hu="Akkor, ha a kombináció a kérdés" data-en="When the combination is the question"></h2>
+  <div class="grid2fixed" style="margin-top:8px">
+    <div class="card yesno yes">
+      <p class="tag" data-hu="Használd, ha" data-en="Use it when"></p>
+      <h3 data-hu="Négy vagy több halmaz átfedése számít" data-en="The overlap of four or more sets matters"></h3>
+      <p data-hu="Csatornák, jogosultságok, tünetek, termékmodulok, címkék. A kérdés nem a „mennyi van A-ban”, hanem a „kik azok, akik A-ban és B-ben benne vannak, C-ben viszont nem”." data-en="Channels, permissions, symptoms, product modules, tags. The question is not “how many in A”, but “who is in A and B but not in C”."></p>
+    </div>
+    <div class="card yesno yes">
+      <p class="tag" data-hu="Használd, ha" data-en="Use it when"></p>
+      <h3 data-hu="A ritka együttállás is döntés" data-en="A rare combination is still a decision"></h3>
+      <p data-hu="A Venn közepén eltűnik a kis régió. Az UpSetben a kis oszlop is oszlop: látszik, hogy létezik, és az is, hogy kicsi. A kampány sokszor pont ezekre a keskeny metszetekre megy." data-en="In the middle of a Venn the small region vanishes. In UpSet a small column is still a column: you see that it exists, and that it is small. Campaigns often target exactly these narrow intersections."></p>
+    </div>
+    <div class="card yesno no">
+      <p class="tag" data-hu="Ne használd, ha" data-en="Do not use it when"></p>
+      <h3 data-hu="Kettő vagy három halmazod van" data-en="You have two or three sets"></h3>
+      <p data-hu="Ott a Venn gyorsabb és ismerősebb. Az UpSet ilyenkor túl gép, a forma többet kér, mint amennyit a kérdés megér." data-en="There a Venn is faster and more familiar. UpSet is then too much machinery: the form asks more than the question is worth."></p>
+    </div>
+    <div class="card yesno no">
+      <p class="tag" data-hu="Ne használd, ha" data-en="Do not use it when"></p>
+      <h3 data-hu="A kérdés áramlás vagy idő" data-en="The question is a flow or a time series"></h3>
+      <p data-hu="Honnan hova megy a mennyiség: Sankey. Egy mutató időben: vonal. Rangsor: oszlop. Az UpSet halmaztagságot mutat egy pillanatban, nem mozgást." data-en="Where a quantity goes: a Sankey. One metric over time: a line. A ranking: a bar. UpSet shows set membership at a moment, not movement."></p>
+    </div>
+  </div>
+</section>
+
+<section id="peldak">
+  <p class="eyebrow" data-hu="05 · Más területek" data-en="05 · Other domains"></p>
+  <h2 data-hu="Ugyanaz a mátrix, másik mennyiség" data-en="The same matrix, a different quantity"></h2>
+  <p class="sub" data-hu="A csatorna-átfedés csak egy alkalmazás. Válts példát: a sorok más halmazok, az oszlopok más együttállások, az olvasási szabály ugyanaz. Hover egy oszlopon vagy egy soron." data-en="Channel overlap is only one application. Switch examples: the rows are different sets, the columns different combinations, the reading rule is the same. Hover a column or a row."></p>
+  <div class="chips" id="exchips" style="margin:0 0 14px"></div>
+  <div class="chips" id="exsort" style="margin:0 0 14px"></div>
+  <div class="chart">
+    <h4 id="extitle"></h4>
+    <div id="exchart" class="ubox"></div>
+    <p class="cap" id="excap"></p>
+  </div>
+  <div class="explain" id="exexplain"></div>
+  <div class="readout" id="exread"></div>
+</section>
+
+<section id="csatorna">
+  <p class="eyebrow" data-hu="06 · Hat halmaz" data-en="06 · Six sets"></p>
+  <h2 data-hu="Egy kohorsz, hat csatorna" data-en="One cohort, six channels"></h2>
+  <p class="sub" data-hu="Szintetikus hűségprogram-kohorsz: app, web, e-mail, fiók, kártya, telefon. Hat körből Venn-diagramot már nem lehet komolyan olvasni. Itt a 63 metszetből a 16 legnagyobb oszlop van kint — a farok {TAIL} tag, {REST} kombinációban." data-en="A synthetic loyalty-programme cohort: app, web, email, branch, card, phone. A six-circle Venn is no longer seriously readable. Of 63 intersections the 16 largest stand as columns — the tail is {TAIL} members in {REST} combinations."></p>
+  <div class="chips" id="chsort" style="margin:0 0 14px"></div>
+  <div class="chart">
+    <h4 data-hu="Csatorna-együttállások, a 16 legnagyobb metszet" data-en="Channel combinations, the 16 largest intersections"></h4>
+    <div id="chchart" class="ubox"></div>
+    <p class="cap" data-hu="Kattints egy sorra, hogy csak azokat az oszlopokat tartsd, amelyekben a halmaz részt vesz. Újra kattintva feloldódik. A hover a nézetet írja." data-en="Click a row to keep only the columns that include that set. Click again to clear. Hover writes the view."></p>
+  </div>
+  <div class="explain" id="chexplain"></div>
+  <div class="readout" id="chread"></div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="verdict">
+      <p data-hu="A legnagyobb oszlop ritkán a hatszoros metszet. Általában egy vagy két csatorna dominál, és a „mindenhol ott van” csoport kicsi. Ez pont az, amit a Venn közepe elhazudna: ott a középső pecsét mindig a történetnek tűnik." data-en="The tallest column is rarely the six-way intersection. Usually one or two channels dominate, and the “present everywhere” group is small. That is exactly what the centre of a Venn would mis-sell: the middle stamp always looks like the story."></p>
+    </div>
+    <div class="note">
+      <h4 data-hu="A farok nem hiba" data-en="The tail is not a bug"></h4>
+      <p data-hu="A 16. oszlop után {REST} kombináció marad, {TAIL} taggal. Ezeket nem kell mind kirakni: a forma akkor jó, ha a döntéshez elég oszlop látszik. A többi egy „egyéb” sor a táblában." data-en="After the 16th column {REST} combinations remain, with {TAIL} members. They do not all have to be drawn: the form works when enough columns are visible for the decision. The rest is an “other” row in a table."></p>
+    </div>
+  </div>
+</section>
+
+<section id="dontesek">
+  <p class="eyebrow" data-hu="07 · Döntések" data-en="07 · Choices"></p>
+  <h2 data-hu="Amit a tankönyvi UpSet nem mond el" data-en="What a textbook UpSet does not tell you"></h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 data-hu="Kizárólagos metszet, nem tartalmazó" data-en="Exclusive intersection, not inclusive"></h3>
+      <p class="small" data-hu="Az oszlop azoké, akik <em>pontosan</em> ezekben a halmazokban vannak. Ha A ∩ B-t tartalmazóan értenéd, beleszámolnád az A ∩ B ∩ C-t is. Az UpSet szétválasztja őket — ezért lehet a két számot külön kampányra tenni." data-en="A column is the people who sit in <em>exactly</em> these sets. If you read A ∩ B inclusively, you would also count A ∩ B ∩ C. UpSet splits them — which is why the two numbers can go to different campaigns."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Rendezés: méret vagy fokszám" data-en="Sort: size or degree"></h3>
+      <p class="small" data-hu="Méret szerint a gyakori együttállás áll elöl — ez a szokásos üzleti nézet. Fokszám szerint a magányosak, a párok és a hármasok csoportosulnak. Ugyanaz az adat, másik mondat." data-en="By size the frequent combinations come first — the usual business view. By degree the singles, pairs and triples group together. Same data, different sentence."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="Nem kell mind a 63 oszlop" data-en="You do not need all 63 columns"></h3>
+      <p class="small" data-hu="A Venn kényszere, hogy minden régiót kirajzol. Az UpSeté nem. A top N + egy farok-szám ugyanazt a teljességet adja, olvashatóbban. Itt N = 16." data-en="Venn is forced to draw every region. UpSet is not. Top N plus a tail count gives the same completeness, more readably. Here N = 16."></p>
+    </div>
+    <div class="card">
+      <h3 data-hu="A hover a magyarázat" data-en="Hover is the explanation"></h3>
+      <p class="small" data-hu="Statikus PNG-n az UpSet elsőre idegen. HTML-ben a kiemelés megmondja, oszlopot, sort vagy cellát látsz-e. Ettől lesz tanítható a forma — ez az, amit a „meets JS” a címben jelent." data-en="On a static PNG, UpSet looks alien at first. In HTML the highlight tells you whether you are looking at a column, a row or a cell. That is what makes the form teachable — and what “meets JS” means in the title."></p>
+    </div>
+  </div>
+</section>
+
+<section id="tanulsag">
+  <p class="eyebrow" data-hu="08 · Tanulságok" data-en="08 · Takeaways"></p>
+  <h2 data-hu="Mikor érdemes lerajzolni" data-en="When it is worth drawing"></h2>
+  <div class="grid3">
+    <div class="card"><h3 data-hu="A Venn háromig él" data-en="Venn lives up to three"></h3><p class="small" data-hu="Addig a kör a gyorsabb ábra. Afölött a mátrix. A váltás nem ízlés, hanem olvashatóság." data-en="Until then the circle is the faster chart. Above that, the matrix. The switch is not taste, it is readability."></p></div>
+    <div class="card"><h3 data-hu="Az oszlop egy mondat" data-en="A column is a sentence"></h3><p class="small" data-hu="„App és e-mail, fiók nélkül.” Ha ezt a mondatot nem tudod a hover nélkül kiolvasni, az ábra még nem kész." data-en="“App and email, no branch.” If you cannot read that sentence without the hover, the chart is not finished yet."></p></div>
+    <div class="card"><h3 data-hu="A kis oszlop is döntés" data-en="A short column is still a decision"></h3><p class="small" data-hu="A ritka kombináció nem zaj. Gyakran ez a szegmens, amire a kampány ténylegesen megy — feltéve, hogy látod." data-en="A rare combination is not noise. It is often the segment the campaign actually targets — provided you can see it."></p></div>
+  </div>
+  <div style="margin-top:26px">
+    <p class="hint" data-hu="Felhasznált eszközök" data-en="Built with"></p>
+    <div class="stackchips" style="margin-top:10px">
+      <a href="https://upset.app/" target="_blank" rel="noopener noreferrer">UpSet</a><span>SVG</span><span>JavaScript</span><span>Python</span><span>NumPy</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span data-hu="Anonimizált vizualizáció · minden adat kitalált" data-en="Anonymised visualisation · all data synthetic"></span>
+  <span class="mono" style="opacity:.7">Udvari István · Data Analyst</span>
+</footer>
+</main>
+
+<script>
+const DATA = {"meta":{"seed":42},"anatomy":{"title_hu":"Három halmaz, minden metszet","title_en":"Three sets, every intersection","unit_hu":"elem","unit_en":"items","universe":78,"n_raw":78,"sets":[{"id":"a","hu":"A","en":"A","color":"#378ADD","n":50},{"id":"b","hu":"B","en":"B","color":"#1D9E75","n":40},{"id":"c","hu":"C","en":"C","color":"#EF9F27","n":35}],"intersections":[{"members":[0,1,2],"n":12,"degree":3},{"members":[0],"n":20,"degree":1},{"members":[1],"n":12,"degree":1},{"members":[0,1],"n":10,"degree":2},{"members":[2],"n":10,"degree":1},{"members":[0,2],"n":8,"degree":2},{"members":[1,2],"n":6,"degree":2}],"n_combos_total":7,"n_combos_shown":7,"tail_n":0,"max_degree":3},"channels":{"title_hu":"Csatorna-használat, 6 halmaz","title_en":"Channel usage, 6 sets","unit_hu":"tag","unit_en":"members","universe":11244,"n_raw":12000,"sets":[{"id":"app","hu":"App","en":"App","color":"#378ADD","n":6404},{"id":"web","hu":"Web","en":"Web","color":"#1D9E75","n":5076},{"id":"email","hu":"E-mail","en":"Email","color":"#EF9F27","n":6212},{"id":"branch","hu":"Fiók","en":"Branch","color":"#D85A30","n":2159},{"id":"card","hu":"Kártya","en":"Card","color":"#1F6F5C","n":6921},{"id":"phone","hu":"Telefon","en":"Phone","color":"#7B6BA8","n":1877}],"intersections":[{"members":[0,2,4],"n":915,"degree":3},{"members":[0,1,2,4],"n":850,"degree":4},{"members":[4],"n":758,"degree":1},{"members":[2,4],"n":614,"degree":2},{"members":[0,4],"n":609,"degree":2},{"members":[0,2],"n":533,"degree":2},{"members":[0,1,4],"n":522,"degree":3},{"members":[2],"n":504,"degree":1},{"members":[0,1,2],"n":487,"degree":3},{"members":[1],"n":427,"degree":1},{"members":[1,4],"n":407,"degree":2},{"members":[0,1],"n":373,"degree":2},{"members":[0],"n":361,"degree":1},{"members":[1,2,4],"n":314,"degree":3},{"members":[1,2],"n":275,"degree":2},{"members":[0,1,2,3,4],"n":148,"degree":5}],"n_combos_total":63,"n_combos_shown":16,"tail_n":3147,"max_degree":6},"features":{"title_hu":"Termékmodulok, 5 halmaz","title_en":"Product modules, 5 sets","unit_hu":"felhasználó","unit_en":"users","universe":7359,"n_raw":8000,"sets":[{"id":"search","hu":"Keresés","en":"Search","color":"#378ADD","n":5803},{"id":"save","hu":"Mentés","en":"Save","color":"#1D9E75","n":4282},{"id":"share","hu":"Megosztás","en":"Share","color":"#EF9F27","n":2330},{"id":"alert","hu":"Értesítés","en":"Alerts","color":"#D85A30","n":2459},{"id":"export","hu":"Export","en":"Export","color":"#1F6F5C","n":1140}],"intersections":[{"members":[0,1],"n":1226,"degree":2},{"members":[0],"n":1190,"degree":1},{"members":[0,1,2],"n":691,"degree":3},{"members":[0,1,3],"n":611,"degree":3},{"members":[0,3],"n":434,"degree":2},{"members":[0,2],"n":365,"degree":2},{"members":[0,1,2,3],"n":341,"degree":4},{"members":[1],"n":318,"degree":1},{"members":[3],"n":242,"degree":1},{"members":[0,1,4],"n":210,"degree":3},{"members":[1,3],"n":185,"degree":2},{"members":[0,4],"n":176,"degree":2},{"members":[1,2],"n":175,"degree":2},{"members":[2],"n":169,"degree":1}],"n_combos_total":31,"n_combos_shown":14,"tail_n":1026,"max_degree":5},"survey":{"title_hu":"Elégedettségi témák, 6 halmaz","title_en":"Satisfaction topics, 6 sets","unit_hu":"válasz","unit_en":"responses","universe":4331,"n_raw":4500,"sets":[{"id":"price","hu":"Ár","en":"Price","color":"#378ADD","n":2617},{"id":"qual","hu":"Minőség","en":"Quality","color":"#1D9E75","n":2321},{"id":"svc","hu":"Kiszolgálás","en":"Service","color":"#EF9F27","n":2393},{"id":"loc","hu":"Helyszín","en":"Location","color":"#D85A30","n":1530},{"id":"hrs","hu":"Nyitvatartás","en":"Hours","color":"#1F6F5C","n":981},{"id":"staff","hu":"Személyzet","en":"Staff","color":"#7B6BA8","n":2144}],"intersections":[{"members":[0],"n":245,"degree":1},{"members":[0,1,2,5],"n":238,"degree":4},{"members":[0,1],"n":183,"degree":2},{"members":[1,2,5],"n":174,"degree":3},{"members":[0,2,5],"n":169,"degree":3},{"members":[0,1,2],"n":162,"degree":3},{"members":[0,1,2,3,5],"n":146,"degree":5},{"members":[1,2],"n":137,"degree":2},{"members":[2,5],"n":135,"degree":2},{"members":[1],"n":125,"degree":1},{"members":[0,1,3],"n":122,"degree":3},{"members":[0,5],"n":120,"degree":2},{"members":[5],"n":113,"degree":1},{"members":[0,3],"n":106,"degree":2},{"members":[0,1,2,3],"n":104,"degree":4}],"n_combos_total":63,"n_combos_shown":15,"tail_n":2052,"max_degree":6},"regions":[{"sets":2,"intersections":3},{"sets":3,"intersections":7},{"sets":4,"intersections":15},{"sets":5,"intersections":31},{"sets":6,"intersections":63},{"sets":7,"intersections":127}]};
+const TITLES = {
+  hu: "UpSet meets JS — amikor a Venn-diagram már nem elég — Udvari István",
+  en: "UpSet meets JS — when a Venn diagram is no longer enough — Udvari István"
+};
+const state = {
+  lang: "hu",
+  venn: 3,
+  example: "features",
+  exSort: "size",
+  chSort: "size",
+  hoverA: null,
+  hoverE: null,
+  hoverC: null,
+  focusSet: null
+};
+
+function L(hu, en) { return state.lang === "hu" ? hu : en; }
+function el(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function fmt(v, d) {
+  if (v === null || v === undefined || Number.isNaN(v)) return "–";
+  d = d === undefined ? 0 : d;
+  return Number(v).toLocaleString(state.lang === "hu" ? "hu-HU" : "en-US", {
+    minimumFractionDigits: d, maximumFractionDigits: d
+  });
+}
+function fmtInt(v) { return fmt(v, 0); }
+function pct(v, d) { return fmt(v * 100, d === undefined ? 1 : d) + "%"; }
+function sn(set) { return state.lang === "hu" ? set.hu : set.en; }
+function svg(w, h, inner) {
+  return '<svg viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="xMidYMid meet" role="img">' + inner + "</svg>";
+}
+function tokens() {
+  const C = DATA.channels;
+  return {
+    "{TAIL}": fmtInt(C.tail_n),
+    "{REST}": fmtInt(C.n_combos_total - C.n_combos_shown)
+  };
+}
+function applyLang() {
+  const tk = tokens();
+  document.querySelectorAll("[data-hu]").forEach(node => {
+    let txt = state.lang === "hu" ? node.getAttribute("data-hu") : node.getAttribute("data-en");
+    if (txt === null) return;
+    Object.keys(tk).forEach(k => { txt = txt.split(k).join(tk[k]); });
+    node.innerHTML = txt;
+  });
+  document.documentElement.lang = state.lang;
+  document.title = TITLES[state.lang];
+  el("lang-hu").setAttribute("aria-pressed", state.lang === "hu");
+  el("lang-en").setAttribute("aria-pressed", state.lang === "en");
+}
+
+function comboName(spec, inter) {
+  if (!inter.members.length) return L("üres", "empty");
+  return inter.members.map(i => sn(spec.sets[i])).join(" ∩ ");
+}
+function comboNeg(spec, inter) {
+  const miss = spec.sets.map((_, i) => i).filter(i => inter.members.indexOf(i) < 0);
+  if (!miss.length) return "";
+  return miss.map(i => "¬" + sn(spec.sets[i])).join(" ∩ ");
+}
+function sortInters(spec, how) {
+  const xs = spec.intersections.slice();
+  if (how === "degree") xs.sort((a, b) => (a.degree - b.degree) || (b.n - a.n));
+  else xs.sort((a, b) => (b.n - a.n) || (b.degree - a.degree));
+  return xs;
+}
+
+function litCombo(hover, focusSet, inter, ci) {
+  if (focusSet !== null && inter.members.indexOf(focusSet) < 0) return false;
+  if (!hover) return true;
+  if (hover.kind === "combo" || hover.kind === "ibar") return hover.i === ci;
+  if (hover.kind === "set" || hover.kind === "sbar") return inter.members.indexOf(hover.i) >= 0;
+  if (hover.kind === "dot") return hover.combo === ci;
+  return true;
+}
+function litSet(hover, focusSet, si) {
+  if (focusSet !== null && focusSet !== si) return focusSet === si;
+  if (!hover) return true;
+  if (hover.kind === "set" || hover.kind === "sbar") return hover.i === si;
+  if (hover.kind === "combo" || hover.kind === "ibar") return true;
+  if (hover.kind === "dot") return hover.set === si || true;
+  return true;
+}
+
+function drawUpset(spec, hover, opts) {
+  opts = opts || {};
+  let inters = sortInters(spec, opts.sort || "size");
+  const focusSet = opts.focusSet === undefined ? null : opts.focusSet;
+  if (focusSet !== null) inters = inters.filter(it => it.members.indexOf(focusSet) >= 0);
+  const sets = spec.sets;
+  const nS = sets.length, nC = inters.length;
+  const nameW = opts.nameW || 92;
+  const barW = opts.barW || 88;
+  const colW = opts.colW || 34;
+  const rowH = opts.rowH || 30;
+  const topH = opts.topH || 132;
+  const gap = 40;
+  const ml = nameW + barW + gap;
+  const W = ml + nC * colW + 18;
+  const H = topH + 10 + nS * rowH + 18;
+  const mxI = Math.max.apply(null, inters.map(x => x.n)) || 1;
+  const mxS = Math.max.apply(null, sets.map(s => s.n)) || 1;
+  const classic = !!opts.classic;
+  const ink = "#2A2E34";
+
+  let s = "";
+  s += '<text x="' + (ml - 10) + '" y="16" text-anchor="end" font-size="10" fill="#9AA1AB">' +
+    esc(L("metszet mérete", "intersection size")) + "</text>";
+  s += '<text x="8" y="' + (topH + 4) + '" font-size="10" fill="#9AA1AB">' +
+    esc(L("halmaz mérete", "set size")) + "</text>";
+
+  if (classic) {
+    sets.forEach((_, si) => {
+      if (si % 2) return;
+      const y = topH + 10 + si * rowH;
+      s += '<rect x="' + (ml - 8) + '" y="' + y + '" width="' + (nC * colW + 16) +
+        '" height="' + rowH + '" fill="#EEF0EB"></rect>';
+    });
+  }
+
+  inters.forEach((it, ci) => {
+    const x = ml + ci * colW + colW / 2;
+    const bh = Math.max(3, (topH - 28) * it.n / mxI);
+    const barFill = classic ? ink : (it.degree === 1 ? "#9AA1AB" : "#1F6F5C");
+    s += '<rect class="hit" data-kind="ibar" data-i="' + ci + '" x="' + (x - 9) + '" y="' +
+      (topH - 8 - bh) + '" width="18" height="' + bh + '" rx="2" fill="' + barFill + '"></rect>';
+    s += '<text class="ilab" data-kind="ibar" data-i="' + ci + '" x="' + x + '" y="' +
+      (topH - 12 - bh) + '" text-anchor="middle" font-size="9.5" fill="#15181C">' +
+      fmtInt(it.n) + "</text>";
+  });
+
+  sets.forEach((st, si) => {
+    const y = topH + 14 + si * rowH + rowH / 2;
+    const bw = Math.max(3, barW * st.n / mxS);
+    const x1 = nameW + barW - bw;
+    s += '<text class="hit" data-kind="set" data-i="' + si + '" x="' + (nameW - 8) + '" y="' +
+      (y + 4) + '" text-anchor="end" font-size="11.5" fill="#15181C">' + esc(sn(st)) + "</text>";
+    s += '<rect class="hit" data-kind="sbar" data-i="' + si + '" x="' + x1 + '" y="' + (y - 6) +
+      '" width="' + bw + '" height="12" rx="2" fill="' + (classic ? ink : st.color) + '"></rect>';
+    s += '<text class="slab" data-kind="sbar" data-i="' + si + '" x="' + (nameW + barW + 6) + '" y="' +
+      (y + 4) + '" text-anchor="start" font-size="9.5" fill="#6E7480">' + fmtInt(st.n) + "</text>";
+  });
+
+  inters.forEach((it, ci) => {
+    const x = ml + ci * colW + colW / 2;
+    const mem = it.members;
+    s += '<rect class="hit" data-kind="combo" data-i="' + ci + '" x="' + (x - colW / 2) +
+      '" y="' + (topH + 6) + '" width="' + colW + '" height="' + (nS * rowH + 4) +
+      '" fill="#fff" opacity="0"></rect>';
+    if (mem.length >= 2) {
+      const ys = mem.map(si => topH + 14 + si * rowH + rowH / 2);
+      const y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+      s += '<line data-kind="link" data-i="' + ci + '" x1="' + x + '" y1="' + y0 +
+        '" x2="' + x + '" y2="' + y1 + '" stroke="#15181C" stroke-width="2" opacity="0.55"></line>';
+    }
+    sets.forEach((st, si) => {
+      const y = topH + 14 + si * rowH + rowH / 2;
+      const filled = mem.indexOf(si) >= 0;
+      const r = filled ? 6 : 4.2;
+      const fill = classic ? (filled ? ink : "#fff") : (filled ? st.color : "#fff");
+      const stroke = classic ? (filled ? ink : "#C5C9C2") : (filled ? st.color : "#C5C9C2");
+      s += '<circle class="hit" data-kind="dot" data-combo="' + ci + '" data-set="' + si +
+        '" data-on="' + (filled ? 1 : 0) + '" cx="' + x + '" cy="' + y + '" r="' + r +
+        '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.6"></circle>';
+    });
+  });
+
+  return { html: svg(W, H, s), inters: inters };
+}
+
+function applyHighlight(root, spec, inters, hover, focusSet) {
+  if (focusSet === undefined) focusSet = null;
+  const any = !!(hover || focusSet !== null);
+  root.querySelectorAll("[data-kind]").forEach(n => {
+    const kind = n.getAttribute("data-kind");
+    if (kind === "combo") return;
+    let on = true;
+    if (kind === "ibar" || kind === "link") {
+      const i = +n.getAttribute("data-i");
+      on = !inters[i] ? false : litCombo(hover, focusSet, inters[i], i);
+    } else if (kind === "dot") {
+      const i = +n.getAttribute("data-combo");
+      const si = +n.getAttribute("data-set");
+      on = !inters[i] ? false : litCombo(hover, focusSet, inters[i], i);
+      if (hover && (hover.kind === "set" || hover.kind === "sbar")) on = on && si === hover.i;
+    } else if (kind === "set" || kind === "sbar") {
+      const i = +n.getAttribute("data-i");
+      if (!any) on = true;
+      else if (hover && (hover.kind === "combo" || hover.kind === "ibar" || hover.kind === "dot")) {
+        const ci = hover.kind === "dot" ? hover.combo : hover.i;
+        on = !!(inters[ci] && inters[ci].members.indexOf(i) >= 0);
+      } else {
+        on = (hover && hover.i === i) || focusSet === i;
+      }
+      if (kind === "set") n.setAttribute("font-weight", on && any ? "600" : "400");
+    }
+    if (kind === "link") n.style.opacity = !any ? "0.55" : (on ? "0.75" : "0.08");
+    else n.style.opacity = !any ? "1" : (on ? "1" : "0.14");
+  });
+}
+
+function emptyExplain() {
+  return {
+    tag: L("nézet", "view"),
+    text: L(
+      "Vidd az egeret egy oszlopra, egy sorra, egy pontra vagy egy sávra. A kiemelés megmutatja, milyen nézetet látsz.",
+      "Hover a column, a row, a dot or a bar. The highlight shows which view you are looking at."
+    ),
+    cells: []
+  };
+}
+
+function explain(spec, hover, inters, extra) {
+  extra = extra || {};
+  if (extra.focusSet !== null && extra.focusSet !== undefined && !hover) {
+    const st = spec.sets[extra.focusSet];
+    const nCol = inters.filter(it => it.members.indexOf(extra.focusSet) >= 0).length;
+    return {
+      tag: L("nézet · halmazra szűrve", "view · filtered to a set"),
+      text: L(
+        "Csak azok az oszlopok maradtak, amelyekben ez a halmaz — " + sn(st) + " — részt vesz. A többi kombináció el van rejtve: nem tűnt el az adatból, csak a nézetből.",
+        "Only columns that include this set — " + sn(st) + " — remain. The other combinations are hidden: not gone from the data, only from the view."
+      ),
+      cells: [
+        { k: L("halmaz", "set"), v: esc(sn(st)) },
+        { k: L("halmazméret", "set size"), v: fmtInt(st.n) },
+        { k: L("látható oszlop", "visible columns"), v: fmtInt(nCol) }
+      ]
+    };
+  }
+  if (!hover) return emptyExplain();
+
+  if (hover.kind === "combo" || hover.kind === "ibar") {
+    const it = inters[hover.i];
+    const neg = comboNeg(spec, it);
+    const formula = comboName(spec, it) + (neg ? " ∩ " + neg : "");
+    return {
+      tag: L("nézet · metszet-oszlop", "view · intersection column"),
+      text: L(
+        "Ez az oszlop azoké, akik <strong>pontosan</strong> ezekben a halmazokban vannak. A függőleges vonal a kitöltött pontokat köti össze. A sáv magassága a mennyiség.",
+        "This column is the people who sit in <strong>exactly</strong> these sets. The vertical line joins the filled dots. Bar height is the quantity."
+      ),
+      cells: [
+        { k: L("kombináció", "combination"), v: esc(formula) },
+        { k: L("fokszám", "degree"), v: fmtInt(it.degree) },
+        { k: spec.unit_hu ? L(spec.unit_hu, spec.unit_en) : L("elemszám", "count"), v: fmtInt(it.n) },
+        { k: L("a kohorszban", "of the cohort"), v: pct(it.n / spec.universe, 1) }
+      ]
+    };
+  }
+  if (hover.kind === "set" || hover.kind === "sbar") {
+    const st = spec.sets[hover.i];
+    const nCol = inters.filter(it => it.members.indexOf(hover.i) >= 0).length;
+    return {
+      tag: L("nézet · halmazsor", "view · set row"),
+      text: L(
+        "A vízszintes sáv a <strong>halmaz teljes mérete</strong> — mindenki, aki benne van, a többi halmaztól függetlenül. Ezért nagyobb, mint bármelyik oszlop, amelyben részt vesz.",
+        "The horizontal bar is the <strong>full set size</strong> — everyone in it, regardless of the other sets. That is why it is larger than any column it takes part in."
+      ),
+      cells: [
+        { k: L("halmaz", "set"), v: esc(sn(st)) },
+        { k: L("halmazméret", "set size"), v: fmtInt(st.n) },
+        { k: L("oszlopban szerepel", "appears in columns"), v: fmtInt(nCol) },
+        { k: L("a kohorszban", "of the cohort"), v: pct(st.n / spec.universe, 1) }
+      ]
+    };
+  }
+  if (hover.kind === "dot") {
+    const st = spec.sets[hover.set];
+    const it = inters[hover.combo];
+    const on = hover.on;
+    return {
+      tag: on ? L("nézet · kitöltött pont", "view · filled dot") : L("nézet · üres pont", "view · empty dot"),
+      text: on
+        ? L(
+          "A kitöltött pont azt jelenti: ez a halmaz — <strong>" + esc(sn(st)) + "</strong> — <em>benne van</em> ebben a kombinációban. Az oszlop színe a sorokból áll össze.",
+          "A filled dot means <strong>" + esc(sn(st)) + "</strong> <em>is in</em> this combination. The column is assembled from its rows."
+        )
+        : L(
+          "Az üres pont azt jelenti: ez a halmaz — <strong>" + esc(sn(st)) + "</strong> — <em>nincs benne</em> ebben a kombinációban. Akik ebben az oszlopban vannak, ebből a halmazból kimaradtak.",
+          "An empty dot means <strong>" + esc(sn(st)) + "</strong> is <em>not in</em> this combination. The people in this column were left out of that set."
+        ),
+      cells: [
+        { k: L("halmaz", "set"), v: esc(sn(st)) },
+        { k: L("kombináció", "combination"), v: esc(comboName(spec, it)) },
+        { k: L("tagság", "membership"), v: on ? L("benne", "in") : L("nincs benne", "not in") },
+        { k: L("oszlop mérete", "column size"), v: fmtInt(it.n) }
+      ]
+    };
+  }
+  return emptyExplain();
+}
+
+function paintExplain(idE, idR, info) {
+  el(idE).innerHTML = '<p class="tag">' + esc(info.tag) + "</p><p>" + info.text + "</p>";
+  if (!info.cells.length) {
+    el(idR).innerHTML = '<div class="cell wide"><div class="k">' + esc(L("olvasás", "reading")) +
+      '</div><div class="v soft">' + esc(L("Még nincs kijelölés.", "Nothing selected yet.")) + "</div></div>";
+    return;
+  }
+  el(idR).innerHTML = info.cells.map(c =>
+    '<div class="cell"><div class="k">' + esc(c.k) + '</div><div class="v">' + c.v + "</div></div>"
+  ).join("");
+}
+
+function bindUpset(boxId, onHover, onSet) {
+  const root = el(boxId);
+  root.onpointerover = ev => {
+    const n = ev.target.closest("[data-kind]");
+    if (!n) return;
+    const kind = n.getAttribute("data-kind");
+    const hover = { kind: kind };
+    if (kind === "combo" || kind === "ibar" || kind === "set" || kind === "sbar") hover.i = +n.getAttribute("data-i");
+    if (kind === "dot") {
+      hover.combo = +n.getAttribute("data-combo");
+      hover.set = +n.getAttribute("data-set");
+      hover.on = n.getAttribute("data-on") === "1";
+    }
+    onHover(hover);
+  };
+  root.onpointerleave = () => onHover(null);
+  root.onclick = ev => {
+    const n = ev.target.closest("[data-kind]");
+    if (!n || !onSet) return;
+    const kind = n.getAttribute("data-kind");
+    if (kind === "set" || kind === "sbar") onSet(+n.getAttribute("data-i"));
+  };
+}
+
+/* ---------- Venn ---------- */
+function renderVenn() {
+  const n = state.venn;
+  el("vennchips").innerHTML = [2, 3, 4, 5, 6].map(k =>
+    '<button type="button" class="chip" data-venn="' + k + '" aria-pressed="' + (n === k) + '">' +
+    k + " " + L("halmaz", "sets") + "</button>"
+  ).join("");
+  const regs = Math.pow(2, n) - 1;
+  el("venntitle").textContent = n + " " + L("halmaz, Venn-szerű átfedés", "sets, Venn-like overlap");
+  el("venncap").textContent = n <= 3
+    ? L("Még olvasható: a régiók szétesnek, a címkéknek van helyük.", "Still readable: the regions separate, the labels have room.")
+    : L(
+      regs + " régiót kellene megkülönböztetni. A terület már nem mennyiség, a címke pedig találgatás.",
+      regs + " regions to tell apart. Area is no longer quantity, and the label is a guess."
+    );
+
+  const W = 420, H = 280;
+  const cols = ["#378ADD", "#1D9E75", "#EF9F27", "#D85A30", "#1F6F5C", "#7B6BA8"];
+  const labs = ["A", "B", "C", "D", "E", "F"];
+  const layout = {
+    2: [{ cx: 168, cy: 140, r: 78 }, { cx: 252, cy: 140, r: 78 }],
+    3: [{ cx: 175, cy: 118, r: 72 }, { cx: 245, cy: 118, r: 72 }, { cx: 210, cy: 178, r: 72 }],
+    4: [
+      { cx: 168, cy: 118, rx: 88, ry: 52, rot: -35 },
+      { cx: 230, cy: 118, rx: 88, ry: 52, rot: 35 },
+      { cx: 168, cy: 168, rx: 88, ry: 52, rot: 35 },
+      { cx: 230, cy: 168, rx: 88, ry: 52, rot: -35 }
+    ],
+    5: [
+      { cx: 210, cy: 96, rx: 92, ry: 46, rot: 0 },
+      { cx: 262, cy: 132, rx: 92, ry: 46, rot: 72 },
+      { cx: 242, cy: 190, rx: 92, ry: 46, rot: 144 },
+      { cx: 178, cy: 190, rx: 92, ry: 46, rot: 216 },
+      { cx: 158, cy: 132, rx: 92, ry: 46, rot: 288 }
+    ],
+    6: [
+      { cx: 210, cy: 92, rx: 90, ry: 40, rot: 0 },
+      { cx: 268, cy: 124, rx: 90, ry: 40, rot: 60 },
+      { cx: 268, cy: 184, rx: 90, ry: 40, rot: 120 },
+      { cx: 210, cy: 216, rx: 90, ry: 40, rot: 180 },
+      { cx: 152, cy: 184, rx: 90, ry: 40, rot: 240 },
+      { cx: 152, cy: 124, rx: 90, ry: 40, rot: 300 }
+    ]
+  };
+  let s = "";
+  layout[n].forEach((c, i) => {
+    const op = n <= 3 ? 0.28 : 0.2;
+    if (c.r) {
+      s += '<circle cx="' + c.cx + '" cy="' + c.cy + '" r="' + c.r + '" fill="' + cols[i] +
+        '" opacity="' + op + '" stroke="' + cols[i] + '" stroke-width="1.5"/>';
+    } else {
+      s += '<ellipse cx="' + c.cx + '" cy="' + c.cy + '" rx="' + c.rx + '" ry="' + c.ry +
+        '" fill="' + cols[i] + '" opacity="' + op + '" stroke="' + cols[i] +
+        '" stroke-width="1.4" transform="rotate(' + c.rot + " " + c.cx + " " + c.cy + ')"/>';
+    }
+  });
+  if (n === 2) {
+    s += '<text x="132" y="136" font-size="13" fill="#15181C">A</text>';
+    s += '<text x="276" y="136" font-size="13" fill="#15181C">B</text>';
+    s += '<text x="204" y="144" text-anchor="middle" font-size="11" fill="#15181C">A∩B</text>';
+  } else if (n === 3) {
+    s += '<text x="132" y="104" font-size="13" fill="#15181C">A</text>';
+    s += '<text x="276" y="104" font-size="13" fill="#15181C">B</text>';
+    s += '<text x="204" y="222" text-anchor="middle" font-size="13" fill="#15181C">C</text>';
+    s += '<text x="210" y="148" text-anchor="middle" font-size="10" fill="#15181C">A∩B∩C</text>';
+  } else {
+    s += '<text x="210" y="148" text-anchor="middle" font-size="12" fill="#15181C">' +
+      esc(L("? · " + regs + " régió", "? · " + regs + " regions")) + "</text>";
+    layout[n].forEach((c, i) => {
+      s += '<text x="' + c.cx + '" y="' + (c.cy - (c.r || c.ry) + 4) +
+        '" text-anchor="middle" font-size="10" fill="#6E7480">' + labs[i] + "</text>";
+    });
+  }
+  el("vennbox").innerHTML = svg(W, H, s);
+
+  el("regiontable").innerHTML = "<thead><tr><th>" + L("halmaz", "sets") +
+    "</th><th class=\"num\">" + L("metszet", "intersections") +
+    "</th><th>" + L("Venn?", "Venn?") + "</th></tr></thead><tbody>" +
+    DATA.regions.map(r => {
+      const ok = r.sets <= 3;
+      return "<tr><td>" + r.sets + "</td><td class=\"num\">" + r.intersections +
+        "</td><td>" + (ok ? L("még igen", "still yes") : L("már nem", "no longer")) + "</td></tr>";
+    }).join("") + "</tbody>";
+}
+
+/* ---------- anatomy / examples / channels ---------- */
+function renderAnatomy(rebuild) {
+  const spec = DATA.anatomy;
+  const classic = el("classicchart");
+  if (rebuild !== false || !classic.innerHTML) {
+    classic.innerHTML = drawUpset(spec, null, {
+      sort: "size", colW: 44, nameW: 36, barW: 70, topH: 120, classic: true
+    }).html;
+  }
+  const box = el("anatochart");
+  if (rebuild !== false || !box._inters) {
+    const drawn = drawUpset(spec, null, { sort: "size", colW: 44, nameW: 36, barW: 70, topH: 120 });
+    box.innerHTML = drawn.html;
+    box._inters = drawn.inters;
+    bindUpset("anatochart", h => { state.hoverA = h; highlightAnatomy(); });
+  }
+  highlightAnatomy();
+}
+function highlightAnatomy() {
+  const spec = DATA.anatomy, box = el("anatochart");
+  applyHighlight(box, spec, box._inters, state.hoverA, null);
+  paintExplain("anatoexplain", "anatoread", explain(spec, state.hoverA, box._inters, {}));
+}
+
+const EX_META = {
+  features: {
+    hu: "Termékmodulok", en: "Product modules",
+    cap_hu: "Öt funkció, 14 oszlop. A keresés szinte mindenkit elér; az export ritka, és ritkán jár egyedül.",
+    cap_en: "Five features, 14 columns. Search reaches almost everyone; export is rare, and rarely walks alone."
+  },
+  survey: {
+    hu: "Kérdőív-témák", en: "Survey topics",
+    cap_hu: "Hat téma egy elégedettségi kérdésben. A minőség és a kiszolgálás gyakran együtt jön — ez a sorok közti kapcsolat, nem a köröké.",
+    cap_en: "Six topics on a satisfaction question. Quality and service often arrive together — a link between rows, not between circles."
+  }
+};
+
+function renderExamples(rebuild) {
+  el("exchips").innerHTML = Object.keys(EX_META).map(k =>
+    '<button type="button" class="chip" data-ex="' + k + '" aria-pressed="' + (state.example === k) + '">' +
+    esc(L(EX_META[k].hu, EX_META[k].en)) + "</button>"
+  ).join("");
+  el("exsort").innerHTML = [
+    ["size", L("rendezés: méret", "sort: size")],
+    ["degree", L("rendezés: fokszám", "sort: degree")]
+  ].map(x => '<button type="button" class="chip" data-exsort="' + x[0] + '" aria-pressed="' +
+    (state.exSort === x[0]) + '">' + esc(x[1]) + "</button>").join("");
+  const spec = DATA[state.example];
+  const meta = EX_META[state.example];
+  el("extitle").textContent = L(spec.title_hu, spec.title_en);
+  el("excap").textContent = L(meta.cap_hu, meta.cap_en) + " · " +
+    L("látható ", "showing ") + spec.n_combos_shown + " / " + spec.n_combos_total +
+    L(" metszet", " intersections");
+  const box = el("exchart");
+  if (rebuild !== false || !box._inters) {
+    const drawn = drawUpset(spec, null, { sort: state.exSort, colW: 36, nameW: 100, barW: 80 });
+    box.innerHTML = drawn.html;
+    box._inters = drawn.inters;
+    bindUpset("exchart", h => { state.hoverE = h; highlightExamples(); });
+  }
+  highlightExamples();
+}
+function highlightExamples() {
+  const spec = DATA[state.example], box = el("exchart");
+  applyHighlight(box, spec, box._inters, state.hoverE, null);
+  paintExplain("exexplain", "exread", explain(spec, state.hoverE, box._inters, {}));
+}
+
+function renderChannels(rebuild) {
+  const spec = DATA.channels;
+  el("kpi-sets").textContent = fmtInt(spec.sets.length);
+  el("kpi-combos").textContent = fmtInt(spec.n_combos_total);
+  el("kpi-shown").textContent = fmtInt(spec.n_combos_shown);
+  el("chsort").innerHTML = [
+    ["size", L("rendezés: méret", "sort: size")],
+    ["degree", L("rendezés: fokszám", "sort: degree")]
+  ].map(x => '<button type="button" class="chip" data-chsort="' + x[0] + '" aria-pressed="' +
+    (state.chSort === x[0]) + '">' + esc(x[1]) + "</button>").join("") +
+    (state.focusSet !== null
+      ? '<button type="button" class="chip" data-chsort="clear">' + esc(L("szűrő törlése", "clear filter")) + "</button>"
+      : "");
+  const box = el("chchart");
+  if (rebuild !== false || !box._inters) {
+    const drawn = drawUpset(spec, null, {
+      sort: state.chSort, colW: 38, nameW: 84, barW: 86, focusSet: state.focusSet
+    });
+    box.innerHTML = drawn.html;
+    box._inters = drawn.inters;
+    bindUpset("chchart", h => { state.hoverC = h; highlightChannels(); }, si => {
+      state.focusSet = state.focusSet === si ? null : si;
+      state.hoverC = null;
+      renderChannels(true);
+    });
+  }
+  highlightChannels();
+}
+function highlightChannels() {
+  const spec = DATA.channels, box = el("chchart");
+  applyHighlight(box, spec, box._inters, state.hoverC, null);
+  paintExplain("chexplain", "chread", explain(spec, state.hoverC, box._inters, { focusSet: state.focusSet }));
+}
+
+function renderAll() {
+  applyLang();
+  renderVenn();
+  renderAnatomy();
+  renderExamples();
+  renderChannels();
+}
+
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("button");
+  if (!t) return;
+  if (t.id === "lang-hu") { state.lang = "hu"; renderAll(); return; }
+  if (t.id === "lang-en") { state.lang = "en"; renderAll(); return; }
+  if (t.dataset.venn) { state.venn = +t.dataset.venn; renderVenn(); return; }
+  if (t.dataset.ex) { state.example = t.dataset.ex; state.hoverE = null; renderExamples(true); return; }
+  if (t.dataset.exsort) { state.exSort = t.dataset.exsort; renderExamples(true); return; }
+  if (t.dataset.chsort === "clear") { state.focusSet = null; renderChannels(true); return; }
+  if (t.dataset.chsort) { state.chSort = t.dataset.chsort; renderChannels(true); }
+});
+
+renderAll();
+</script>
+</body>
+</html>
