@@ -81,6 +81,7 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
 
 html{scroll-behavior:smooth;scroll-padding-top:70px}
 
@@ -392,6 +393,11 @@ h1{
   margin-top:15px;
   padding-left:112px;
   min-height:1px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px 20px;
+  flex-wrap:wrap;
 }
 
 @media (max-width:599px){
@@ -424,6 +430,151 @@ h1{
 
 .chip.reset{color:var(--muted)}
 .chip.reset:hover{color:var(--accent)}
+
+/* ---------- nezetvalto: csempek / tablazat ---------- */
+.nezet{
+  display:flex;
+  gap:2px;
+  padding:2px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--card);
+  margin-left:auto;
+}
+.nezet button{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.06em;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:5px 11px;
+  border-radius:3px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  line-height:1;
+}
+.nezet button svg{width:13px;height:13px;flex:none}
+.nezet button:hover{color:var(--accent)}
+.nezet button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.nezet button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ---------- tablazatos nezet ----------
+   Huszonegy oszlop: a cim + minden szuroertek egy-egy oszlop. Az
+   oszlopfeliratok allitva (vertical-rl + 180 fok), igy 26 px-es oszlopokba
+   is belefernek. Kis kijelzon a doboz vizszintesen gordul, a cimoszlop
+   viszont sticky, hogy gordites kozben is latszodjon, melyik sorban vagy. */
+.tabla-doboz{
+  overflow-x:auto;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  -webkit-overflow-scrolling:touch;
+
+  /* Gorduleses arnyek: kis kijelzon jelzi, hogy oldalra meg van folytatas.
+     A "local" retegek egyutt gordulnek a tartalommal es letakarjak az
+     arnyekot a szeleken, a "scroll" retegek allnak - igy az arnyek csak
+     ott latszik, ahol tenyleg van meg mit gorditeni. */
+  background:
+    linear-gradient(to right, var(--card) 40%, rgba(255,255,255,0)) left / 26px 100% no-repeat local,
+    linear-gradient(to left,  var(--card) 40%, rgba(255,255,255,0)) right / 26px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(21,24,28,.13), rgba(21,24,28,0)) left / 11px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(21,24,28,.13), rgba(21,24,28,0)) right / 11px 100% no-repeat scroll,
+    var(--card);
+}
+
+.tabla-doboz .empty{border:0;padding:38px 24px}
+
+table.matrix{
+  border-collapse:collapse;
+  width:100%;
+  font-size:var(--fs-body);
+  animation:rise .32s ease both;
+}
+
+/* cimoszlop */
+.matrix .cim{
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:var(--card);
+  text-align:left;
+  font-weight:400;
+  padding:9px 16px 9px 15px;
+  width:100%;          /* a maradek helyet a cimoszlop nyeli el */
+  min-width:212px;
+  border-right:1px solid var(--line);
+}
+.matrix thead .cim{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted);
+  vertical-align:bottom;
+  padding-bottom:11px;
+}
+.matrix tbody .cim{line-height:1.35}
+
+.matrix a{color:inherit;text-decoration:none;border-bottom:1px solid transparent}
+.matrix a:hover{color:var(--accent);border-bottom-color:currentColor}
+.matrix a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* a harom szurotengely neve az oszlopai felett */
+.matrix th.csoport{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  font-weight:400;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  text-align:center;
+  white-space:nowrap;
+  padding:9px 7px 7px;
+  border-bottom:1px solid var(--line);
+}
+
+/* allitott oszlopfeliratok - a magassagot a leghosszabb felirat adja */
+.matrix th.oszlop{
+  width:26px;
+  min-width:26px;
+  max-width:26px;
+  padding:9px 0 9px;
+  vertical-align:bottom;
+  font-weight:400;
+}
+.matrix th.oszlop span{
+  display:inline-block;
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  white-space:nowrap;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.03em;
+  color:var(--muted);
+  line-height:1;
+}
+
+.matrix thead tr:last-child th{border-bottom:2px solid var(--line)}
+
+/* csoporthatar: minden tengely elso oszlopa elott egy vonal */
+.matrix .hatar{border-left:1px solid var(--line)}
+
+.matrix tbody th,
+.matrix tbody td{border-top:1px solid var(--line)}
+
+.matrix td.jel{text-align:center;padding:9px 0}
+.matrix .pipa{color:var(--accent);font-size:var(--fs-base)}
+.matrix .nincs{color:var(--line)}
+
+.matrix tbody tr:hover th,
+.matrix tbody tr:hover td{background:var(--accent-soft)}
+
+@media (max-width:599px){
+  .matrix .cim{min-width:168px;padding-left:13px;padding-right:12px}
+}
 
 /* ---------- csempék ---------- */
 .grid{
@@ -707,10 +858,23 @@ footer a:hover{color:var(--accent)}
       <span class="query" id="query" aria-live="polite"></span>
     </div>
     <div id="csoportok"></div>
-    <div class="szuro-labl"><div class="chips" id="reset-doboz"></div></div>
+    <div class="szuro-labl">
+      <div class="chips" id="reset-doboz"></div>
+
+      <!-- Nezetvalto: a csempes racs attekinthetobb kepekkel, a tablazat
+           attekinthetobb sok projektnel. A feliratokat a szkript tolti,
+           hogy nyelvvaltasnal is stimmeljen. -->
+      <div class="nezet" role="group" id="nezetvalto" aria-label="Nézet / View">
+        <button type="button" data-nezet="racs" aria-pressed="true"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.6"/><rect x="13" y="3" width="8" height="8" rx="1.6"/><rect x="3" y="13" width="8" height="8" rx="1.6"/><rect x="13" y="13" width="8" height="8" rx="1.6"/></svg><span></span></button>
+        <button type="button" data-nezet="tabla" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="1.6"/><path d="M3 9.5h18M9.5 9.5v10"/></svg><span></span></button>
+      </div>
+    </div>
   </section>
 
-  <main class="grid" id="grid"></main>
+  <main id="talalatok">
+    <div class="grid" id="grid"></div>
+    <div class="tabla-doboz" id="tabla-doboz" hidden></div>
+  </main>
 
   <section class="rolam" id="rolam">
     <h2 data-en="About me">Rólam</h2>
@@ -761,6 +925,10 @@ footer a:hover{color:var(--accent)}
   var csoportok = document.getElementById("csoportok");
   var resetDoboz= document.getElementById("reset-doboz");
   var query     = document.getElementById("query");
+  var tabla     = document.getElementById("tabla-doboz");
+
+  // "racs" = csempek, "tabla" = matrix nezet. A latogato valasztasat megjegyezzuk.
+  var nezet = "racs";
 
   /* ---------- nyelvek ----------
      Alapértelmezett a magyar. A statikus szövegeknél a magyar a HTML-ben
@@ -781,6 +949,8 @@ footer a:hover{color:var(--accent)}
       mailTitle:"Kattints a cím vágólapra másolásához",
       masolva:"  ✓ vágólapra másolva",
       honapok:["jan.","febr.","márc.","ápr.","máj.","jún.","júl.","aug.","szept.","okt.","nov.","dec."],
+      nezetRacs:"Csempék", nezetTabla:"Táblázat",
+      tablaCim:"Projekt",
       datum:function(ev, h){ return ev + ". " + h; },
       projekt:function(n){ return n + " projekt"; }
     },
@@ -794,6 +964,8 @@ footer a:hover{color:var(--accent)}
       mailTitle:"Click to copy the address",
       masolva:"  ✓ copied to clipboard",
       honapok:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+      nezetRacs:"Cards", nezetTabla:"Table",
+      tablaCim:"Project",
       datum:function(ev, h){ return h + " " + ev; },
       projekt:function(n){ return n + (n === 1 ? " project" : " projects"); }
     }
@@ -929,19 +1101,27 @@ footer a:hover{color:var(--accent)}
     return CSOPORTOK.some(function(cs){ return aktiv[cs.kulcs].length > 0; });
   }
 
+  /* Egy tengely összes előforduló értéke, a felirat ábécéjében. MINDIG a
+     teljes listából számol — ezért nem változik a chipek és a táblázat
+     oszlopainak sora attól, hogy éppen mire szűrünk. */
+  function ertekLista(cs){
+    var ertekek = [];
+    lista.forEach(function(p){
+      cs.ertekek(p).forEach(function(v){
+        if(ertekek.indexOf(v) === -1) ertekek.push(v);
+      });
+    });
+    return ertekek.sort(function(a,b){
+      return cs.felirat(a).localeCompare(cs.felirat(b), nyelv);
+    });
+  }
+
   function chipeketRajzol(){
     csoportok.innerHTML = "";
 
     CSOPORTOK.forEach(function(cs){
-      // az adott tengelyen előforduló összes érték, a felirat ábécéjében
-      var ertekek = [];
-      lista.forEach(function(p){
-        cs.ertekek(p).forEach(function(v){
-          if(ertekek.indexOf(v) === -1) ertekek.push(v);
-        });
-      });
+      var ertekek = ertekLista(cs);
       if(ertekek.length === 0) return;
-      ertekek.sort(function(a,b){ return cs.felirat(a).localeCompare(cs.felirat(b), nyelv); });
 
       var sor = document.createElement("div");
       sor.className = "chip-sor";
@@ -1072,9 +1252,102 @@ footer a:hover{color:var(--accent)}
     grid.appendChild(soon);
   }
 
+  /* ---------- táblázatos nézet ----------
+     Egy sor = egy projekt, egy oszlop = egy szűrőérték, a metszetben pipa.
+     Ugyanaz a szűrés hajtja, mint a csempéket. */
+  function tablaFrissit(){
+    var sz = szurtLista();
+    tabla.innerHTML = "";
+
+    if(sz.length === 0){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = t("ures");
+      tabla.appendChild(e);
+      return;
+    }
+
+    var blokkok = [];
+    CSOPORTOK.forEach(function(cs){
+      var ertekek = ertekLista(cs);
+      if(ertekek.length) blokkok.push({ cs:cs, ertekek:ertekek });
+    });
+
+    var h = [];
+    h.push('<table class="matrix"><thead>');
+
+    // 1. fejlécsor: a tengely neve az oszlopai felett
+    h.push('<tr><td></td>');
+    blokkok.forEach(function(b){
+      h.push('<th class="csoport hatar" colspan="' + b.ertekek.length +
+             '" scope="colgroup">' + esc(t(b.cs.kulcs)) + '</th>');
+    });
+    h.push('</tr>');
+
+    // 2. fejlécsor: állított oszlopfeliratok
+    h.push('<tr><th class="cim" scope="col">' + esc(t("tablaCim")) + '</th>');
+    blokkok.forEach(function(b){
+      b.ertekek.forEach(function(v, i){
+        h.push('<th class="oszlop' + (i === 0 ? " hatar" : "") +
+               '" scope="col"><span>' + esc(b.cs.felirat(v)) + '</span></th>');
+      });
+    });
+    h.push('</tr></thead><tbody>');
+
+    sz.forEach(function(p){
+      h.push('<tr><th class="cim" scope="row"><a href="demos/' + esc(p.fajl) +
+             '">' + esc(mezo(p, "cim")) + '</a></th>');
+      blokkok.forEach(function(b){
+        var sajat = b.cs.ertekek(p);
+        b.ertekek.forEach(function(v, i){
+          var hatar = (i === 0 ? " hatar" : "");
+          h.push(sajat.indexOf(v) > -1
+            ? '<td class="jel' + hatar + '"><span class="pipa" title="' +
+              esc(b.cs.felirat(v)) + '">&#10003;</span></td>'
+            : '<td class="jel' + hatar + '"><span class="nincs" aria-hidden="true">&middot;</span></td>');
+        });
+      });
+      h.push('</tr>');
+    });
+
+    h.push('</tbody></table>');
+    tabla.innerHTML = h.join("");
+  }
+
+  /* ---------- nézetváltó ---------- */
+  var nezetGombok = [].slice.call(document.querySelectorAll("#nezetvalto button"));
+
+  function nezetFrissit(){
+    var tablaE = (nezet === "tabla");
+    nezetGombok.forEach(function(b){
+      var k = b.getAttribute("data-nezet");
+      b.setAttribute("aria-pressed", k === nezet ? "true" : "false");
+      var cimke = b.querySelector("span");
+      if(cimke) cimke.textContent = t(k === "tabla" ? "nezetTabla" : "nezetRacs");
+    });
+    grid.hidden  = tablaE;
+    tabla.hidden = !tablaE;
+    // a rejtett nézetet kiürítjük, hogy ne legyen két kész DOM egyszerre
+    if(tablaE){ grid.innerHTML = ""; } else { tabla.innerHTML = ""; }
+  }
+
+  nezetGombok.forEach(function(b){
+    b.addEventListener("click", function(){
+      nezet = b.getAttribute("data-nezet");
+      try{ localStorage.setItem("portfolio-nezet", nezet); }catch(e){}
+      frissit();
+    });
+  });
+
+  try{
+    var mentettNezet = localStorage.getItem("portfolio-nezet");
+    if(mentettNezet === "tabla" || mentettNezet === "racs") nezet = mentettNezet;
+  }catch(e){}
+
   function frissit(){
     chipeketRajzol();
-    gridFrissit();
+    nezetFrissit();
+    if(nezet === "tabla"){ tablaFrissit(); } else { gridFrissit(); }
     queryFrissit(szurtLista().length);
   }
 
