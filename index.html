@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Udvari István — Data Analyst</title>
-<meta name="description" content="15+ év marketing-, CRM- és kampányanalitika. Szegmentálás, A/B tesztek, dashboardok, automatizálás — SQL, Python, Power BI, Excel. Demók és esettanulmányok.">
+<meta name="description" content="15+ év adatelemzés üzleti döntésekhez, működő demókban megmutatva. Szegmentálás, kampányanalitika, dashboardok, automatizálás — SQL, Python, Power BI, Excel.">
 <link rel="canonical" href="https://udvariistvan2016-ui.github.io/portfolio/">
 
 <!-- Favicon: növekvő oszlopdiagram — egyetlen motívum, hogy 16 px-en is
@@ -24,7 +24,7 @@
 <meta property="og:site_name" content="Udvari István — Data Analyst">
 <meta property="og:url" content="https://udvariistvan2016-ui.github.io/portfolio/">
 <meta property="og:title" content="Udvari István — Data Analyst">
-<meta property="og:description" content="15+ év marketing-, CRM- és kampányanalitika. Üzleti kérdéseket fordítok le az adatok nyelvére: szegmentálás, A/B tesztek, dashboardok, automatizálás. Működő demók és anonimizált esettanulmányok.">
+<meta property="og:description" content="15+ év adatelemzés üzleti döntésekhez, működő demókban megmutatva. Üzleti kérdéseket fordítok le az adatok nyelvére: szegmentálás, kampányanalitika, funnel- és benchmark-elemzés, dashboardok, automatizálás.">
 <meta property="og:image" content="https://udvariistvan2016-ui.github.io/portfolio/assets/og-kep.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -32,7 +32,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Udvari István — Data Analyst">
-<meta name="twitter:description" content="15+ év marketing-, CRM- és kampányanalitika. Üzleti kérdéseket fordítok le az adatok nyelvére: szegmentálás, A/B tesztek, dashboardok, automatizálás. Működő demók és anonimizált esettanulmányok.">
+<meta name="twitter:description" content="15+ év adatelemzés üzleti döntésekhez, működő demókban megmutatva. Üzleti kérdéseket fordítok le az adatok nyelvére: szegmentálás, kampányanalitika, funnel- és benchmark-elemzés, dashboardok, automatizálás.">
 <meta name="twitter:image" content="https://udvariistvan2016-ui.github.io/portfolio/assets/og-kep.jpg">
 
 <!-- ============================================================
@@ -734,6 +734,29 @@ table.matrix{
   font-size:var(--fs-sm);
 }
 
+/* ---------- Kapcsolat ---------- */
+.kapcsolat{
+  border-top:1px solid var(--line);
+  padding-top:34px;
+  margin-top:40px;
+}
+
+.kapcsolat h2{
+  font-size:var(--fs-h2);
+  font-weight:600;
+  letter-spacing:-.015em;
+  margin-bottom:14px;
+}
+
+.kapcsolat p{
+  font-size:var(--fs-lead);
+  color:#3A4048;
+  max-width:52ch;
+  margin-bottom:24px;
+}
+
+.kapcsolat .links{margin-bottom:6px}
+
 /* ---------- lábléc ---------- */
 footer{
   border-top:1px solid var(--line);
@@ -774,6 +797,7 @@ footer a:hover{color:var(--accent)}
     <nav class="fejlec-nav">
       <a href="#projektek" data-en="Projects">Projektek</a>
       <a href="#rolam" data-en="About">Rólam</a>
+      <a href="#kapcsolat" data-en="Contact">Kapcsolat</a>
       <div class="nyelv" role="group" aria-label="Nyelv / Language">
         <button type="button" data-lang="hu" aria-pressed="true">HU</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
@@ -796,9 +820,9 @@ footer a:hover{color:var(--accent)}
       </a>
       <!-- Az e-mail cím szándékosan NINCS benne nyersen a forrásban (spamrobotok
            ellen). A gomb kattintásra állítja össze — lásd a lenti szkriptet. -->
-      <button type="button" id="mailgomb">
+      <button type="button" id="mailgomb" class="mailgomb">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
-        <span id="mailfelirat">E-mail cím mutatása</span>
+        <span id="mailfelirat" class="mailfelirat">E-mail cím mutatása</span>
       </button>
     </nav>
 
@@ -909,6 +933,26 @@ footer a:hover{color:var(--accent)}
     </div>
   </section>
 
+  <section class="kapcsolat" id="kapcsolat">
+    <h2 data-en="Contact">Kapcsolat</h2>
+
+    <p data-en="If you have a data question, or a role this profile fits, get in touch. I read every message.">Ha van egy adatos kérdésed, vagy egy pozíció, amihez ez a profil illik,
+    keress nyugodtan. Minden megkeresést elolvasok.</p>
+
+    <nav class="links">
+      <a href="https://www.linkedin.com/in/istvanudvari" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3A2 2 0 0 1 21 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+        LinkedIn
+      </a>
+      <!-- Ugyanaz a rejtett e-mail gomb, mint a heroban - a cim itt sincs
+           benne nyersen a forrasban. -->
+      <button type="button" class="mailgomb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+        <span class="mailfelirat">E-mail cím mutatása</span>
+      </button>
+    </nav>
+  </section>
+
   <footer>
     <span>© <span id="ev"></span> Udvari István</span>
     <span><a href="https://www.linkedin.com/in/istvanudvari" target="_blank" rel="noopener">linkedin.com/in/istvanudvari</a></span>
@@ -1017,11 +1061,12 @@ footer a:hover{color:var(--accent)}
      Ha módosítanád: btoa("uj@cim.hu") a böngésző konzoljában,
      és rajzold újra a két PNG-t. */
   var mail = (function(){
-    var gomb    = document.getElementById("mailgomb");
-    var felirat = document.getElementById("mailfelirat");
-    if(!gomb || !felirat) return { nyelvvaltas:function(){} };
+    // tobb gomb is lehet belole (hero + Kapcsolat szekcio); mindegyik
+    // fuggetlenul fedi fel magat, a dekodolt cim viszont kozos
+    var gombok = [].slice.call(document.querySelectorAll(".mailgomb"));
+    if(!gombok.length) return { nyelvvaltas:function(){} };
 
-    var cim = null, jelzes = null, ido = null;
+    var cim = null;
 
     function kep(fajl, alt){
       var i = document.createElement("img");
@@ -1030,44 +1075,58 @@ footer a:hover{color:var(--accent)}
       return i;
     }
 
-    function felfed(){
-      cim = atob("dWR2YXJpLmlzdHZhbjIwMTZAZ21haWwuY29t");
-      // a kép alt szövegei a dekódolt címből, hogy a forrásban ne legyenek meg
-      var elotte = cim.split("@")[0];
-      var utana  = cim.split("@")[1].split(".")[0];
+    var peldanyok = gombok.map(function(gomb){
+      var felirat = gomb.querySelector(".mailfelirat");
+      if(!felirat) return { nyelvvaltas:function(){} };
 
-      felirat.textContent = "";
-      felirat.appendChild(kep("assets/logo1.png", elotte));
-      felirat.appendChild(document.createTextNode("@"));
-      felirat.appendChild(kep("assets/logo2.png", utana));
-      felirat.appendChild(document.createTextNode(".com"));
+      var felfedve = false, jelzes = null, ido = null;
 
-      jelzes = document.createElement("span");
-      jelzes.className = "mail-jelzes";
-      felirat.appendChild(jelzes);
+      function felfed(){
+        if(cim === null) cim = atob("dWR2YXJpLmlzdHZhbjIwMTZAZ21haWwuY29t");
+        // a kép alt szövegei a dekódolt címből, hogy a forrásban ne legyenek meg
+        var elotte = cim.split("@")[0];
+        var utana  = cim.split("@")[1].split(".")[0];
 
-      gomb.setAttribute("title", t("mailTitle"));
-    }
+        felirat.textContent = "";
+        felirat.appendChild(kep("assets/logo1.png", elotte));
+        felirat.appendChild(document.createTextNode("@"));
+        felirat.appendChild(kep("assets/logo2.png", utana));
+        felirat.appendChild(document.createTextNode(".com"));
 
-    function masol(){
-      if(!navigator.clipboard) return;
-      navigator.clipboard.writeText(cim).then(function(){
-        jelzes.textContent = t("masolva");
-        clearTimeout(ido);
-        ido = setTimeout(function(){ jelzes.textContent = ""; }, 1800);
-      }, function(){});
-    }
+        jelzes = document.createElement("span");
+        jelzes.className = "mail-jelzes";
+        felirat.appendChild(jelzes);
 
-    gomb.addEventListener("click", function(){
-      if(cim === null){ felfed(); } else { masol(); }
+        felfedve = true;
+        gomb.setAttribute("title", t("mailTitle"));
+      }
+
+      function masol(){
+        if(!navigator.clipboard) return;
+        navigator.clipboard.writeText(cim).then(function(){
+          jelzes.textContent = t("masolva");
+          clearTimeout(ido);
+          ido = setTimeout(function(){ jelzes.textContent = ""; }, 1800);
+        }, function(){});
+      }
+
+      gomb.addEventListener("click", function(){
+        if(!felfedve){ felfed(); } else { masol(); }
+      });
+
+      return {
+        // felfedés előtt a feliratot, utána csak a tooltipet cseréli —
+        // a már megjelenített képdarabokhoz nem nyúl
+        nyelvvaltas:function(){
+          if(!felfedve){ felirat.textContent = t("mailMutat"); }
+          else { gomb.setAttribute("title", t("mailTitle")); }
+        }
+      };
     });
 
     return {
-      // felfedés előtt a feliratot, utána csak a tooltipet cseréli —
-      // a már megjelenített képdarabokhoz nem nyúl
       nyelvvaltas:function(){
-        if(cim === null){ felirat.textContent = t("mailMutat"); }
-        else { gomb.setAttribute("title", t("mailTitle")); }
+        peldanyok.forEach(function(p){ p.nyelvvaltas(); });
       }
     };
   })();
