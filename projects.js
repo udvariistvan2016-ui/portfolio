@@ -97,7 +97,7 @@ const PROJEKTEK = [
     fajl: "poi-crm-hubspot-python.html",
     cimkek: ["Python", "ETL / Adatpipeline", "CRM", "Munka"],
     tipus: "interaktív demó",
-    rang: 90,
+    rang: 89,
     datum: "2026-08",
     kiemelt: false
   },
@@ -203,7 +203,7 @@ const PROJEKTEK = [
     tipus: "esettanulmány",
     rang: 95,
     datum: "2026-09",
-    kiemelt: false
+    kiemelt: true
   },
 
   {
@@ -227,7 +227,7 @@ const PROJEKTEK = [
     fajl: "chat-sentiment-analysis-case-study.html",
     cimkek: ["Python", "Claude", "n8n", "Munka"],
     tipus: "esettanulmány",
-    rang: 89,
+    rang: 90,
     datum: "2026-09",
     kiemelt: false
   },
