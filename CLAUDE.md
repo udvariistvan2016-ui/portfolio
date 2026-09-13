@@ -46,6 +46,7 @@ LinkedIn kiterjesztése, a munkáltató is láthatja.
 demos/laboreredmeny-vizualizacio.html   – magánjellegű egészségügyi adat
 demos/sorkalauz.html                    – 18+ tartalom
 demos/opera-koktelrepertoar.html        – 18+ tartalom, idegen márkafotók
+demos/power-bi-riport.html              – helykitöltő, kínos lenne találatban
 ```
 
 A sor, ha kell:

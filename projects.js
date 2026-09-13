@@ -256,6 +256,19 @@ const PROJEKTEK = [
     rang: 82,
     datum: "2026-09",
     kiemelt: false
+  },
+
+  {
+    cim: "Power BI riportmodell",
+    leiras: "Készül: adatmodell, mértékek és egy riport a végfelhasználói kérdésekre szabva.",
+    cim_en: "Power BI report model",
+    leiras_en: "In progress: a data model, measures and a report shaped around the questions end users actually ask.",
+    fajl: "power-bi-riport.html",
+    cimkek: ["Power BI", "Munka"],
+    tipus: "helykitöltő",
+    rang: -10,
+    datum: "2026-09",
+    kiemelt: false
   }
 
 ];

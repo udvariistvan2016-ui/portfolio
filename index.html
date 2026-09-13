@@ -179,8 +179,49 @@ body{
   .fejlec-nav a{display:none}   /* szűk kijelzőn nem fér ki a név mellé */
 }
 
+/* ---------- kialakítás alatt sáv ----------
+   A fejléc alatt, jobbra zárva — ugyanabban a sávban, ahol a nyelvváltó
+   van. Diszkrét, de az első képernyőn látszik. */
+.epul{
+  display:flex;
+  justify-content:flex-end;
+  padding-top:11px;
+}
+
+.epul span{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.02em;
+  color:var(--muted);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:5px 11px;
+}
+
+/* a pont lassan pulzál — jelzi, hogy él a dolog, de nem vonja el a figyelmet */
+.epul span::before{
+  content:"";
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--accent);
+  flex:none;
+  animation:lelegzik 2.6s ease-in-out infinite;
+}
+
+@keyframes lelegzik{0%,100%{opacity:1}50%{opacity:.32}}
+
+@media (max-width:479px){
+  .epul{justify-content:flex-start}
+  .epul span{font-size:var(--fs-2xs);padding:4px 9px}
+}
+
 /* ---------- hero ---------- */
-.hero{padding:64px 0 0}
+.hero{padding:46px 0 0}
 
 .hero-mondat{
   font-size:var(--fs-h2);
@@ -808,6 +849,12 @@ footer a:hover{color:var(--accent)}
 
 <div class="wrap">
 
+  <!-- Kialakítás alatt: a fejléc jobb oldala alatt, a nyelvváltóval egy
+       függőlegesben. Ha kész az oldal, ez a blokk egyben törölhető. -->
+  <div class="epul">
+    <span data-en="Under construction — some content is not final yet.">Kialakítás alatt — a tartalom helyenként még nem végleges.</span>
+  </div>
+
   <section class="hero" id="top">
     <h1>Udvari István</h1>
 
@@ -871,7 +918,7 @@ footer a:hover{color:var(--accent)}
           <path d="M18.5 15 l.8 2 2 .8 -2 .8 -.8 2 -.8 -2 -2 -.8 2 -.8 Z"/>
         </svg>
         <h3 data-en="Automation and AI">Automatizálás és AI</h3>
-        <p data-en="Excel, Python, n8n, Claude. Automating reports, routine tasks and data integration between systems, as well as sentiment analysis, speech recognition and text processing.">Excel, Python, n8n, Claude. Riportok, feladatok, rendszerek közti adatintegráció automatizálása, valamint sentiment analízis, beszédfelismerés és szövegfeldolgozás is.</p>
+        <p data-en="Automating reports, routine tasks and data integration between systems, as well as sentiment analysis, speech recognition and text processing.">Riportok, feladatok, rendszerek közti adatintegráció automatizálása, valamint sentiment analízis, beszédfelismerés és szövegfeldolgozás is.</p>
       </div>
     </div>
   </section>
