@@ -71,7 +71,7 @@ const PROJEKTEK = [
     fajl: "email-kampany-benchmark.html",
     cimkek: ["SQL", "Vizualizáció", "CRM", "Munka"],
     tipus: "esettanulmány",
-    rang: 95,
+    rang: 91,
     datum: "2026-08",
     kiemelt: true
   },
@@ -201,7 +201,7 @@ const PROJEKTEK = [
     fajl: "conversational-analytics.html",
     cimkek: ["SQL", "Python", "AI / LLM", "Munka"],
     tipus: "esettanulmány",
-    rang: 91,
+    rang: 95,
     datum: "2026-09",
     kiemelt: false
   },
