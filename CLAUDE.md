@@ -8,6 +8,8 @@ Ideiglenes megoldás — a végleges oldal külön projekt lesz.
 ```
 index.html    – főoldal: bemutatkozás, csempék, címkeszűrő. RITKÁN módosul.
 projects.js   – a projektek listája. Új demónál EZ változik.
+videok.html   – a magyarázó videók oldala. RITKÁN módosul.
+videok.js     – a videók listája. Új videónál EZ változik.
 demos/        – egyoldalas, önálló HTML demók
   _sablon-visszalink.html – a vissza-navigációs sáv forrása
 OLVASD-EL.md  – kézi (böngészős) használati útmutató
@@ -71,7 +73,7 @@ Csak ezeket használd, pontosan így írva:
 SQL · Python · Power BI · Excel
 ML / Data Science · CRM · Szegmentáció · A/B teszt
 AI / LLM · Claude · Automatizálás · n8n · Web scraping · ETL / Adatpipeline
-Vizualizáció · Tool
+Vizualizáció · Tool · Tudástár
 Munka · Magán
 ```
 
@@ -111,7 +113,9 @@ az `index.html`-t akarod módosítani, valamit félreértettél.
   leiras_en: "… (angolul)",
   fajl: "fajlnev.html",
   cimkek: ["…", "…"],
-  tipus: "interaktív demó",
+  tipus: "interaktív demó",   // vagy: interaktív tool, folyamatábra,
+                              // adatvizualizáció, esettanulmány,
+                              // videó, helykitöltő
   rang: 50,
   datum: "2026-08",
   kiemelt: false
@@ -126,8 +130,22 @@ csempén a magyar jelenik meg — nem törik el, de az angol oldal félkarú les
 7. Nyisd meg helyben az `index.html`-t, és nézd meg, hogy megjelent-e a csempe
    és működik-e a szűrő.
 
-A `kiemelt: true` szélesebb csempét ad — egyszerre legfeljebb 1-2 projekten
-legyen bekapcsolva.
+A `kiemelt: true` szélesebb csempét ad. A darabszámot a rács tördelése
+szabja meg: 3 oszlopnál egy széles csempe egy sorban egy normállal fér ki.
+Jelenleg 3 ilyen van, és ezzel minden sor hézag nélkül telik ki.
+
+### Külső linkek
+
+Ha egy projekt nem a `demos/` mappában lakik, add meg az `url` mezőt:
+
+```js
+url: "https://udvariistvan2016-ui.github.io/klimaallo-kert/",   // külső
+url: "videok.html",                                             // saját lap
+```
+
+A külső (`http`-vel kezdődő) cím új lapon nyílik, és a csempén megjelenik
+a „külső oldal" jelzés. A saját lapra mutató relatív cím nem kap jelzést.
+Külső címnél a `fajl` csak azonosító — ebből lesz a bélyegkép neve.
 
 ## Stílus
 

@@ -37,6 +37,7 @@
 const CIMKE_EN = {
   "Szegmentáció":       "Segmentation",
   "Vizualizáció":       "Visualisation",
+  "Tudástár":           "Knowledge base",
   "Automatizálás":      "Automation",
   "ETL / Adatpipeline": "ETL / Data pipeline",
   "A/B teszt":          "A/B testing",
@@ -50,7 +51,8 @@ const TIPUS_EN = {
   "folyamatábra":     "flow diagram",
   "adatvizualizáció": "data visualisation",
   "esettanulmány":    "case study",
-  "helykitöltő":      "placeholder"
+  "helykitöltő":      "placeholder",
+  "videó":            "video"
 };
 
 const PROJEKTEK = [
@@ -283,9 +285,37 @@ const PROJEKTEK = [
     leiras_en: "Enter your measured body dimensions and your equipment, and it works out chair height, desk height sitting and standing, and monitor position and distance. Where the setup is a compromise, it says why.",
     fajl: "ulo-allo-munkahely",
     url: "https://claude.ai/artifact/3hK7ZjmVgLhgm53UvdWRzh",
-    cimkek: ["Claude", "Tool", "Magán"],
+    cimkek: ["Claude", "Tool", "Tudástár", "Magán"],
     tipus: "interaktív tool",
     rang: 45,
+    datum: "2026-10",
+    kiemelt: false
+  },
+
+  {
+    cim: "Klímaálló kert — szűrhető növénykalauz",
+    leiras: "Egy főtájépítész nyilvános, 100 fajos klímatűrő listája és 20 fajos invazív listája kereshető, szűrhető formában: méret, fényigény, vízigény, eredet és mérgezőség szerint.",
+    cim_en: "Climate-resilient garden — a filterable plant guide",
+    leiras_en: "A landscape architect's public list of 100 drought-tolerant species and 20 invasive ones, made searchable and filterable: by size, light, water, origin and toxicity.",
+    fajl: "klimaallo-kert",
+    url: "https://udvariistvan2016-ui.github.io/klimaallo-kert/",
+    cimkek: ["Tudástár", "Tool", "Magán"],
+    tipus: "interaktív tool",
+    rang: 44,
+    datum: "2026-08",
+    kiemelt: false
+  },
+
+  {
+    cim: "Magyarázó videók",
+    leiras: "Rövid animációk adatelemzésről, gépi tanulásról, matematikáról és természettudományról. A jelenetek Pythonban, Manimmel készülnek, a narráció gépi hang.",
+    cim_en: "Explanatory videos",
+    leiras_en: "Short animations on data analysis, machine learning, mathematics and natural science. The scenes are written in Python with Manim; the narration is synthesised speech.",
+    fajl: "magyarazo-videok",
+    url: "videok.html",
+    cimkek: ["Python", "Vizualizáció", "Magán"],
+    tipus: "videó",
+    rang: 84,
     datum: "2026-10",
     kiemelt: false
   }

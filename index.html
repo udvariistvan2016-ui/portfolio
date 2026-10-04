@@ -844,6 +844,7 @@ footer a:hover{color:var(--accent)}
 
     <nav class="fejlec-nav">
       <a href="#projektek" data-en="Projects">Projektek</a>
+      <a href="videok.html" data-en="Videos">Videók</a>
       <a href="#rolam" data-en="About">Rólam</a>
       <a href="#kapcsolat" data-en="Contact">Kapcsolat</a>
       <div class="nyelv" role="group" aria-label="Nyelv / Language">
@@ -1337,8 +1338,8 @@ footer a:hover{color:var(--accent)}
       a.className = "card" + (p.kiemelt ? " wide" : "");
       // kulso link: a sajat tarhelyen kivuli oldal (pl. Artifact, masik
       // GitHub Pages projekt). Uj lapon nyilik, es a csempen is latszik.
-      var kulso = !!p.url;
-      a.href = kulso ? p.url : "demos/" + p.fajl;
+      var kulso = !!p.url && /^https?:/i.test(p.url);
+      a.href = p.url ? p.url : "demos/" + p.fajl;
       if(kulso){ a.target = "_blank"; a.rel = "noopener"; }
       a.style.animationDelay = Math.min(idx * 40, 240) + "ms";
 
@@ -1421,11 +1422,12 @@ footer a:hover{color:var(--accent)}
     h.push('</tr></thead><tbody>');
 
     sz.forEach(function(p){
+      var kulsoS = !!p.url && /^https?:/i.test(p.url);
       var cel = p.url ? esc(p.url) : "demos/" + esc(p.fajl);
-      var ujlap = p.url ? ' target="_blank" rel="noopener"' : "";
+      var ujlap = kulsoS ? ' target="_blank" rel="noopener"' : "";
       h.push('<tr><th class="cim" scope="row"><a href="' + cel + '"' + ujlap +
-             ' title="' + esc(p.url ? t("kulso") : "") + '">' +
-             esc(mezo(p, "cim")) + (p.url ? ' <span class="kulso-jel" aria-hidden="true">&#8599;</span>' : '') +
+             ' title="' + esc(kulsoS ? t("kulso") : "") + '">' +
+             esc(mezo(p, "cim")) + (kulsoS ? ' <span class="kulso-jel" aria-hidden="true">&#8599;</span>' : '') +
              '</a></th>');
       blokkok.forEach(function(b){
         var sajat = b.cs.ertekek(p);

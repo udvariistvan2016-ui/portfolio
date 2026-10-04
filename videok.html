@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magyarázó videók — Udvari István</title>
+<meta name="description" content="Magyarázó animációk adatelemzésről, gépi tanulásról, matematikáról és természettudományról. Manimmel készült, 3Blue1Brown-stílusú videók magyarul.">
+<link rel="canonical" href="https://udvariistvan2016-ui.github.io/portfolio/videok.html">
+
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="hu_HU">
+<meta property="og:site_name" content="Udvari István — Data Analyst">
+<meta property="og:url" content="https://udvariistvan2016-ui.github.io/portfolio/videok.html">
+<meta property="og:title" content="Magyarázó videók — Udvari István">
+<meta property="og:description" content="Magyarázó animációk adatelemzésről, gépi tanulásról, matematikáról és természettudományról. Manimmel készült videók magyarul.">
+<meta property="og:image" content="https://udvariistvan2016-ui.github.io/portfolio/assets/og-kep.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Magyarázó videók — Udvari István">
+<meta name="twitter:description" content="Magyarázó animációk adatelemzésről, gépi tanulásról, matematikáról és természettudományról.">
+<meta name="twitter:image" content="https://udvariistvan2016-ui.github.io/portfolio/assets/og-kep.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* A főoldal tokenjei — a két lap egy rendszer. */
+:root{
+  --paper:#F2F3F0;
+  --card:#FFFFFF;
+  --ink:#15181C;
+  --muted:#6E7480;
+  --line:#DCDED8;
+  --accent:#1F6F5C;
+  --accent-soft:#E2EDE8;
+  --radius:4px;
+
+  --fs-2xs:11px;
+  --fs-xs:12px;
+  --fs-sm:13px;
+  --fs-body:14px;
+  --fs-base:15px;
+  --fs-lead:16px;
+  --fs-title:17px;
+  --fs-h2:clamp(22px,2.6vw,28px);
+  --fs-display:clamp(30px,4.4vw,44px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:var(--fs-base);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+
+/* ---------- sticky fejléc (azonos a főoldaléval) ---------- */
+.fejlec{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(242,243,240,.9);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+
+.fejlec-belso{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  height:54px;
+}
+
+.marka{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  text-decoration:none;
+  color:var(--ink);
+  font-weight:600;
+  font-size:var(--fs-base);
+  letter-spacing:-.01em;
+}
+.marka-ikon{width:19px;height:19px;flex:none}
+
+.marka-beosztas{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  font-weight:400;
+  letter-spacing:.03em;
+  color:var(--muted);
+}
+.marka-beosztas::before{content:"·";margin-right:7px}
+
+@media (max-width:900px){
+  .marka-beosztas{display:none}
+}
+
+.fejlec-nav{display:flex;align-items:center;gap:18px}
+
+.fejlec-nav a{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  text-decoration:none;
+}
+.fejlec-nav a:hover{color:var(--accent)}
+.fejlec-nav a[aria-current="page"]{color:var(--ink)}
+
+.nyelv{
+  display:flex;
+  gap:2px;
+  padding:2px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--card);
+}
+.nyelv button{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.08em;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:4px 9px;
+  border-radius:3px;
+  cursor:pointer;
+}
+.nyelv button:hover{color:var(--accent)}
+.nyelv button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.nyelv button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+@media (max-width:679px){
+  .fejlec-nav a{display:none}
+}
+
+/* ---------- bevezető ---------- */
+.bevezeto{padding:52px 0 0}
+
+h1{
+  font-size:var(--fs-display);
+  font-weight:600;
+  letter-spacing:-.025em;
+  line-height:1.08;
+  margin-bottom:18px;
+}
+
+.bevezeto p{
+  font-size:var(--fs-lead);
+  color:#3A4048;
+  max-width:62ch;
+  margin-bottom:14px;
+}
+
+.bevezeto p:last-of-type{margin-bottom:0}
+
+.bevezeto strong{font-weight:600;color:var(--ink)}
+
+.nyelvjelzes{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  margin-top:20px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.02em;
+  color:var(--muted);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:6px 12px;
+}
+
+/* ---------- szűrő ---------- */
+.filterbar{
+  border-top:1px solid var(--line);
+  margin-top:40px;
+  padding-top:26px;
+  margin-bottom:30px;
+}
+
+.filter-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:20px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+
+.filter-label{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.szamlalo{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  color:var(--muted);
+}
+.szamlalo .val{color:var(--ink)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+
+.chip{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  padding:7px 13px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--card);
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.reset{color:var(--muted)}
+.chip.reset:hover{color:var(--accent)}
+
+.reset-sor{margin-top:13px;min-height:1px}
+
+/* ---------- videórács ---------- */
+.racs{
+  display:grid;
+  /* 340 px a minimum, hogy 1080 px-en KET oszlop legyen: egy 16:9-es
+     plakat haromoszlopos racsban mar olvashatatlanul kicsi. */
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:20px;
+  padding-bottom:10px;
+}
+
+.video{
+  background:var(--card);
+  border:2px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  animation:rise .32s ease both;
+}
+
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+/* A plakát doboza tartja a 16:9 arányt, és ebbe kerül majd az iframe. */
+.plakat{
+  position:relative;
+  aspect-ratio:16/9;
+  background:#0E1116;
+  border-bottom:1px solid var(--line);
+}
+
+.plakat img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.plakat iframe{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:0;
+}
+
+/* a lejátszógomb az egész plakátot lefedi, hogy bárhol kattintható legyen */
+.lejatszo{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  padding:0;
+}
+
+.lejatszo-kor{
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  background:rgba(31,111,92,.92);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .18s, background .18s;
+}
+.lejatszo-kor svg{width:22px;height:22px;margin-left:3px;fill:#fff}
+
+.lejatszo:hover .lejatszo-kor{transform:scale(1.08);background:var(--accent)}
+.lejatszo:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
+
+/* plakát van, de még nincs YouTube-azonosító */
+.hamarosan{
+  position:absolute;
+  left:12px;
+  bottom:12px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  letter-spacing:.06em;
+  color:#F2F3F0;
+  background:rgba(14,17,22,.76);
+  border:1px solid rgba(242,243,240,.26);
+  border-radius:var(--radius);
+  padding:8px 14px;
+  text-align:center;
+}
+
+/* készülő videó: nincs plakát */
+.keszul-doboz{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  font-family:"IBM Plex Mono",monospace;
+}
+.keszul-doboz b{font-weight:500;font-size:var(--fs-sm);color:var(--ink)}
+.keszul-doboz span{font-size:var(--fs-xs);color:var(--muted)}
+.keszul-pont{
+  width:7px;height:7px;border-radius:50%;background:var(--accent);
+  animation:lelegzik 2.6s ease-in-out infinite;
+}
+@keyframes lelegzik{0%,100%{opacity:1}50%{opacity:.3}}
+
+.video-torzs{
+  padding:20px 22px 20px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
+}
+
+.video-fej{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  color:var(--muted);
+  letter-spacing:.06em;
+  margin-bottom:11px;
+}
+.video-fej .hossz{color:var(--accent)}
+.video-fej .hossz::before{content:"·";margin:0 6px;color:var(--muted)}
+
+.video h2{
+  font-size:var(--fs-title);
+  font-weight:600;
+  letter-spacing:-.012em;
+  line-height:1.3;
+  margin-bottom:9px;
+}
+
+.video p{
+  font-size:var(--fs-body);
+  color:#4A505A;
+  line-height:1.55;
+  margin-bottom:16px;
+}
+
+.temak{
+  margin-top:auto;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.tema{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  padding:3px 8px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  border-radius:3px;
+}
+
+.kapcsolodo{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+  font-size:var(--fs-sm);
+}
+.kapcsolodo a{color:var(--accent);text-decoration:none}
+.kapcsolodo a:hover{text-decoration:underline}
+.kapcsolodo .cimke{
+  display:block;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-2xs);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:3px;
+}
+
+.ures{
+  grid-column:1/-1;
+  border:1px dashed var(--line);
+  border-radius:var(--radius);
+  padding:44px 28px;
+  text-align:center;
+  color:var(--muted);
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-sm);
+}
+
+/* ---------- készítés / lábjegyzet ---------- */
+.muhely{
+  border-top:1px solid var(--line);
+  margin-top:40px;
+  padding-top:30px;
+}
+.muhely h2{
+  font-size:var(--fs-h2);
+  font-weight:600;
+  letter-spacing:-.015em;
+  margin-bottom:16px;
+}
+.muhely p{
+  font-size:var(--fs-base);
+  color:#3A4048;
+  max-width:68ch;
+  margin-bottom:13px;
+}
+.muhely a{color:var(--accent)}
+
+/* ---------- lábléc ---------- */
+footer{
+  border-top:1px solid var(--line);
+  margin-top:40px;
+  padding:26px 0 60px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:var(--fs-xs);
+  color:var(--muted);
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--accent)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="fejlec">
+  <div class="wrap fejlec-belso">
+    <a class="marka" href="index.html#top">
+      <svg class="marka-ikon" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="11"   y="34" width="11" height="19" rx="2" fill="currentColor"/>
+        <rect x="26.5" y="23" width="11" height="30" rx="2" fill="currentColor"/>
+        <rect x="42"   y="11" width="11" height="42" rx="2" fill="#1F6F5C"/>
+      </svg>
+      <span class="marka-nev">Udvari István</span>
+      <span class="marka-beosztas" data-en="data analyst and AI solutions specialist">adatelemző és AI-megoldások szakértője</span>
+    </a>
+
+    <nav class="fejlec-nav">
+      <a href="index.html#projektek" data-en="Projects">Projektek</a>
+      <a href="videok.html" aria-current="page" data-en="Videos">Videók</a>
+      <a href="index.html#rolam" data-en="About">Rólam</a>
+      <a href="index.html#kapcsolat" data-en="Contact">Kapcsolat</a>
+      <div class="nyelv" role="group" aria-label="Nyelv / Language">
+        <button type="button" data-lang="hu" aria-pressed="true">HU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="bevezeto" id="top">
+    <h1 data-en="Explanatory videos">Magyarázó videók</h1>
+
+    <p data-en="Short animations that answer one question each. The approach follows the style of <strong>3Blue1Brown</strong>: a question before the definition, an example before the generalisation, and colours that carry meaning from the first frame to the last.">Rövid animációk, mindegyik egy kérdésre válaszol. A megközelítés
+    a <strong>3Blue1Brown</strong>-csatorna stílusát követi: kérdés a definíció előtt,
+    példa az általánosítás előtt, és színek, amik az első képkockától az utolsóig
+    ugyanazt jelentik.</p>
+
+    <p data-en="The scenes are written in Python with <strong>Manim</strong>, the narration is synthesised speech, and ffmpeg puts the two together in sync. The topics are deliberately mixed: some come from my work with data, others from curiosity.">A jelenetek Pythonban, <strong>Manimmel</strong> készülnek, a narráció
+    gépi hang, az ffmpeg pedig szinkronban fűzi össze a kettőt. A témák szándékosan
+    vegyesek: egy részük az adatos munkából jön, a többi puszta kíváncsiságból.</p>
+
+    <p class="nyelvjelzes" data-en="The narration is in Hungarian.">A videók magyar nyelvűek.</p>
+  </section>
+
+  <section class="filterbar" aria-labelledby="filter-label">
+    <div class="filter-head">
+      <span class="filter-label" id="filter-label" data-en="Topic">Témakör</span>
+      <span class="szamlalo" id="szamlalo" aria-live="polite"></span>
+    </div>
+    <div class="chips" id="chipek" role="group" aria-labelledby="filter-label"></div>
+    <div class="reset-sor"><div class="chips" id="reset-doboz"></div></div>
+  </section>
+
+  <main class="racs" id="racs"></main>
+
+  <section class="muhely">
+    <h2 data-en="How they are made">Hogyan készülnek</h2>
+    <p data-en="Claude writes the scenes as Manim code, a neural text-to-speech engine reads the narration, and ffmpeg synchronises the two and burns in the subtitles. One video is 8–14 scenes; the work goes into the storyboard and the colour code, not the rendering.">Claude írja meg a jeleneteket Manim-kódként, a narrációt neurális
+    beszédszintetizátor mondja fel, az ffmpeg pedig szinkronizálja a kettőt és ráégeti
+    a feliratot. Egy videó 8–14 jelenet; a munka a forgatókönyvbe és a színkódba megy,
+    nem a renderelésbe.</p>
+    <p data-en="Manim is the animation engine behind the 3Blue1Brown channel, published by the Manim Community under the MIT licence. This page is not affiliated with that channel.">A Manim a 3Blue1Brown-csatorna animációs motorja, a Manim Community
+    MIT-licenc alatt közzétett változatában. Ez az oldal nem áll kapcsolatban
+    a csatornával.</p>
+  </section>
+
+  <footer>
+    <span>© <span id="ev"></span> Udvari István</span>
+    <span><a href="index.html" data-en="Back to the projects">Vissza a projektekhez</a></span>
+  </footer>
+
+</div>
+
+<script src="videok.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var racs       = document.getElementById("racs");
+  var chipek     = document.getElementById("chipek");
+  var resetDoboz = document.getElementById("reset-doboz");
+  var szamlalo   = document.getElementById("szamlalo");
+
+  var SZOVEG = {
+    hu: {
+      torles:"×  Szűrő törlése",
+      ures:"Ebben a témakörben még nincs videó.",
+      lejatszas:"Videó lejátszása",
+      hamarosan:"Hamarosan a YouTube-on",
+      keszul:"Készül",
+      keszulAlcim:"hamarosan felkerül",
+      kapcsolodo:"Kapcsolódó projekt",
+      honapok:["jan.","febr.","márc.","ápr.","máj.","jún.","júl.","aug.","szept.","okt.","nov.","dec."],
+      datum:function(ev, h){ return ev + ". " + h; },
+      db:function(n){ return n + " videó"; }
+    },
+    en: {
+      torles:"×  Clear filter",
+      ures:"No video in this topic yet.",
+      lejatszas:"Play video",
+      hamarosan:"Coming soon on YouTube",
+      keszul:"In progress",
+      keszulAlcim:"coming soon",
+      kapcsolodo:"Related project",
+      honapok:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+      datum:function(ev, h){ return h + " " + ev; },
+      db:function(n){ return n + (n === 1 ? " video" : " videos"); }
+    }
+  };
+
+  var nyelv = "hu";
+  function t(k){ return SZOVEG[nyelv][k]; }
+
+  // A szűrő belső értéke MINDIG a magyar témakör-név — a nyelvváltás csak
+  // a feliratot cseréli, ezért az aktív szűrés átváltáskor megmarad.
+  function temaFelirat(x){
+    return (nyelv === "en" && typeof TEMA_EN !== "undefined" && TEMA_EN[x]) ? TEMA_EN[x] : x;
+  }
+  function mezo(v, nev){ return (nyelv === "en" && v[nev + "_en"]) ? v[nev + "_en"] : v[nev]; }
+
+  var lista = (typeof VIDEOK !== "undefined" ? VIDEOK.slice() : []);
+  var aktiv = [];
+
+  document.getElementById("ev").textContent = new Date().getFullYear();
+
+  var ESC = {"&":"&amp;","<":"&lt;",">":"&gt;"};
+  ESC[String.fromCharCode(34)] = "&quot;";
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return ESC[c]; }); }
+
+  function honap(d){
+    if(!d) return "";
+    var r = d.split("-");
+    return t("datum")(r[0], t("honapok")[parseInt(r[1],10) - 1] || "");
+  }
+
+  function szurt(){
+    if(!aktiv.length) return lista;
+    return lista.filter(function(v){
+      return (v.temak||[]).some(function(x){ return aktiv.indexOf(x) > -1; });
+    });
+  }
+
+  function chipeketRajzol(){
+    chipek.innerHTML = "";
+    var sorrend = (typeof TEMAK !== "undefined" ? TEMAK : []);
+    sorrend.forEach(function(x){
+      var db = lista.filter(function(v){ return (v.temak||[]).indexOf(x) > -1; }).length;
+      if(!db) return;
+      var b = document.createElement("button");
+      b.className = "chip";
+      b.type = "button";
+      b.textContent = temaFelirat(x);
+      b.setAttribute("aria-pressed", aktiv.indexOf(x) > -1 ? "true" : "false");
+      b.addEventListener("click", function(){
+        var i = aktiv.indexOf(x);
+        if(i > -1){ aktiv.splice(i, 1); } else { aktiv.push(x); }
+        frissit();
+      });
+      chipek.appendChild(b);
+    });
+
+    resetDoboz.innerHTML = "";
+    if(aktiv.length){
+      var torlo = document.createElement("button");
+      torlo.className = "chip reset";
+      torlo.type = "button";
+      torlo.textContent = t("torles");
+      torlo.addEventListener("click", function(){ aktiv = []; frissit(); });
+      resetDoboz.appendChild(torlo);
+    }
+  }
+
+  /* A lejátszó homlokzata: alapból csak a plakátkép van kint, és a YouTube
+     felé SEMMILYEN kérés nem megy. Kattintásra cseréljük iframe-re, a
+     nocookie domainnel. Így az oldal gyors marad, és nem állít sütit
+     addig, amíg a látogató nem kér lejátszást. */
+  function lejatszoBe(doboz, azonosito){
+    var keret = document.createElement("iframe");
+    keret.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(azonosito) +
+                "?autoplay=1&rel=0&modestbranding=1";
+    keret.title = "YouTube";
+    keret.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture";
+    keret.setAttribute("allowfullscreen", "");
+    keret.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+    doboz.innerHTML = "";
+    doboz.appendChild(keret);
+  }
+
+  function kartya(v){
+    var e = document.createElement("article");
+    e.className = "video";
+
+    var plakat = document.createElement("div");
+    plakat.className = "plakat";
+
+    if(v.allapot === "keszul"){
+      plakat.innerHTML =
+        '<div class="keszul-doboz">' +
+          '<span class="keszul-pont" aria-hidden="true"></span>' +
+          '<b>' + esc(t("keszul")) + '</b>' +
+          '<span>' + esc(t("keszulAlcim")) + '</span>' +
+        '</div>';
+    } else {
+      var kep = document.createElement("img");
+      kep.src = "assets/videok/" + v.slug + ".jpg";
+      kep.alt = "";
+      kep.loading = "lazy";
+      kep.decoding = "async";
+      plakat.appendChild(kep);
+
+      if(v.youtube){
+        var gomb = document.createElement("button");
+        gomb.className = "lejatszo";
+        gomb.type = "button";
+        gomb.setAttribute("aria-label", t("lejatszas") + ": " + mezo(v, "cim"));
+        gomb.innerHTML = '<span class="lejatszo-kor"><svg viewBox="0 0 24 24" aria-hidden="true">' +
+                         '<path d="M8 5v14l11-7z"/></svg></span>';
+        gomb.addEventListener("click", function(){ lejatszoBe(plakat, v.youtube); });
+        plakat.appendChild(gomb);
+      } else {
+        var jel = document.createElement("span");
+        jel.className = "hamarosan";
+        jel.textContent = t("hamarosan");
+        plakat.appendChild(jel);
+      }
+    }
+
+    var fej = esc(honap(v.datum)) +
+      (v.hossz ? '<span class="hossz">' + esc(v.hossz) + '</span>' : "");
+
+    var temak = (v.temak||[]).map(function(x){
+      return '<span class="tema">' + esc(temaFelirat(x)) + '</span>';
+    }).join("");
+
+    var kapcs = "";
+    if(v.kapcsolodo && v.kapcsolodo.url){
+      kapcs = '<div class="kapcsolodo"><span class="cimke">' + esc(t("kapcsolodo")) + '</span>' +
+              '<a href="' + esc(v.kapcsolodo.url) + '">' +
+              esc(mezo(v.kapcsolodo, "cim")) + ' &rarr;</a></div>';
+    }
+
+    var torzs = document.createElement("div");
+    torzs.className = "video-torzs";
+    torzs.innerHTML =
+      '<div class="video-fej">' + fej + '</div>' +
+      '<h2>' + esc(mezo(v, "cim")) + '</h2>' +
+      '<p>' + esc(mezo(v, "leiras")) + '</p>' +
+      '<div class="temak">' + temak + '</div>' +
+      kapcs;
+
+    e.appendChild(plakat);
+    e.appendChild(torzs);
+    return e;
+  }
+
+  function racsFrissit(){
+    var sz = szurt();
+    racs.innerHTML = "";
+
+    if(!sz.length){
+      var u = document.createElement("div");
+      u.className = "ures";
+      u.textContent = t("ures");
+      racs.appendChild(u);
+      return;
+    }
+
+    sz.forEach(function(v, i){
+      var k = kartya(v);
+      k.style.animationDelay = Math.min(i * 40, 240) + "ms";
+      racs.appendChild(k);
+    });
+  }
+
+  function frissit(){
+    chipeketRajzol();
+    racsFrissit();
+    var n = szurt().length;
+    szamlalo.innerHTML = '<span class="val">' + esc(t("db")(n)) + '</span>';
+  }
+
+  /* ---------- nyelvváltás (ugyanaz a séma, mint a főoldalon) ---------- */
+  var statikus = [].slice.call(document.querySelectorAll("[data-en]"));
+  statikus.forEach(function(el){ el.setAttribute("data-hu", el.innerHTML); });
+
+  var nyelvGombok = [].slice.call(document.querySelectorAll(".nyelv button"));
+
+  function nyelvBeallit(l, mentes){
+    if(!SZOVEG[l]) l = "hu";
+    nyelv = l;
+    document.documentElement.lang = l;
+    statikus.forEach(function(el){ el.innerHTML = el.getAttribute("data-" + l); });
+    nyelvGombok.forEach(function(b){
+      b.setAttribute("aria-pressed", b.getAttribute("data-lang") === l ? "true" : "false");
+    });
+    if(mentes){
+      try{ localStorage.setItem("portfolio-nyelv", l); }catch(e){}
+      try{
+        var u = new URL(location.href);
+        if(l === "hu"){ u.searchParams.delete("lang"); } else { u.searchParams.set("lang", l); }
+        history.replaceState(null, "", u.toString());
+      }catch(e){}
+    }
+    frissit();
+  }
+
+  nyelvGombok.forEach(function(b){
+    b.addEventListener("click", function(){ nyelvBeallit(b.getAttribute("data-lang"), true); });
+  });
+
+  var kezdo = "hu";
+  try{
+    var urlNyelv = new URLSearchParams(location.search).get("lang");
+    var mentett  = localStorage.getItem("portfolio-nyelv");
+    if(urlNyelv && SZOVEG[urlNyelv]) kezdo = urlNyelv;
+    else if(mentett && SZOVEG[mentett]) kezdo = mentett;
+  }catch(e){}
+  nyelvBeallit(kezdo, false);
+})();
+</script>
+
+</body>
+</html>
