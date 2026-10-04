@@ -738,6 +738,13 @@ table.matrix{
 .card:hover .card-open,
 .card:focus-visible .card-open{opacity:1;transform:none}
 
+/* külső oldalra mutató csempe jelzése a dátum mellett */
+.kulso-jel{
+  color:var(--accent);
+  letter-spacing:.04em;
+}
+.kulso-jel::before{content:"·";margin:0 6px;color:var(--muted)}
+
 /* ---------- "még jön több" csempe ---------- */
 .soon{
   border:1px dashed var(--line);
@@ -1038,6 +1045,8 @@ footer a:hover{color:var(--accent)}
       torles:"×  Szűrők törlése",
       ures:"Nincs ilyen címkéjű projekt. Válassz másik szűrőt.",
       megnyitas:"Megnyitás &rarr;",
+      megnyitasKulso:"Megnyitás &#8599;",
+      kulso:"külső oldal",
       soon:"További demók készülnek",
       mailMutat:"E-mail cím mutatása",
       mailTitle:"Kattints a cím vágólapra másolásához",
@@ -1053,6 +1062,8 @@ footer a:hover{color:var(--accent)}
       torles:"×  Clear filters",
       ures:"No project with these tags. Try another filter.",
       megnyitas:"Open &rarr;",
+      megnyitasKulso:"Open &#8599;",
+      kulso:"external page",
       soon:"More demos in the works",
       mailMutat:"Show e-mail address",
       mailTitle:"Click to copy the address",
@@ -1324,7 +1335,11 @@ footer a:hover{color:var(--accent)}
     sz.forEach(function(p, idx){
       var a = document.createElement("a");
       a.className = "card" + (p.kiemelt ? " wide" : "");
-      a.href = "demos/" + p.fajl;
+      // kulso link: a sajat tarhelyen kivuli oldal (pl. Artifact, masik
+      // GitHub Pages projekt). Uj lapon nyilik, es a csempen is latszik.
+      var kulso = !!p.url;
+      a.href = kulso ? p.url : "demos/" + p.fajl;
+      if(kulso){ a.target = "_blank"; a.rel = "noopener"; }
       a.style.animationDelay = Math.min(idx * 40, 240) + "ms";
 
       var tagek = (p.cimkek||[]).map(function(c){
@@ -1338,11 +1353,13 @@ footer a:hover{color:var(--accent)}
       a.innerHTML =
         '<img class="thumb" src="' + esc(kepUt) + '" alt="" loading="lazy" decoding="async">' +
         '<div class="card-body">' +
-          '<div class="card-date">' + esc(honap(p.datum)) + '</div>' +
+          '<div class="card-date">' + esc(honap(p.datum)) +
+            (kulso ? '<span class="kulso-jel">' + esc(t("kulso")) + '</span>' : '') +
+          '</div>' +
           '<h2>' + esc(mezo(p, "cim")) + '</h2>' +
           '<p>' + esc(mezo(p, "leiras")) + '</p>' +
           '<div class="card-tags">' + tagek + '</div>' +
-          '<div class="card-open">' + t("megnyitas") + '</div>' +
+          '<div class="card-open">' + t(kulso ? "megnyitasKulso" : "megnyitas") + '</div>' +
         '</div>';
 
       var kep = a.querySelector(".thumb");
@@ -1404,8 +1421,12 @@ footer a:hover{color:var(--accent)}
     h.push('</tr></thead><tbody>');
 
     sz.forEach(function(p){
-      h.push('<tr><th class="cim" scope="row"><a href="demos/' + esc(p.fajl) +
-             '">' + esc(mezo(p, "cim")) + '</a></th>');
+      var cel = p.url ? esc(p.url) : "demos/" + esc(p.fajl);
+      var ujlap = p.url ? ' target="_blank" rel="noopener"' : "";
+      h.push('<tr><th class="cim" scope="row"><a href="' + cel + '"' + ujlap +
+             ' title="' + esc(p.url ? t("kulso") : "") + '">' +
+             esc(mezo(p, "cim")) + (p.url ? ' <span class="kulso-jel" aria-hidden="true">&#8599;</span>' : '') +
+             '</a></th>');
       blokkok.forEach(function(b){
         var sajat = b.cs.ertekek(p);
         b.ertekek.forEach(function(v, i){

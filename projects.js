@@ -11,7 +11,12 @@
      leiras   – 1-2 mondat, mi ez (ez látszik a csempén)
      cim_en   – a csempe címe angolul (ha hiányzik, a magyar látszik)
      leiras_en – a leírás angolul
-     fajl     – a demó fájl neve a demos/ mappában
+     fajl     – a demó fájl neve a demos/ mappában. Külső linknél (lásd
+                url) nincs ilyen fájl: ilyenkor csak egy azonosító, amiből
+                a bélyegkép neve lesz (assets/thumbs/<fajl>.jpg).
+     url      – OPCIONÁLIS. Ha meg van adva, a csempe erre a külső címre
+                mutat (Artifact, másik GitHub Pages oldal), új lapon nyílik,
+                és a csempén megjelenik a „külső oldal" jelzés.
      cimkek   – technológia-címkék + pontosan egy Munka/Magán
      tipus    – interaktív tool / interaktív demó / folyamatábra /
                 adatvizualizáció / esettanulmány / helykitöltő
@@ -268,6 +273,20 @@ const PROJEKTEK = [
     tipus: "helykitöltő",
     rang: -10,
     datum: "2026-09",
+    kiemelt: false
+  },
+
+  {
+    cim: "Ülő-álló munkahely beállító",
+    leiras: "Megadod a lemért testméreteidet és az eszközeidet, és kiszámolja a székmagasságot, az asztalmagasságot ülve és állva, a monitor helyét és távolságát. Ahol a beállítás kompromisszumos, megmondja, miért.",
+    cim_en: "Sit-stand workstation calculator",
+    leiras_en: "Enter your measured body dimensions and your equipment, and it works out chair height, desk height sitting and standing, and monitor position and distance. Where the setup is a compromise, it says why.",
+    fajl: "ulo-allo-munkahely",
+    url: "https://claude.ai/artifact/3hK7ZjmVgLhgm53UvdWRzh",
+    cimkek: ["Claude", "Tool", "Magán"],
+    tipus: "interaktív tool",
+    rang: 45,
+    datum: "2026-10",
     kiemelt: false
   }
 
